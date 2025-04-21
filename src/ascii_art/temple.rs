@@ -1,10 +1,10 @@
 use std::vec;
 
-use crate::font_face_types::binary_clock_color::BinaryClockColor;
+use crate::font_face_types::color_clock::ColorClock;
 
 struct Temple;
 
-impl BinaryClockColor for Temple {
+impl ColorClock for Temple {
     const HOUR: &'static str = r"
               Θ
               |

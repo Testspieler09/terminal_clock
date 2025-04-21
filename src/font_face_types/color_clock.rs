@@ -1,4 +1,4 @@
-pub trait BinaryClockColor {
+pub trait ColorClock {
     // The static ascii art for the clock face
     const HOUR: &'static str;
     const MINUTES: &'static str;
