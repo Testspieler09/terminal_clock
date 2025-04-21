@@ -1,0 +1,51 @@
+use std::vec;
+
+use crate::font_face_types::binary_clock_color::BinaryClockColor;
+
+struct Temple;
+
+impl BinaryClockColor for Temple {
+    const HOUR: &'static str = r"
+              Θ
+              |
+         _,*/@@@\,_
+       ∙«≡≡≡≡«..»≡≡»∙
+          ╟╧╧╧││╧╢
+        Θ«╟╤╤╤││╤╢»Θ
+    ∙,____╟╧╧╧││╧╢
+  _,*@@@@@╟╤╤╤││╤╢»Θ
+Θ≈≈≡≡≡≡≡≡≡╟╧╧╧││╧╢
+   ╟╪╪╪╪╪╡╟╤╤╤││╤╢»Θ
+   ╟╪╪╪╪╪╡╟╧╧╧││╧╢
+ Θ«╟╧╧╧╧╧╡╟╤╤╤││╤╢»Θ
+   ╟╤╤╤╤╤╡╟╧╧╧││╧╢
+   ╟╪╪╪╪╪╡╟╤╤╤││╤╢
+   ╙┴┴┴┴┴┘╙┴┴┴┴┴┴╜
+";
+    const MINUTES: &'static str = r"
+              Θ
+              |
+         _,*/@@@\,_
+       ∙«≡≡≡≡«..»≡≡»∙
+          ╟╧╧╧││╧╢
+    ∙,____╟╤╤╤││╤╢»Θ
+  _,*@@@@@╟╧╧╧││╧╢
+Θ≈≈≡≡≡≡≡≡≡╟╤╤╤││╤╢»Θ
+   ╟╪╪╪╪╪╡╟╧╧╧││╧╢
+ Θ«╟╧╧╧╧╧╡╟╤╤╤││╤╢»Θ
+   ╟╤╤╤╤╤╡╟╧╧╧││╧╢
+ Θ«╟╧╧╧╧╧╡╟╤╤╤││╤╢»Θ
+   ╟╤╤╤╤╤╡╟╧╧╧││╧╢
+   ╟╪╪╪╪╪╡╟╤╤╤││╤╢
+   ╙┴┴┴┴┴┘╙┴┴┴┴┴┴╜
+";
+    const SECONDS: &'static str = Self::MINUTES;
+
+    const LED_COORDS: Vec<u32> = vec![];
+
+    const QUOTE: Option<&'static str> = Some("Fall down seven times, stand up eight");
+
+    fn draw_clockface(clock_format: &str) {
+        return;
+    }
+}
