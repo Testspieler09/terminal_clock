@@ -5,11 +5,14 @@ pub trait AnalogClock {
     const SECOND_HAND_FRAMES: Vec<&'static str>;
 
     const CLOCK_BASE: &'static str;
-    const CLOCK_CENTER: [u32; 2];
 
-    // An optional quote
-    const QUOTE: Option<&'static str>;
+    const CLOCK_CENTER: [u32; 2];
+    const HOUR_CENTER: [u32; 2];
+    const MINUTE_CENTER: [u32; 2];
+    const SECONDS_CENTER: [u32; 2];
 
     // TODO: add a default implementaton of the func here
-    fn draw_clockface(clock_format: &str);
+    fn draw_clockface(clock_format: &str) {
+        return;
+    }
 }

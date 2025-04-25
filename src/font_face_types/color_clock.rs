@@ -6,12 +6,12 @@ pub trait ColorClock {
 
     // The position of the characters that are suppsoed
     // to change color to display the time
-    // TODO: adjust type
-    const LED_COORDS: Vec<u32>;
-
-    // An optional quote
-    const QUOTE: Option<&'static str>;
+    const LED_COORDS_HOURS: &[&[(u32, u32)]];
+    const LED_COORDS_MINUTES: &[&[(u32, u32)]];
+    const LED_COORDS_SECONDS: &[&[(u32, u32)]];
 
     // TODO: add a default implementaton of the func here
-    fn draw_clockface(clock_format: &str);
+    fn draw_clockface(&self, clock_format: &str) {
+        return;
+    }
 }
