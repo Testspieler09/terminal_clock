@@ -1,10 +1,9 @@
 use crate::font_face_types::color_clock::ColorClock;
 
-struct Temple;
+pub struct Temple;
 
 impl ColorClock for Temple {
-    const HOUR: &'static str = r"
-              Θ
+    const HOUR: &'static str = r"              Θ
               |
          _,*/@@@\,_
        ∙«≡≡≡≡«..»≡≡»∙
@@ -18,10 +17,8 @@ impl ColorClock for Temple {
  Θ«╟╧╧╧╧╧╡╟╤╤╤││╤╢»Θ
    ╟╤╤╤╤╤╡╟╧╧╧││╧╢
    ╟╪╪╪╪╪╡╟╤╤╤││╤╢
-   ╙┴┴┴┴┴┘╙┴┴┴┴┴┴╜
-";
-    const MINUTES: &'static str = r"
-              Θ
+   ╙┴┴┴┴┴┘╙┴┴┴┴┴┴╜";
+    const MINUTES: &'static str = r"              Θ
               |
          _,*/@@@\,_
        ∙«≡≡≡≡«..»≡≡»∙
@@ -35,8 +32,7 @@ impl ColorClock for Temple {
  Θ«╟╧╧╧╧╧╡╟╤╤╤││╤╢»Θ
    ╟╤╤╤╤╤╡╟╧╧╧││╧╢
    ╟╪╪╪╪╪╡╟╤╤╤││╤╢
-   ╙┴┴┴┴┴┘╙┴┴┴┴┴┴╜
-";
+   ╙┴┴┴┴┴┘╙┴┴┴┴┴┴╜";
     const SECONDS: &'static str = Self::MINUTES;
 
     // TODO: generate them automatically (e.g. with some binary clock trait)?!
