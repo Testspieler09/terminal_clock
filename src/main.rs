@@ -1,3 +1,4 @@
+mod helpers;
 mod pomodoro;
 mod renderer;
 
