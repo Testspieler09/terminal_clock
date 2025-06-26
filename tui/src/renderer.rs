@@ -1,10 +1,13 @@
 use color_eyre::Result;
-use ratatui::crossterm::event::{self, Event};
-use ratatui::{DefaultTerminal, Frame};
+use ratatui::{
+    DefaultTerminal, Frame,
+    crossterm::event::{self, Event},
+};
+use std::{thread::sleep, time::Duration};
 
 use crate::ascii_art::temple::Temple;
 use crate::font_face_types::color_clock::ColorClock;
-//
+
 pub fn init_renderer() -> Result<()> {
     let terminal = ratatui::init();
     let result = run(terminal);
@@ -15,8 +18,13 @@ pub fn init_renderer() -> Result<()> {
 fn run(mut terminal: DefaultTerminal) -> Result<()> {
     loop {
         terminal.draw(render)?;
-        if matches!(event::read()?, Event::Key(_)) {
-            break Ok(());
+
+        sleep(Duration::from_millis(100));
+
+        if event::poll(Duration::from_secs(0))? {
+            if matches!(event::read()?, Event::Key(_)) {
+                break Ok(());
+            }
         }
     }
 }

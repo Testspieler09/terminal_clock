@@ -1,10 +1,12 @@
 use crate::helpers::center_widget;
 use chrono::{Local, Timelike};
-use ratatui::Frame;
-use ratatui::layout::{Alignment, Constraint, Rect};
-use ratatui::style::{Color, Style};
-use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::{
+    Frame,
+    layout::{Alignment, Constraint, Rect},
+    style::{Color, Style},
+    text::{Line, Span, Text},
+    widgets::{Block, Borders, Paragraph},
+};
 use unicode_segmentation::UnicodeSegmentation;
 
 fn combine_ascii_art_while_applying_led<'a>(
@@ -74,7 +76,7 @@ fn combine_ascii_art_while_applying_led<'a>(
                 };
 
                 let style = if is_led_position {
-                    Style::default().fg(Color::Red)
+                    Style::default().fg(Color::Blue)
                 } else {
                     Style::default()
                 };

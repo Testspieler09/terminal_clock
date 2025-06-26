@@ -1,0 +1,5 @@
+[package]
+name = "pomodoro"
+
+[dependencies]
+chrono = { workspace = true }

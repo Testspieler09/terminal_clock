@@ -1,0 +1,6 @@
+[package]
+name = "font_faces"
+
+[dependencies]
+unicode-segmentation = { workspace = true }
+chrono               = { workspace = true }

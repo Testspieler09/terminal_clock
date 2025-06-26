@@ -1,0 +1,5 @@
+[package]
+name = "tui"
+
+[dependencies]
+ratatui = { workspace = true }
