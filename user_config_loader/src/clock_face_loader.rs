@@ -210,6 +210,8 @@ const LED_COORDS_MINUTES: &[&[(u32, u32)]] = &[
     &[(0, 14), (11, 19), (5, 19), (7, 0), (11, 1)],
 ];
 
+struct ClockConfig;
+
 pub struct ClockFaceLoader;
 
 impl ClockFaceLoader {
@@ -223,5 +225,9 @@ impl ClockFaceLoader {
             LED_COORDS_MINUTES,
             Color::Blue,
         ))
+    }
+
+    fn from(config: ClockConfig) {
+        todo!()
     }
 }
