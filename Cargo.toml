@@ -3,21 +3,14 @@ resolver = "2"
 members = [
   "cli",
   "tui",
-  "font_faces",
-  "pomodoro",
   "user_config_loader",
 ]
 
 [workspace.dependencies]
+
+# External dependiencies
 clap                 = { version = "4.5.37", features = ["derive"] }
 ratatui              = "0.29.0"
 color-eyre           = "0.6"
 unicode-segmentation = "1.8.0"
 chrono               = "0.4.40"
-
-# Own dependiencies
-cli                  = { path = "cli" }
-font-faces           = { path = "font_faces" }
-pomodoro             = { path = "pomodoro" }
-tui                  = { path = "tui" }
-user-config-loader   = { path = "user_config_loader" }

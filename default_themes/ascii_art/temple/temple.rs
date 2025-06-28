@@ -1,4 +1,4 @@
-use crate::font_face_types::color_clock::ColorClock;
+use tui::color_clock::ColorClock;
 
 pub struct Temple;
 

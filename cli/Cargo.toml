@@ -1,6 +1,10 @@
 [package]
 name = "cli"
+edition = "2024"
 
 [dependencies]
+tui        = { path = "../tui/" }
+
+# External dependencies
 clap       = { workspace = true }
 color-eyre = { workspace = true }

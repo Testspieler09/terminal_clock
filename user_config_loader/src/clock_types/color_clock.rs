@@ -1,8 +1,7 @@
-use crate::helpers::center_widget;
+use crate::clock::Clock;
 use chrono::{Local, Timelike};
 use ratatui::{
-    Frame,
-    layout::{Alignment, Constraint, Rect},
+    layout::Alignment,
     style::{Color, Style},
     text::{Line, Span, Text},
     widgets::{Block, Borders, Paragraph},
@@ -13,6 +12,7 @@ fn combine_ascii_art_while_applying_led<'a>(
     artwork_1_triple: (&'a str, &[&[(u32, u32)]], u32),
     artwork_2_triple: (&'a str, &[&[(u32, u32)]], u32),
     artwork_3_triple: (&'a str, &[&[(u32, u32)]], u32),
+    accent_color: Color,
 ) -> (Paragraph<'a>, usize, usize) {
     let art_1_lines: Vec<&str> = artwork_1_triple.0.split('\n').collect();
     let art_2_lines: Vec<&str> = artwork_2_triple.0.split('\n').collect();
@@ -76,7 +76,7 @@ fn combine_ascii_art_while_applying_led<'a>(
                 };
 
                 let style = if is_led_position {
-                    Style::default().fg(Color::Blue)
+                    Style::default().fg(accent_color)
                 } else {
                     Style::default()
                 };
@@ -96,57 +96,89 @@ fn combine_ascii_art_while_applying_led<'a>(
     )
 }
 
-pub trait ColorClock {
+pub struct ColorClock<'a> {
     // The static ascii art for the clock face
-    const HOUR: &'static str;
-    const MINUTES: &'static str;
-    const SECONDS: &'static str;
+    hour: &'static str,
+    minutes: &'static str,
+    seconds: &'static str,
 
     // The position of the characters that are suppsoed
     // to change color to display the time
-    const LED_COORDS_HOURS: &[&[(u32, u32)]];
-    const LED_COORDS_MINUTES: &[&[(u32, u32)]];
-    const LED_COORDS_SECONDS: &[&[(u32, u32)]];
+    // TODO: change this to vec now
+    led_coords_hours: &'a [&'a [(u32, u32)]],
+    led_coords_minutes: &'a [&'a [(u32, u32)]],
+    led_coords_seconds: &'a [&'a [(u32, u32)]],
 
-    fn draw_clockface(&self, f: &mut Frame, clock_format: &str, area: Rect) {
+    accent_color: Color,
+}
+
+impl<'a> ColorClock<'a> {
+    pub fn new(
+        hour: &'static str,
+        minutes: &'static str,
+        seconds: &'static str,
+        led_coords_hours: &'a [&'a [(u32, u32)]],
+        led_coords_minutes: &'a [&'a [(u32, u32)]],
+        led_coords_seconds: &'a [&'a [(u32, u32)]],
+        accent_color: Color,
+    ) -> Self {
+        ColorClock {
+            hour,
+            minutes,
+            seconds,
+            led_coords_hours,
+            led_coords_minutes,
+            led_coords_seconds,
+            accent_color,
+        }
+    }
+}
+
+impl Clock for ColorClock<'_> {
+    // fn from_config<T: Config>() -> Self {
+    //     Self {
+    //         hour: Config.hour,
+    //         minutes: Config.minutes,
+    //         seconds: Config.seconds,
+    //         led_coorde_hours: Config.led_hours,
+    //         led_coorde_minutes: Config.led_minutes,
+    //         led_coorde_seconds: Config.led_second,
+    //         accent_color: Config.accent_color,
+    //     }
+    // }
+    // TODO: remove temp constructor for testing
+
+    fn draw_clockface(&self, clock_format: &str) -> (Paragraph, usize, usize) {
         let time_stamp = Local::now();
         let hour_value = time_stamp.hour();
         let minute_value = time_stamp.minute();
         let second_value = time_stamp.second();
 
-        let (ascii_art_paragraph, paragraph_width, paragraph_height): (
-            Paragraph<'_>,
-            usize,
-            usize,
-        ) = match clock_format {
+        match clock_format {
             "HH:MM:SS" => combine_ascii_art_while_applying_led(
-                (Self::HOUR, Self::LED_COORDS_HOURS, hour_value),
-                (Self::MINUTES, Self::LED_COORDS_MINUTES, minute_value),
-                (Self::SECONDS, Self::LED_COORDS_SECONDS, second_value),
+                (self.hour, self.led_coords_hours, hour_value),
+                (self.minutes, self.led_coords_minutes, minute_value),
+                (self.seconds, self.led_coords_seconds, second_value),
+                self.accent_color,
             ),
             "HH:MM" => combine_ascii_art_while_applying_led(
-                (Self::HOUR, Self::LED_COORDS_HOURS, hour_value),
-                (Self::MINUTES, Self::LED_COORDS_MINUTES, minute_value),
+                (self.hour, self.led_coords_hours, hour_value),
+                (self.minutes, self.led_coords_minutes, minute_value),
                 ("", &[], second_value),
+                self.accent_color,
             ),
             "MM:HH:SS" => combine_ascii_art_while_applying_led(
-                (Self::MINUTES, Self::LED_COORDS_MINUTES, minute_value),
-                (Self::HOUR, Self::LED_COORDS_HOURS, hour_value),
-                (Self::SECONDS, Self::LED_COORDS_SECONDS, second_value),
+                (self.minutes, self.led_coords_minutes, minute_value),
+                (self.hour, self.led_coords_hours, hour_value),
+                (self.seconds, self.led_coords_seconds, second_value),
+                self.accent_color,
             ),
             _ => combine_ascii_art_while_applying_led(
-                (Self::HOUR, Self::LED_COORDS_HOURS, hour_value),
-                (Self::MINUTES, Self::LED_COORDS_MINUTES, minute_value),
+                (self.hour, self.led_coords_hours, hour_value),
+                (self.minutes, self.led_coords_minutes, minute_value),
                 ("", &[], second_value),
+                self.accent_color,
             ),
-        };
-
-        let area = center_widget(
-            area,
-            Constraint::Length(paragraph_width as u16),
-            Constraint::Length(paragraph_height as u16),
-        );
-
-        f.render_widget(ascii_art_paragraph, area);
+        }
     }
 }

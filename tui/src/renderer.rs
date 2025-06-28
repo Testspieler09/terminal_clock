@@ -1,12 +1,13 @@
+use crate::helpers::center_widget;
 use color_eyre::Result;
 use ratatui::{
     DefaultTerminal, Frame,
     crossterm::event::{self, Event},
+    prelude::Constraint,
 };
 use std::{thread::sleep, time::Duration};
 
-use crate::ascii_art::temple::Temple;
-use crate::font_face_types::color_clock::ColorClock;
+use user_config_loader::clock_face_loader::ClockFaceLoader;
 
 pub fn init_renderer() -> Result<()> {
     let terminal = ratatui::init();
@@ -21,15 +22,20 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
 
         sleep(Duration::from_millis(100));
 
-        if event::poll(Duration::from_secs(0))? {
-            if matches!(event::read()?, Event::Key(_)) {
-                break Ok(());
-            }
+        if event::poll(Duration::from_secs(0))? && matches!(event::read()?, Event::Key(_)) {
+            break Ok(());
         }
     }
 }
 
 fn render(frame: &mut Frame) {
-    let clock = Temple;
-    clock.draw_clockface(frame, "HH:MM:SS", frame.area());
+    let clock = ClockFaceLoader.load_clockface();
+    let (ascii_art_paragraph, width, height) = clock.draw_clockface("HH:MM:SS");
+    let area = center_widget(
+        frame.area(),
+        Constraint::Length(width as u16),
+        Constraint::Length(height as u16),
+    );
+
+    frame.render_widget(ascii_art_paragraph, area);
 }

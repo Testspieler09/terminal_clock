@@ -1,2 +1,8 @@
 [package]
 name = "user_config_loader"
+edition = "2024"
+
+[dependencies]
+ratatui              = { workspace = true }
+chrono               = { workspace = true }
+unicode-segmentation = { workspace = true }
