@@ -8,74 +8,74 @@ use ratatui::{
 };
 use unicode_segmentation::UnicodeSegmentation;
 
-fn combine_ascii_art_while_applying_led<'a>(
-    artwork_1_triple: (&'a str, &[&[(u32, u32)]], u32),
-    artwork_2_triple: (&'a str, &[&[(u32, u32)]], u32),
-    artwork_3_triple: (&'a str, &[&[(u32, u32)]], u32),
+pub struct ArtBlock<'a> {
+    pub ascii_art: &'a str,
+    pub led_coords: &'a Vec<Vec<(u32, u32)>>,
+    pub time_value: u32,
+}
+
+// TODO: check the implementation
+pub fn combine_ascii_art_while_applying_led<'a>(
+    art1: &ArtBlock<'a>,
+    art2: &ArtBlock<'a>,
+    art3: &ArtBlock<'a>,
     accent_color: Color,
 ) -> (Paragraph<'a>, usize, usize) {
-    let art_1_lines: Vec<&str> = artwork_1_triple.0.split('\n').collect();
-    let art_2_lines: Vec<&str> = artwork_2_triple.0.split('\n').collect();
-    let art_3_lines: Vec<&str> = artwork_3_triple.0.split('\n').collect();
+    let arts = [art1, art2, art3];
 
-    let max_art_1_width = art_1_lines
+    // Split each ascii_art into lines
+    let split_lines: Vec<Vec<&str>> = arts
         .iter()
-        .map(|line| line.graphemes(true).count())
-        .max()
-        .unwrap_or(0);
-    let max_art_2_width = art_2_lines
-        .iter()
-        .map(|line| line.graphemes(true).count())
-        .max()
-        .unwrap_or(0);
-    let max_art_3_width = art_3_lines
-        .iter()
-        .map(|line| line.graphemes(true).count())
-        .max()
-        .unwrap_or(0);
-
-    let paragraph_width = max_art_1_width + max_art_2_width + max_art_3_width;
-
-    let padded_art_1_lines: Vec<String> = art_1_lines
-        .into_iter()
-        .map(|line| format!("{:<width$}", line, width = max_art_1_width))
-        .collect();
-    let padded_art_2_lines: Vec<String> = art_2_lines
-        .into_iter()
-        .map(|line| format!("{:<width$}", line, width = max_art_2_width))
-        .collect();
-    let padded_art_3_lines: Vec<String> = art_3_lines
-        .into_iter()
-        .map(|line| format!("{:<width$}", line, width = max_art_3_width))
+        .map(|art| art.ascii_art.lines().collect())
         .collect();
 
-    let max_lines = padded_art_1_lines
-        .len()
-        .max(padded_art_2_lines.len())
-        .max(padded_art_3_lines.len());
+    // Compute max width per block
+    let max_widths: Vec<usize> = split_lines
+        .iter()
+        .map(|lines| {
+            lines
+                .iter()
+                .map(|l| l.graphemes(true).count())
+                .max()
+                .unwrap_or(0)
+        })
+        .collect();
+
+    // Pad each line to align with the max width
+    let padded_lines: Vec<Vec<String>> = split_lines
+        .iter()
+        .zip(&max_widths)
+        .map(|(lines, width)| {
+            lines
+                .iter()
+                .map(|line| format!("{:<width$}", line, width = width))
+                .collect()
+        })
+        .collect();
+
+    let paragraph_width = max_widths.iter().sum();
+    let max_lines = padded_lines
+        .iter()
+        .map(|lines| lines.len())
+        .max()
+        .unwrap_or(0);
 
     let mut styled_text = Text::default();
 
-    for i in 0..max_lines {
-        let art_1_line = padded_art_1_lines.get(i).map(String::as_str).unwrap_or("");
-        let art_2_line = padded_art_2_lines.get(i).map(String::as_str).unwrap_or("");
-        let art_3_line = padded_art_3_lines.get(i).map(String::as_str).unwrap_or("");
-
+    for line_index in 0..max_lines {
         let mut line_spans: Vec<Span> = Vec::new();
 
-        for (line_index, &line) in [art_1_line, art_2_line, art_3_line].iter().enumerate() {
-            for (char_index, ch) in line.chars().enumerate() {
-                let is_led_position = match line_index % 3 {
-                    0 => artwork_1_triple.1[artwork_1_triple.2 as usize]
-                        .contains(&(i as u32, char_index as u32)),
-                    1 => artwork_2_triple.1[artwork_2_triple.2 as usize]
-                        .contains(&(i as u32, char_index as u32)),
-                    2 => artwork_3_triple.1[artwork_3_triple.2 as usize]
-                        .contains(&(i as u32, char_index as u32)),
-                    _ => false,
-                };
+        for (art_idx, lines) in padded_lines.iter().enumerate() {
+            let line = lines.get(line_index).map(String::as_str).unwrap_or("");
+            let coords = &arts[art_idx].led_coords;
+            let digit = arts[art_idx].time_value as usize;
 
-                let style = if is_led_position {
+            for (char_index, ch) in line.chars().enumerate() {
+                let is_led = coords
+                    .get(digit)
+                    .is_some_and(|coords| coords.contains(&(line_index as u32, char_index as u32)));
+
+                let style = if is_led {
                     Style::default().fg(accent_color)
                 } else {
                     Style::default()
@@ -84,7 +84,8 @@ fn combine_ascii_art_while_applying_led<'a>(
                 line_spans.push(Span::styled(ch.to_string(), style));
             }
         }
-        styled_text.extend(vec![Line::from(line_spans)]);
+
+        styled_text.lines.push(Line::from(line_spans));
     }
 
     (
@@ -96,30 +97,41 @@ fn combine_ascii_art_while_applying_led<'a>(
     )
 }
 
-pub struct ColorClock<'a> {
+fn art_block<'a>(
+    ascii_art: &'a str,
+    led_coords: &'a Vec<Vec<(u32, u32)>>,
+    time_value_p: u32,
+) -> ArtBlock<'a> {
+    ArtBlock {
+        ascii_art,
+        led_coords,
+        time_value: time_value_p,
+    }
+}
+
+pub struct ColorClock {
     // The static ascii art for the clock face
-    hour: &'static str,
-    minutes: &'static str,
-    seconds: &'static str,
+    hour: String,
+    minutes: String,
+    seconds: String,
 
     // The position of the characters that are suppsoed
     // to change color to display the time
-    // TODO: change this to vec now
-    led_coords_hours: &'a [&'a [(u32, u32)]],
-    led_coords_minutes: &'a [&'a [(u32, u32)]],
-    led_coords_seconds: &'a [&'a [(u32, u32)]],
+    led_coords_hours: Vec<Vec<(u32, u32)>>,
+    led_coords_minutes: Vec<Vec<(u32, u32)>>,
+    led_coords_seconds: Vec<Vec<(u32, u32)>>,
 
     accent_color: Color,
 }
 
-impl<'a> ColorClock<'a> {
+impl ColorClock {
     pub fn new(
-        hour: &'static str,
-        minutes: &'static str,
-        seconds: &'static str,
-        led_coords_hours: &'a [&'a [(u32, u32)]],
-        led_coords_minutes: &'a [&'a [(u32, u32)]],
-        led_coords_seconds: &'a [&'a [(u32, u32)]],
+        hour: String,
+        minutes: String,
+        seconds: String,
+        led_coords_hours: Vec<Vec<(u32, u32)>>,
+        led_coords_minutes: Vec<Vec<(u32, u32)>>,
+        led_coords_seconds: Vec<Vec<(u32, u32)>>,
         accent_color: Color,
     ) -> Self {
         ColorClock {
@@ -134,51 +146,39 @@ impl<'a> ColorClock<'a> {
     }
 }
 
-impl Clock for ColorClock<'_> {
-    // fn from_config<T: Config>() -> Self {
-    //     Self {
-    //         hour: Config.hour,
-    //         minutes: Config.minutes,
-    //         seconds: Config.seconds,
-    //         led_coorde_hours: Config.led_hours,
-    //         led_coorde_minutes: Config.led_minutes,
-    //         led_coorde_seconds: Config.led_second,
-    //         accent_color: Config.accent_color,
-    //     }
-    // }
-    // TODO: remove temp constructor for testing
-
+impl Clock for ColorClock {
     fn draw_clockface(&self, clock_format: &str) -> (Paragraph, usize, usize) {
         let time_stamp = Local::now();
         let hour_value = time_stamp.hour();
         let minute_value = time_stamp.minute();
         let second_value = time_stamp.second();
 
-        match clock_format {
-            "HH:MM:SS" => combine_ascii_art_while_applying_led(
-                (self.hour, self.led_coords_hours, hour_value),
-                (self.minutes, self.led_coords_minutes, minute_value),
-                (self.seconds, self.led_coords_seconds, second_value),
-                self.accent_color,
+        static EMPTY_COORDS: &Vec<Vec<(u32, u32)>> = &Vec::new();
+        let empty_block = art_block("", EMPTY_COORDS, 0);
+
+        let result = match clock_format {
+            "HH:MM:SS" => (
+                art_block(&self.hour, &self.led_coords_hours, hour_value),
+                art_block(&self.minutes, &self.led_coords_minutes, minute_value),
+                art_block(&self.seconds, &self.led_coords_seconds, second_value),
             ),
-            "HH:MM" => combine_ascii_art_while_applying_led(
-                (self.hour, self.led_coords_hours, hour_value),
-                (self.minutes, self.led_coords_minutes, minute_value),
-                ("", &[], second_value),
-                self.accent_color,
+            "HH:MM" => (
+                art_block(&self.hour, &self.led_coords_hours, hour_value),
+                art_block(&self.minutes, &self.led_coords_minutes, minute_value),
+                empty_block,
             ),
-            "MM:HH:SS" => combine_ascii_art_while_applying_led(
-                (self.minutes, self.led_coords_minutes, minute_value),
-                (self.hour, self.led_coords_hours, hour_value),
-                (self.seconds, self.led_coords_seconds, second_value),
-                self.accent_color,
+            "MM:HH:SS" => (
+                art_block(&self.minutes, &self.led_coords_minutes, minute_value),
+                art_block(&self.hour, &self.led_coords_hours, hour_value),
+                art_block(&self.seconds, &self.led_coords_seconds, second_value),
             ),
-            _ => combine_ascii_art_while_applying_led(
-                (self.hour, self.led_coords_hours, hour_value),
-                (self.minutes, self.led_coords_minutes, minute_value),
-                ("", &[], second_value),
-                self.accent_color,
+            _ => (
+                art_block(&self.hour, &self.led_coords_hours, hour_value),
+                art_block(&self.minutes, &self.led_coords_minutes, minute_value),
+                empty_block,
             ),
-        }
+        };
+
+        combine_ascii_art_while_applying_led(&result.0, &result.1, &result.2, self.accent_color)
     }
 }

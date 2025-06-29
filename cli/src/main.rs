@@ -1,7 +1,7 @@
 use color_eyre::Result;
-use tui::renderer::init_renderer;
+use tui::renderer::TuiRenderer;
 
 fn main() -> Result<()> {
     color_eyre::install()?;
-    init_renderer()
+    TuiRenderer::start_renderer()
 }

@@ -3,5 +3,6 @@ use user_config_loader::colorscheme::ColorScheme;
 
 pub struct TuiState {
     current_colorscheme: ColorScheme,
-    current_clock_face: dyn Clock,
+    current_clock_face: Box<dyn Clock>,
+    refresh_rate: u32,
 }
