@@ -1,4 +1,6 @@
 use crate::helpers::center_widget;
+use crate::tui_assets::TuiAssets;
+use crate::tui_state::TuiState;
 use color_eyre::Result;
 use ratatui::{
     DefaultTerminal, Frame,
@@ -12,6 +14,8 @@ use user_config_loader::{
 };
 
 pub fn init_renderer() -> Result<()> {
+    // let tui_assets = TuiAssets;
+    // let tui_state = TuiState;
     let terminal = ratatui::init();
     let result = run(terminal);
     ratatui::restore();
@@ -33,7 +37,6 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
 }
 
 fn render(frame: &mut Frame) {
-    let colorscheme = ColorSchemeLoader;
     let clock = ClockFaceLoader.load_clockface();
     let (ascii_art_paragraph, width, height) = clock.draw_clockface("HH:MM:SS");
     let area = center_widget(
