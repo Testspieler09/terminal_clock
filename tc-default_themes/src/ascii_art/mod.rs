@@ -1,1 +1,1 @@
-pub mod temple;
+pub(crate) mod temple;

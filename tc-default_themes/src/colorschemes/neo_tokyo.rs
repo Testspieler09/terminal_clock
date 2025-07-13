@@ -3,7 +3,7 @@ use ratatui::style::Color;
 use std::collections::HashMap;
 use std::str::FromStr;
 
-pub fn neo_tokyo() -> ColorScheme {
+pub(crate) fn neo_tokyo() -> ColorScheme {
     let mut colors = HashMap::new();
     colors.insert(
         "foreground".to_string(),
