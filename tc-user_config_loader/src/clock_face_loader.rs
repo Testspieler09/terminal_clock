@@ -32,15 +32,21 @@ pub struct ColorClockConfig {
 
 #[derive(Deserialize)]
 pub struct DigitalClockConfig {
-    pub bit_depth: u8,
-    pub on_color: String,
-    pub off_color: String,
+    // pub numbers: [&'static str; 10],
+    // pub seperator: &'static str,
 }
 
 #[derive(Deserialize)]
 pub struct AnalogClockConfig {
-    pub face_path: String,
-    pub hand_style: String,
+    // hour_hand_frames: Vec<&'static str>,
+    // minute_hand_frames: Vec<&'static str>,
+    // second_hand_frames: Vec<&'static str>,
+    //
+    // clock_base: &'static str,
+    clock_center: [u32; 2],
+    hour_center: [u32; 2],
+    minute_center: [u32; 2],
+    seconds_center: [u32; 2],
 }
 
 pub struct ClockFaceLoader;
@@ -263,7 +269,7 @@ impl ClockFaceLoader {
             led_coords_hours,
             led_coords_minutes.clone(),
             led_coords_minutes,
-            Color::Blue,
+            Color::Red,
         ))
     }
 

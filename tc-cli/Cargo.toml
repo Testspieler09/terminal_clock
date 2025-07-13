@@ -1,9 +1,9 @@
 [package]
-name = "cli"
+name = "tc-cli"
 edition = "2024"
 
 [dependencies]
-tui        = { path = "../tui/" }
+tc-tui     = { path = "../tc-tui/" }
 
 # External dependencies
 clap       = { workspace = true }

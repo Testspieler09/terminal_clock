@@ -9,7 +9,7 @@ use ratatui::{
 };
 use std::{thread::sleep, time::Duration};
 
-use user_config_loader::{
+use tc_user_config_loader::{
     clock_face_loader::ClockFaceLoader, colorscheme_loader::ColorSchemeLoader,
 };
 

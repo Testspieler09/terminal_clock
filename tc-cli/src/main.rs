@@ -1,5 +1,5 @@
 use color_eyre::Result;
-use tui::renderer::TuiRenderer;
+use tc_tui::renderer::TuiRenderer;
 
 fn main() -> Result<()> {
     color_eyre::install()?;

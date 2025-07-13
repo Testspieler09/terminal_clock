@@ -1,0 +1,9 @@
+[package]
+name = "tc-default_themes"
+edition = "2024"
+
+[dependencies]
+tc-user_config_loader = { path = "../tc-user_config_loader/" }
+
+# External dependencies
+ratatui               = { workspace = true }

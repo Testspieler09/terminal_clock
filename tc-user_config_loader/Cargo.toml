@@ -1,5 +1,5 @@
 [package]
-name = "user_config_loader"
+name = "tc-user_config_loader"
 edition = "2024"
 
 [dependencies]

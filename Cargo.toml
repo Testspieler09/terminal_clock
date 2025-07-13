@@ -1,10 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-  "cli",
-  "tui",
-  "user_config_loader",
-]
+members = ["tc-*"]
 
 [workspace.dependencies]
 

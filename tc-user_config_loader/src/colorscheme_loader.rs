@@ -26,23 +26,7 @@ pub(crate) struct SchemeConfig {
 pub struct ColorSchemeLoader;
 
 impl ColorSchemeLoader {
-    fn load_default_themes() -> Result<Vec<ColorScheme>, ColorSchemeLoadError> {
-        let dir = PathBuf::from("default_themes/colorschemes");
-        let mut themes = Vec::new();
-
-        for entry in std::fs::read_dir(&dir)? {
-            let path = entry?.path();
-            if path.extension().and_then(|s| s.to_str()) == Some("toml") {
-                let content = std::fs::read_to_string(&path)?;
-                let parsed: ThemeFile = toml::from_str(&content)?;
-                themes.push(parsed.colorscheme.into());
-            }
-        }
-
-        Ok(themes)
-    }
-
-    fn load_user_theme() -> Result<Option<ColorScheme>, ColorSchemeLoadError> {
+    fn load_user_themes() -> Result<Option<ColorScheme>, ColorSchemeLoadError> {
         let path = Self::get_user_config_path()?;
 
         if !path.exists() {
@@ -76,10 +60,10 @@ impl ColorSchemeLoader {
     }
 
     pub fn load_colorschemes() -> Result<Vec<ColorScheme>, ColorSchemeLoadError> {
-        let mut default_themes = Self::load_default_themes()?;
-        if let Some(user_theme) = Self::load_user_theme()? {
-            default_themes.push(user_theme);
+        let mut themes = Vec::new();
+        if let Some(user_theme) = Self::load_user_themes()? {
+            themes.push(user_theme);
         }
-        Ok(default_themes)
+        Ok(themes)
     }
 }

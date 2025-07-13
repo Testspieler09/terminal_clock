@@ -206,15 +206,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b94f61472cee1439c0b966b47e3aca9ae07e45d070759512cd390ea2bebc6675"
 
 [[package]]
-name = "cli"
-version = "0.0.0"
-dependencies = [
- "clap",
- "color-eyre",
- "tui",
-]
-
-[[package]]
 name = "color-eyre"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -842,6 +833,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "tc-cli"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "color-eyre",
+ "tc-tui",
+]
+
+[[package]]
+name = "tc-default_themes"
+version = "0.0.0"
+dependencies = [
+ "ratatui",
+ "tc-user_config_loader",
+]
+
+[[package]]
+name = "tc-tui"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "color-eyre",
+ "ratatui",
+ "tc-user_config_loader",
+ "unicode-segmentation",
+]
+
+[[package]]
+name = "tc-user_config_loader"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "ratatui",
+ "serde",
+ "toml",
+ "unicode-segmentation",
+]
+
+[[package]]
 name = "thread_local"
 version = "1.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -933,17 +963,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tui"
-version = "0.0.0"
-dependencies = [
- "chrono",
- "color-eyre",
- "ratatui",
- "unicode-segmentation",
- "user_config_loader",
-]
-
-[[package]]
 name = "unicode-ident"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -977,17 +996,6 @@ name = "unicode-width"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fc81956842c57dac11422a97c3b8195a1ff727f06e85c84ed2e8aa277c9a0fd"
-
-[[package]]
-name = "user_config_loader"
-version = "0.0.0"
-dependencies = [
- "chrono",
- "ratatui",
- "serde",
- "toml",
- "unicode-segmentation",
-]
 
 [[package]]
 name = "utf8parse"
