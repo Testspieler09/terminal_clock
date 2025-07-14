@@ -891,6 +891,7 @@ dependencies = [
  "color-eyre",
  "ratatui",
  "tc-user_config_loader",
+ "tokio",
  "unicode-segmentation",
 ]
 

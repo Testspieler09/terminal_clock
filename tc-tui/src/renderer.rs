@@ -7,7 +7,7 @@ use ratatui::{
     crossterm::event::{self, Event},
     prelude::Constraint,
 };
-use std::{thread::sleep, time::Duration};
+use tokio::time::{Duration, sleep};
 
 use tc_user_config_loader::{
     clock_face_loader::ClockFaceLoader, colorscheme_loader::ColorSchemeLoader,
@@ -16,21 +16,21 @@ use tc_user_config_loader::{
 pub struct TuiRenderer;
 
 impl TuiRenderer {
-    pub fn start_renderer() -> Result<()> {
+    pub async fn start_renderer() -> Result<()> {
         // let tui_assets = TuiAssets;
         // let tui_state = TuiState;
         let terminal = ratatui::init();
-        let result = Self::run(terminal);
+        let result = Self::run(terminal).await;
         ratatui::restore();
         result
     }
 
-    fn run(mut terminal: DefaultTerminal) -> Result<()> {
+    async fn run(mut terminal: DefaultTerminal) -> Result<()> {
         loop {
             terminal.draw(Self::render)?;
 
             // TODO: use async code -> tokyo
-            sleep(Duration::from_millis(100));
+            sleep(Duration::from_millis(100)).await;
 
             // TODO: Adjust Eventhandler here or move into separate file / impl
             if event::poll(Duration::from_secs(0))? && matches!(event::read()?, Event::Key(_)) {

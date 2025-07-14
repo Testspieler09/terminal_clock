@@ -1,3 +1,4 @@
+pub(crate) mod components;
 pub(crate) mod helpers;
 pub mod renderer;
 pub(crate) mod tui_assets;

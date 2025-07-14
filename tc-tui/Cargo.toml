@@ -10,3 +10,4 @@ ratatui               = { workspace = true }
 color-eyre            = { workspace = true }
 unicode-segmentation  = { workspace = true }
 chrono                = { workspace = true }
+tokio                 = { workspace = true }
