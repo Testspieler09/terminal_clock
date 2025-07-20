@@ -35,12 +35,13 @@ pub(crate) struct PomodoroTimer {
 
 impl PomodoroTimer {
     pub fn new(config: PomodoroConfig) -> Self {
+        let work_duration = config.work_duration;
         Self {
-            config: config.clone(),
+            config,
             state: PomodoroState {
                 session: 1,
                 phase: TimerPhase::Work,
-                remaining_secs: config.work_duration * 60,
+                remaining_secs: work_duration * 60,
             },
             last_tick: Instant::now(),
         }

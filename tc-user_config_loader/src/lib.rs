@@ -4,3 +4,5 @@ pub mod clock_types;
 pub mod colorscheme;
 pub mod colorscheme_loader;
 pub(crate) mod error;
+pub mod quote;
+pub mod quote_loader;

@@ -3,6 +3,7 @@ use ratatui::style::Color;
 use std::collections::HashMap;
 use std::str::FromStr;
 
+#[derive(Clone)]
 pub struct ColorScheme {
     pub name: String,
     pub colors: HashMap<String, Color>,

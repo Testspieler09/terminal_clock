@@ -4,6 +4,7 @@ use ratatui::{
     widgets::Paragraph,
 };
 
+#[derive(Clone)]
 pub struct Quote {
     pub text: String,
     pub color: Color,
@@ -14,6 +15,13 @@ impl Quote {
         Self {
             text: text.into(),
             color,
+        }
+    }
+
+    pub fn from_string(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            color: Color::White,
         }
     }
 
