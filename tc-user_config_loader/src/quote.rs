@@ -1,5 +1,5 @@
 use ratatui::{
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     text::Span,
     widgets::Paragraph,
 };
@@ -21,7 +21,7 @@ impl Quote {
     pub fn from_string(text: impl Into<String>) -> Self {
         Self {
             text: text.into(),
-            color: Color::White,
+            color: Color::Blue,
         }
     }
 
@@ -29,7 +29,7 @@ impl Quote {
     pub fn render(&self) -> Paragraph {
         Paragraph::new(Span::styled(
             self.text.clone(),
-            Style::default().fg(self.color),
+            Style::default().fg(self.color).add_modifier(Modifier::BOLD),
         ))
     }
 }

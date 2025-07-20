@@ -1,7 +1,7 @@
 use crate::{
-    components::help_box::HelpBox,
+    components::{help_box::HelpBox, pomodoro},
     event_handler::EventHandler,
-    helpers::center_widget,
+    helpers::{center_widget, center_widget_horizontally},
     tui_assets::TuiAssets,
     tui_state::{ApplicationState, TuiState},
 };
@@ -63,7 +63,27 @@ impl TuiRenderer {
             Constraint::Length(height as u16),
         );
 
+        // Render Clock
         frame.render_widget(ascii_art_paragraph, area);
+
+        // Render HelpBox if toggled
         frame.render_widget(config.help_box.clone(), frame.area());
+
+        // Render Quote if exists
+        if let Some(quote) = &config.current_quote {
+            let quote_area = center_widget_horizontally(
+                frame.area(),
+                Constraint::Length(quote.text.len() as u16),
+                Constraint::Length(1),
+                area.y + area.height + 1,
+            );
+
+            frame.render_widget(quote.render(), quote_area);
+        }
+
+        // Render Pomodoro if active
+        if let Some(_pomodoro) = &config.current_pomodoro {
+            todo!()
+        }
     }
 }
