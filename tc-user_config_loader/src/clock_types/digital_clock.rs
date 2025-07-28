@@ -1,4 +1,4 @@
-use crate::clock::Clock;
+use crate::models::clock::Clock;
 use ratatui::widgets::Paragraph;
 
 pub struct DigitalClock {

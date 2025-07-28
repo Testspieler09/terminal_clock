@@ -1,4 +1,4 @@
-use crate::colorscheme_loader::SchemeConfig;
+use crate::loader::colorscheme_loader::SchemeConfig;
 use ratatui::style::Color;
 use std::collections::HashMap;
 use std::str::FromStr;

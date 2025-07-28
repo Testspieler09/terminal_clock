@@ -1,7 +1,7 @@
 use crate::Clock;
 use ratatui::style::Color;
 use tc_user_config_loader::clock_types::color_clock::ColorClock;
-use tc_user_config_loader::clock_types::helper::{TimeUnit, generate_binary_led_coords};
+use tc_user_config_loader::clock_types::helper::{generate_binary_led_coords, TimeUnit};
 
 pub(crate) fn temple() -> Box<dyn Clock> {
     let hour: String = include_str!("H_temple.ascii").to_string();
@@ -44,6 +44,6 @@ pub(crate) fn temple() -> Box<dyn Clock> {
         led_coords_hours,
         led_coords_minutes.clone(),
         led_coords_minutes,
-        Color::Red,
+        Color::Blue,
     ))
 }

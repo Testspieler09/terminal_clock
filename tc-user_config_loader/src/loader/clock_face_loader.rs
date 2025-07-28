@@ -1,10 +1,10 @@
-use crate::clock::Clock;
 use crate::clock_types::{
     analog_clock::AnalogClock,
     color_clock::ColorClock,
     digital_clock::DigitalClock,
     helper::{TimeUnit, generate_binary_led_coords},
 };
+use crate::models::clock::Clock;
 use ratatui::style::Color;
 use serde::Deserialize;
 
@@ -58,9 +58,10 @@ impl ClockFaceLoader {
     pub fn load_clockface(&self) -> Box<dyn Clock> {
         // FIX: replace this later
         let hour: String =
-            include_str!("../../tc-default_themes/src/ascii_art/temple/H_temple.ascii").to_string();
+            include_str!("../../../tc-default_themes/src/ascii_art/temple/H_temple.ascii")
+                .to_string();
         let minutes: String =
-            include_str!("../../tc-default_themes/src/ascii_art/temple/MS_temple.ascii")
+            include_str!("../../../tc-default_themes/src/ascii_art/temple/MS_temple.ascii")
                 .to_string();
         let seconds = minutes.clone();
 

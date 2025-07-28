@@ -1,5 +1,5 @@
-use crate::clock::Clock;
 use crate::clock_types::helper::{art_block, combine_ascii_art_while_applying_led};
+use crate::models::clock::Clock;
 use chrono::{Local, Timelike};
 use ratatui::{style::Color, widgets::Paragraph};
 

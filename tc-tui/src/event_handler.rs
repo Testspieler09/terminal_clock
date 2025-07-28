@@ -1,4 +1,4 @@
-use crate::tui_state::{ApplicationState, TuiState};
+use crate::tui_models::{ApplicationState, TuiState};
 use ratatui::crossterm::event::{self, Event, KeyCode};
 use tokio::{io, time::Duration};
 
@@ -13,7 +13,7 @@ impl EventHandler {
                         tui_state.help_box.toggle_visibility();
                     }
                     KeyCode::Char('q') => {
-                        tui_state.application_state = ApplicationState::FINISHED;
+                        tui_state.application_state = ApplicationState::Finished;
                     }
                     _ => {}
                 }

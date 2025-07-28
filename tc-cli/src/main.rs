@@ -1,5 +1,5 @@
 use color_eyre::Result;
-use tc_tui::renderer::TuiRenderer;
+use tc_tui::TuiRenderer;
 
 #[tokio::main]
 async fn main() -> Result<()> {

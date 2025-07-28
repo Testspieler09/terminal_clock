@@ -1,5 +1,5 @@
-use crate::colorscheme::ColorScheme;
-use crate::error::ColorSchemeLoadError;
+use crate::loader::load_error::ColorSchemeLoadError;
+use crate::models::colorscheme::ColorScheme;
 use serde::Deserialize;
 use std::path::PathBuf;
 

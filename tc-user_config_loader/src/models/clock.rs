@@ -1,6 +1,6 @@
 use crate::{
-    clock_face_loader::{AnalogClockConfig, ColorClockConfig, DigitalClockConfig},
     clock_types::color_clock::ColorClock,
+    loader::clock_face_loader::{AnalogClockConfig, ColorClockConfig, DigitalClockConfig},
 };
 use ratatui::style::Color;
 use ratatui::widgets::Paragraph;

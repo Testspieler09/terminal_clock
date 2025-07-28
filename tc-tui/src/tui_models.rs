@@ -1,13 +1,17 @@
-use tc_user_config_loader::clock::Clock;
-use tc_user_config_loader::colorscheme::ColorScheme;
-use tc_user_config_loader::quote::Quote;
+use tc_user_config_loader::models::{clock::Clock, colorscheme::ColorScheme, quote::Quote};
 
 use crate::components::help_box::HelpBox;
 use crate::components::pomodoro::PomodoroTimer;
 
+pub struct TuiAssets {
+    pub colorschemes: Vec<ColorScheme>,
+    pub clock_faces: Vec<Box<dyn Clock>>,
+    pub quotes: Vec<Quote>,
+}
+
 pub enum ApplicationState {
-    RUNNING,
-    FINISHED,
+    Running,
+    Finished,
 }
 
 pub struct TuiState<'a> {
