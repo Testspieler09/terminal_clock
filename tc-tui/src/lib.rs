@@ -14,7 +14,7 @@ use ratatui::{DefaultTerminal, Frame, prelude::Constraint};
 use tc_default_themes::{
     load_all_default_colorschemes, load_all_default_font_faces, load_all_default_quotes,
 };
-use tc_user_config_loader::loader::{
+use tc_user_config_loader::{
     clock_face_loader::ClockFaceLoader, colorscheme_loader::ColorSchemeLoader,
 };
 use tokio::time::{Duration, sleep};

@@ -1,7 +1,8 @@
-use crate::loader::load_error::ColorSchemeLoadError;
-use crate::models::colorscheme::ColorScheme;
+use crate::ColorSchemeLoadError;
+use ratatui::style::Color;
 use serde::Deserialize;
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf, str::FromStr};
+use tc_models::colorscheme::ColorScheme;
 
 #[derive(Deserialize)]
 struct ThemeFile {
@@ -21,6 +22,43 @@ pub(crate) struct SchemeConfig {
     pub purple: Option<String>,
     pub cyan: Option<String>,
     pub pink: Option<String>,
+}
+
+impl From<SchemeConfig> for ColorScheme {
+    fn from(config: SchemeConfig) -> Self {
+        fn parse_color(opt: Option<String>, fallback: &str) -> Color {
+            opt.as_deref()
+                .and_then(|s| Color::from_str(s).ok())
+                .unwrap_or_else(|| Color::from_str(fallback).unwrap())
+        }
+
+        let mut colors = HashMap::new();
+
+        colors.insert(
+            "foreground".to_string(),
+            parse_color(config.foreground, "#c0caf5"),
+        );
+        colors.insert(
+            "selection".to_string(),
+            parse_color(config.selection, "#283457"),
+        );
+        colors.insert(
+            "comment".to_string(),
+            parse_color(config.comment, "#565f89"),
+        );
+        colors.insert("red".to_string(), parse_color(config.red, "#f7768e"));
+        colors.insert("orange".to_string(), parse_color(config.orange, "#ff9e64"));
+        colors.insert("yellow".to_string(), parse_color(config.yellow, "#e0af68"));
+        colors.insert("green".to_string(), parse_color(config.green, "#9ece6a"));
+        colors.insert("purple".to_string(), parse_color(config.purple, "#9d7cd8"));
+        colors.insert("cyan".to_string(), parse_color(config.cyan, "#7dcfff"));
+        colors.insert("pink".to_string(), parse_color(config.pink, "#bb9af7"));
+
+        ColorScheme {
+            name: config.name,
+            colors,
+        }
+    }
 }
 
 pub struct ColorSchemeLoader;

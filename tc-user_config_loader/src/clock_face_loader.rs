@@ -1,12 +1,13 @@
-use crate::clock_types::{
+use ratatui::style::Color;
+use serde::Deserialize;
+use std::str::FromStr;
+use tc_models::{
     analog_clock::AnalogClock,
+    clock::Clock,
     color_clock::ColorClock,
     digital_clock::DigitalClock,
     helper::{TimeUnit, generate_binary_led_coords},
 };
-use crate::models::clock::Clock;
-use ratatui::style::Color;
-use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct ClockFile {
@@ -31,6 +32,20 @@ pub struct ColorClockConfig {
     pub minute_coords: Vec<Vec<(u32, u32)>>,
     pub second_coords: Vec<Vec<(u32, u32)>>,
     pub accent_color: String,
+}
+
+impl From<ColorClockConfig> for ColorClock {
+    fn from(config: ColorClockConfig) -> ColorClock {
+        ColorClock::new(
+            config.hour,
+            config.minutes,
+            config.seconds,
+            config.hour_coords,
+            config.minute_coords,
+            config.second_coords,
+            Color::from_str(config.accent_color.as_str()).unwrap_or(Color::White),
+        )
+    }
 }
 
 #[derive(Deserialize)]
@@ -58,10 +73,9 @@ impl ClockFaceLoader {
     pub fn load_clockface(&self) -> Box<dyn Clock> {
         // FIX: replace this later
         let hour: String =
-            include_str!("../../../tc-default_themes/src/ascii_art/temple/H_temple.ascii")
-                .to_string();
+            include_str!("../../tc-default_themes/src/ascii_art/temple/H_temple.ascii").to_string();
         let minutes: String =
-            include_str!("../../../tc-default_themes/src/ascii_art/temple/MS_temple.ascii")
+            include_str!("../../tc-default_themes/src/ascii_art/temple/MS_temple.ascii")
                 .to_string();
         let seconds = minutes.clone();
 

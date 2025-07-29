@@ -1,4 +1,4 @@
-use tc_user_config_loader::models::quote::Quote;
+use tc_models::quote::Quote;
 
 pub(crate) fn init_default_quotes() -> Vec<Quote> {
     vec![

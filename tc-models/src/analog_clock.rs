@@ -1,6 +1,6 @@
 use ratatui::widgets::Paragraph;
 
-use crate::models::clock::Clock;
+use crate::clock::Clock;
 
 pub struct AnalogClock {
     // The static ascii art for the clock face

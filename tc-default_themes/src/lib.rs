@@ -1,6 +1,6 @@
 use crate::colorschemes::neo_tokyo::neo_tokyo;
 use crate::{ascii_art::temple::temple, default_quotes::init_default_quotes};
-use tc_user_config_loader::models::{clock::Clock, colorscheme::ColorScheme, quote::Quote};
+use tc_models::{clock::Clock, colorscheme::ColorScheme, quote::Quote};
 
 mod ascii_art;
 mod colorschemes;

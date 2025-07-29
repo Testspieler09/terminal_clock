@@ -1,4 +1,4 @@
-use tc_user_config_loader::models::{clock::Clock, colorscheme::ColorScheme, quote::Quote};
+use tc_models::{clock::Clock, colorscheme::ColorScheme, quote::Quote};
 
 use crate::components::help_box::HelpBox;
 use crate::components::pomodoro::PomodoroTimer;
