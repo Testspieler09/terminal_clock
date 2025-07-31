@@ -15,6 +15,7 @@ pub struct ColorClock {
     led_coords_minutes: Vec<Vec<(u32, u32)>>,
     led_coords_seconds: Vec<Vec<(u32, u32)>>,
 
+    // NOTE: Maybe add a format field?!
     accent_color: Color,
 }
 

@@ -7,21 +7,21 @@ use ratatui::{
 #[derive(Clone)]
 pub struct Quote {
     pub text: String,
-    pub color: Color,
+    pub accent_color: Color,
 }
 
 impl Quote {
     pub fn new(text: impl Into<String>, color: Color) -> Self {
         Self {
             text: text.into(),
-            color,
+            accent_color: color,
         }
     }
 
     pub fn from_string(text: impl Into<String>) -> Self {
         Self {
             text: text.into(),
-            color: Color::Blue,
+            accent_color: Color::Blue,
         }
     }
 
@@ -29,7 +29,9 @@ impl Quote {
     pub fn render(&self) -> Paragraph {
         Paragraph::new(Span::styled(
             self.text.clone(),
-            Style::default().fg(self.color).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(self.accent_color)
+                .add_modifier(Modifier::BOLD),
         ))
     }
 }

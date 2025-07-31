@@ -4,6 +4,8 @@ pub mod quote_loader;
 
 use std::{fmt, io};
 
+type LoaderResult<T> = Result<T, ColorSchemeLoadError>;
+
 #[derive(Debug)]
 pub enum ColorSchemeLoadError {
     Io(io::Error),

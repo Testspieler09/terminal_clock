@@ -67,27 +67,34 @@ impl TuiRenderer {
             Constraint::Length(height as u16),
         );
 
-        // Render Clock
-        frame.render_widget(ascii_art_paragraph, area);
+        match config.application_state {
+            ApplicationState::Running => {
+                // Render Clock
+                frame.render_widget(ascii_art_paragraph, area);
 
-        // Render HelpBox if toggled
-        frame.render_widget(config.help_box.clone(), frame.area());
+                // Render Quote if exists
+                if let Some(quote) = &config.current_quote {
+                    let quote_area = center_widget_horizontally(
+                        frame.area(),
+                        Constraint::Length(quote.text.len() as u16),
+                        Constraint::Length(1),
+                        area.y + area.height + 1,
+                    );
 
-        // Render Quote if exists
-        if let Some(quote) = &config.current_quote {
-            let quote_area = center_widget_horizontally(
-                frame.area(),
-                Constraint::Length(quote.text.len() as u16),
-                Constraint::Length(1),
-                area.y + area.height + 1,
-            );
+                    frame.render_widget(quote.render(), quote_area);
+                }
 
-            frame.render_widget(quote.render(), quote_area);
-        }
-
-        // Render Pomodoro if active
-        if let Some(_pomodoro) = &config.current_pomodoro {
-            todo!()
+                // Render Pomodoro if active
+                if let Some(_pomodoro) = &config.current_pomodoro {
+                    todo!()
+                }
+            }
+            ApplicationState::ShowingHelp => {
+                // Render HelpBox if toggled
+                frame.render_widget(config.help_box.clone(), frame.area());
+            }
+            // TODO: implement the logic for the other states later
+            _ => {}
         }
     }
 }

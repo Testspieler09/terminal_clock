@@ -24,13 +24,18 @@ impl<'a> HelpBox<'a> {
     pub fn toggle_visibility(&mut self) {
         self.visible = !self.visible;
     }
+
+    pub fn is_visible(&self) -> bool {
+        self.visible
+    }
 }
 
 impl<'a> Widget for HelpBox<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         if self.visible {
             let block = Block::default()
-                .title("Help Box")
+                .title("┤ Help Box ├")
+                .style(Style::default().bg(Color::Black))
                 .border_type(BorderType::Rounded)
                 .borders(Borders::ALL);
 

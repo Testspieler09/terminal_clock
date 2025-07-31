@@ -11,6 +11,11 @@ impl EventHandler {
                 match key_event.code {
                     KeyCode::Char('h') => {
                         tui_state.help_box.toggle_visibility();
+                        tui_state.application_state = if tui_state.help_box.is_visible() {
+                            ApplicationState::ShowingHelp
+                        } else {
+                            ApplicationState::Running
+                        };
                     }
                     KeyCode::Char('q') => {
                         tui_state.application_state = ApplicationState::Finished;

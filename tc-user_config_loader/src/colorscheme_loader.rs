@@ -1,17 +1,12 @@
-use crate::ColorSchemeLoadError;
+use crate::{ColorSchemeLoadError, LoaderResult};
 use ratatui::style::Color;
 use serde::Deserialize;
 use std::{collections::HashMap, path::PathBuf, str::FromStr};
 use tc_models::colorscheme::ColorScheme;
 
 #[derive(Deserialize)]
-struct ThemeFile {
-    colorscheme: SchemeConfig,
-}
-
-#[derive(Deserialize)]
 pub(crate) struct SchemeConfig {
-    pub name: String, // TODO: defaults to filename
+    pub name: Option<String>,
     pub foreground: Option<String>,
     pub selection: Option<String>,
     pub comment: Option<String>,
@@ -26,36 +21,48 @@ pub(crate) struct SchemeConfig {
 
 impl From<SchemeConfig> for ColorScheme {
     fn from(config: SchemeConfig) -> Self {
-        fn parse_color(opt: Option<String>, fallback: &str) -> Color {
+        fn parse_color(opt: Option<String>, fallback: Color) -> Color {
             opt.as_deref()
                 .and_then(|s| Color::from_str(s).ok())
-                .unwrap_or_else(|| Color::from_str(fallback).unwrap())
+                .unwrap_or(fallback)
         }
 
         let mut colors = HashMap::new();
 
         colors.insert(
             "foreground".to_string(),
-            parse_color(config.foreground, "#c0caf5"),
+            parse_color(config.foreground, Color::White),
         );
         colors.insert(
             "selection".to_string(),
-            parse_color(config.selection, "#283457"),
+            parse_color(config.selection, Color::DarkGray),
         );
         colors.insert(
             "comment".to_string(),
-            parse_color(config.comment, "#565f89"),
+            parse_color(config.comment, Color::Gray),
         );
-        colors.insert("red".to_string(), parse_color(config.red, "#f7768e"));
-        colors.insert("orange".to_string(), parse_color(config.orange, "#ff9e64"));
-        colors.insert("yellow".to_string(), parse_color(config.yellow, "#e0af68"));
-        colors.insert("green".to_string(), parse_color(config.green, "#9ece6a"));
-        colors.insert("purple".to_string(), parse_color(config.purple, "#9d7cd8"));
-        colors.insert("cyan".to_string(), parse_color(config.cyan, "#7dcfff"));
-        colors.insert("pink".to_string(), parse_color(config.pink, "#bb9af7"));
+        colors.insert("red".to_string(), parse_color(config.red, Color::Red));
+        colors.insert(
+            "orange".to_string(),
+            parse_color(config.orange, Color::LightRed),
+        );
+        colors.insert(
+            "yellow".to_string(),
+            parse_color(config.yellow, Color::Yellow),
+        );
+        colors.insert("green".to_string(), parse_color(config.green, Color::Green));
+        colors.insert(
+            "purple".to_string(),
+            parse_color(config.purple, Color::Magenta),
+        );
+        colors.insert("cyan".to_string(), parse_color(config.cyan, Color::Cyan));
+        colors.insert(
+            "pink".to_string(),
+            parse_color(config.pink, Color::LightMagenta),
+        );
 
         ColorScheme {
-            name: config.name,
+            name: config.name.expect("Expected the theme to have a name."),
             colors,
         }
     }
@@ -64,26 +71,53 @@ impl From<SchemeConfig> for ColorScheme {
 pub struct ColorSchemeLoader;
 
 impl ColorSchemeLoader {
-    fn load_user_themes() -> Result<Option<ColorScheme>, ColorSchemeLoadError> {
-        let path = Self::get_user_config_path()?;
+    fn load_user_themes() -> LoaderResult<Vec<ColorScheme>> {
+        let folder_path = Self::get_user_config_path()?;
 
-        if !path.exists() {
-            return Ok(None);
+        let toml_count = std::fs::read_dir(&folder_path)?
+            .filter_map(Result::ok)
+            .filter(|entry| {
+                entry
+                    .path()
+                    .extension()
+                    .and_then(|ext| ext.to_str())
+                    .map(|ext_str| ext_str.eq_ignore_ascii_case("toml"))
+                    .unwrap_or(false)
+            })
+            .count();
+        let mut themes = Vec::with_capacity(toml_count);
+
+        if !folder_path.exists() {
+            return Ok(themes);
         }
 
-        let content = std::fs::read_to_string(path)?;
-        let parsed: ThemeFile = toml::from_str(&content)?;
-        Ok(Some(parsed.colorscheme.into()))
+        for entry in std::fs::read_dir(folder_path)? {
+            let path = entry?.path();
+
+            if path.extension().and_then(|ext| ext.to_str()) != Some("toml") {
+                continue;
+            }
+
+            let content = std::fs::read_to_string(&path)?;
+            let mut parsed_theme: SchemeConfig = toml::from_str(&content)?;
+
+            if parsed_theme.name.is_none() {
+                let filename = path.file_name().and_then(|f| f.to_str());
+                parsed_theme.name = filename.map(|s| s.to_string());
+            }
+
+            themes.push(parsed_theme.into());
+        }
+
+        Ok(themes)
     }
 
-    fn get_user_config_path() -> Result<PathBuf, ColorSchemeLoadError> {
+    fn get_user_config_path() -> LoaderResult<PathBuf> {
         #[cfg(target_os = "windows")]
         {
             let appdata = std::env::var("APPDATA")
                 .map_err(|e| ColorSchemeLoadError::ConfigPath(e.to_string()))?;
-            Ok(PathBuf::from(appdata)
-                .join("terminal_clock")
-                .join("theme.toml"))
+            Ok(PathBuf::from(appdata).join("terminal_clock").join("themes"))
         }
 
         #[cfg(any(target_os = "linux", target_os = "macos"))]
@@ -93,14 +127,15 @@ impl ColorSchemeLoader {
             Ok(PathBuf::from(home)
                 .join(".config")
                 .join("terminal_clock")
-                .join("theme.toml"))
+                .join("themes"))
         }
     }
 
-    pub fn load_colorschemes() -> Result<Vec<ColorScheme>, ColorSchemeLoadError> {
+    pub fn load_colorschemes() -> LoaderResult<Vec<ColorScheme>> {
         let mut themes = Vec::new();
-        if let Some(user_theme) = Self::load_user_themes()? {
-            themes.push(user_theme);
+        // TODO: load default themes within this crate
+        if let Ok(user_theme) = Self::load_user_themes() {
+            themes.extend(user_theme);
         }
         Ok(themes)
     }

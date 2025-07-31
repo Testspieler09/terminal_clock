@@ -1,3 +1,4 @@
+use crate::LoaderResult;
 use ratatui::style::Color;
 use serde::Deserialize;
 use std::str::FromStr;
@@ -10,13 +11,7 @@ use tc_models::{
 };
 
 #[derive(Deserialize)]
-struct ClockFile {
-    clock_type: String,
-    settings: ClockConfig,
-}
-
-#[derive(Deserialize)]
-#[serde(tag = "type", content = "config")]
+#[serde(tag = "clock_type", content = "config")]
 pub enum ClockConfig {
     ColorClock(ColorClockConfig),
     DigitalClock(DigitalClockConfig),
@@ -32,6 +27,7 @@ pub struct ColorClockConfig {
     pub minute_coords: Vec<Vec<(u32, u32)>>,
     pub second_coords: Vec<Vec<(u32, u32)>>,
     pub accent_color: String,
+    pub format: Option<String>,
 }
 
 impl From<ColorClockConfig> for ColorClock {
@@ -70,7 +66,9 @@ pub struct AnalogClockConfig {
 pub struct ClockFaceLoader;
 
 impl ClockFaceLoader {
-    pub fn load_clockface(&self) -> Box<dyn Clock> {
+    pub fn load_clockfaces(&self) -> LoaderResult<Box<dyn Clock>> {
+        // TODO: load default themes within this crate
+        // TODO: load user themes
         // FIX: replace this later
         let hour: String =
             include_str!("../../tc-default_themes/src/ascii_art/temple/H_temple.ascii").to_string();
@@ -108,7 +106,7 @@ impl ClockFaceLoader {
             TimeUnit::Minutes,
         );
 
-        Box::new(ColorClock::new(
+        Ok(Box::new(ColorClock::new(
             hour,
             minutes,
             seconds,
@@ -116,10 +114,6 @@ impl ClockFaceLoader {
             led_coords_minutes.clone(),
             led_coords_minutes,
             Color::Red,
-        ))
-    }
-
-    fn from(config: ClockConfig) {
-        todo!()
+        )))
     }
 }
