@@ -876,15 +876,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tc-default_themes"
-version = "0.0.0"
-dependencies = [
- "ratatui",
- "tc-models",
- "tc-user_config_loader",
-]
-
-[[package]]
 name = "tc-models"
 version = "0.0.0"
 dependencies = [
@@ -900,7 +891,6 @@ dependencies = [
  "chrono",
  "color-eyre",
  "ratatui",
- "tc-default_themes",
  "tc-models",
  "tc-user_config_loader",
  "tokio",

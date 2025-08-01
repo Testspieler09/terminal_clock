@@ -105,6 +105,7 @@ pub(crate) fn combine_ascii_art_while_applying_led<'a>(
 
 // Helpers for external and internal use
 pub enum TimeUnit {
+    Seconds,
     Minutes,
     Hours,
 }
@@ -116,7 +117,7 @@ pub fn generate_binary_led_coords(
     unit: TimeUnit,
 ) -> Vec<Vec<(u32, u32)>> {
     let max_value = match unit {
-        TimeUnit::Minutes => 60,
+        TimeUnit::Minutes | TimeUnit::Seconds => 60,
         TimeUnit::Hours => 24,
     };
 

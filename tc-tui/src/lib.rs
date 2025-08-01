@@ -11,11 +11,9 @@ use crate::{
 };
 use color_eyre::Result;
 use ratatui::{DefaultTerminal, Frame, prelude::Constraint};
-use tc_default_themes::{
-    load_all_default_colorschemes, load_all_default_font_faces, load_all_default_quotes,
-};
 use tc_user_config_loader::{
     clock_face_loader::ClockFaceLoader, colorscheme_loader::ColorSchemeLoader,
+    quote_loader::QuoteLoader,
 };
 use tokio::time::{Duration, sleep};
 
@@ -31,9 +29,9 @@ impl TuiRenderer {
 
     async fn run(mut terminal: DefaultTerminal) -> Result<()> {
         let tui_assets = TuiAssets {
-            clock_faces: load_all_default_font_faces(),
-            quotes: load_all_default_quotes(),
-            colorschemes: load_all_default_colorschemes(),
+            clock_faces: ClockFaceLoader::load_clockfaces()?,
+            quotes: QuoteLoader::load_quotes()?,
+            colorschemes: ColorSchemeLoader::load_colorschemes()?,
         };
         let mut tui_state = TuiState {
             application_state: ApplicationState::Running,

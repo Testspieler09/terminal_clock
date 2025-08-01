@@ -4,7 +4,6 @@ edition = "2024"
 
 [dependencies]
 tc-user_config_loader = { path = "../tc-user_config_loader/" }
-tc-default_themes     = { path = "../tc-default_themes/" }
 tc-models             = { path = "../tc-models/" }
 
 # External dependencies

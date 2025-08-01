@@ -1,4 +1,4 @@
-use crate::LoaderResult;
+use crate::{LoaderResult, clock_face_loader, default_themes::CLOCK_FACES};
 use ratatui::style::Color;
 use serde::Deserialize;
 use std::str::FromStr;
@@ -18,27 +18,57 @@ pub enum ClockConfig {
     AnalogClock(AnalogClockConfig),
 }
 
+impl From<ClockConfig> for Box<dyn Clock> {
+    fn from(config: ClockConfig) -> Self {
+        match config {
+            ClockConfig::ColorClock(c) => Box::new(ColorClock::from(c)),
+            ClockConfig::AnalogClock(c) => Box::new(AnalogClock::from(c)),
+            ClockConfig::DigitalClock(c) => Box::new(DigitalClock::from(c)),
+        }
+    }
+}
+
 #[derive(Deserialize)]
 pub struct ColorClockConfig {
     pub hour: String,
     pub minutes: String,
     pub seconds: String,
-    pub hour_coords: Vec<Vec<(u32, u32)>>,
-    pub minute_coords: Vec<Vec<(u32, u32)>>,
-    pub second_coords: Vec<Vec<(u32, u32)>>,
+    pub hour_coords: [Vec<(u8, (u32, u32))>; 2],
+    pub minute_coords: [Vec<(u8, (u32, u32))>; 2],
+    pub second_coords: [Vec<(u8, (u32, u32))>; 2],
+    pub always_on_coords: Vec<(u32, u32)>,
     pub accent_color: String,
     pub format: Option<String>,
 }
 
 impl From<ColorClockConfig> for ColorClock {
     fn from(config: ColorClockConfig) -> ColorClock {
+        let hour_coords = generate_binary_led_coords(
+            &config.hour_coords[0],
+            &config.hour_coords[1],
+            config.always_on_coords.as_slice(),
+            TimeUnit::Hours,
+        );
+        let minute_coords = generate_binary_led_coords(
+            &config.minute_coords[0],
+            &config.minute_coords[1],
+            config.always_on_coords.as_slice(),
+            TimeUnit::Minutes,
+        );
+        let second_coords = generate_binary_led_coords(
+            &config.second_coords[0],
+            &config.second_coords[1],
+            config.always_on_coords.as_slice(),
+            TimeUnit::Seconds,
+        );
+
         ColorClock::new(
             config.hour,
             config.minutes,
             config.seconds,
-            config.hour_coords,
-            config.minute_coords,
-            config.second_coords,
+            hour_coords,
+            minute_coords,
+            second_coords,
             Color::from_str(config.accent_color.as_str()).unwrap_or(Color::White),
         )
     }
@@ -48,6 +78,12 @@ impl From<ColorClockConfig> for ColorClock {
 pub struct DigitalClockConfig {
     // pub numbers: [&'static str; 10],
     // pub seperator: &'static str,
+}
+
+impl From<DigitalClockConfig> for DigitalClock {
+    fn from(config: DigitalClockConfig) -> DigitalClock {
+        todo!()
+    }
 }
 
 #[derive(Deserialize)]
@@ -63,57 +99,26 @@ pub struct AnalogClockConfig {
     seconds_center: [u32; 2],
 }
 
+impl From<AnalogClockConfig> for AnalogClock {
+    fn from(config: AnalogClockConfig) -> AnalogClock {
+        todo!()
+    }
+}
+
 pub struct ClockFaceLoader;
 
 impl ClockFaceLoader {
-    pub fn load_clockfaces(&self) -> LoaderResult<Box<dyn Clock>> {
-        // TODO: load default themes within this crate
-        // TODO: load user themes
-        // FIX: replace this later
-        let hour: String =
-            include_str!("../../tc-default_themes/src/ascii_art/temple/H_temple.ascii").to_string();
-        let minutes: String =
-            include_str!("../../tc-default_themes/src/ascii_art/temple/MS_temple.ascii")
-                .to_string();
-        let seconds = minutes.clone();
+    fn load_user_clockfaces() -> LoaderResult<Vec<Box<dyn Clock>>> {
+        todo!()
+    }
 
-        let led_bit_mapping_hour_face: [&[(u8, (u32, u32))]; 2] = [
-            &[(1, (11, 1)), (2, (8, 0))],
-            &[
-                (1, (11, 19)),
-                (2, (9, 19)),
-                (4, (7, 19)),
-                (8, (5, 19)),
-                (8, (5, 8)),
-            ],
-        ];
-
-        let led_bit_mapping_minute_face: [&[(u8, (u32, u32))]; 2] = [
-            &[(1, (11, 1)), (2, (9, 1)), (4, (7, 0))],
-            &[(1, (11, 19)), (2, (9, 19)), (4, (7, 19)), (8, (5, 19))],
-        ];
-
-        let led_coords_hours = generate_binary_led_coords(
-            led_bit_mapping_hour_face[0],
-            led_bit_mapping_hour_face[1],
-            &[(0, 14)],
-            TimeUnit::Hours,
-        );
-        let led_coords_minutes = generate_binary_led_coords(
-            led_bit_mapping_minute_face[0],
-            led_bit_mapping_minute_face[1],
-            &[(0, 14)],
-            TimeUnit::Minutes,
-        );
-
-        Ok(Box::new(ColorClock::new(
-            hour,
-            minutes,
-            seconds,
-            led_coords_hours,
-            led_coords_minutes.clone(),
-            led_coords_minutes,
-            Color::Red,
-        )))
+    pub fn load_clockfaces() -> LoaderResult<Vec<Box<dyn Clock>>> {
+        let mut clock_faces = Vec::new();
+        for clock_face in CLOCK_FACES {
+            let clock_config: ClockConfig = toml::from_str(clock_face)?;
+            clock_faces.push(clock_config.into());
+        }
+        // clock_faces.extend(Self::load_user_clockfaces()?);
+        Ok(clock_faces)
     }
 }

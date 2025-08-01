@@ -1,7 +1,7 @@
-use crate::{ColorSchemeLoadError, LoaderResult};
+use crate::{LoaderResult, default_themes::COLORSCHEMES, get_user_config_path};
 use ratatui::style::Color;
 use serde::Deserialize;
-use std::{collections::HashMap, path::PathBuf, str::FromStr};
+use std::{collections::HashMap, str::FromStr};
 use tc_models::colorscheme::ColorScheme;
 
 #[derive(Deserialize)]
@@ -72,7 +72,7 @@ pub struct ColorSchemeLoader;
 
 impl ColorSchemeLoader {
     fn load_user_themes() -> LoaderResult<Vec<ColorScheme>> {
-        let folder_path = Self::get_user_config_path()?;
+        let folder_path = get_user_config_path()?;
 
         let toml_count = std::fs::read_dir(&folder_path)?
             .filter_map(Result::ok)
@@ -112,31 +112,17 @@ impl ColorSchemeLoader {
         Ok(themes)
     }
 
-    fn get_user_config_path() -> LoaderResult<PathBuf> {
-        #[cfg(target_os = "windows")]
-        {
-            let appdata = std::env::var("APPDATA")
-                .map_err(|e| ColorSchemeLoadError::ConfigPath(e.to_string()))?;
-            Ok(PathBuf::from(appdata).join("terminal_clock").join("themes"))
-        }
-
-        #[cfg(any(target_os = "linux", target_os = "macos"))]
-        {
-            let home = std::env::var("HOME")
-                .map_err(|e| ColorSchemeLoadError::ConfigPath(e.to_string()))?;
-            Ok(PathBuf::from(home)
-                .join(".config")
-                .join("terminal_clock")
-                .join("themes"))
-        }
-    }
-
     pub fn load_colorschemes() -> LoaderResult<Vec<ColorScheme>> {
-        let mut themes = Vec::new();
-        // TODO: load default themes within this crate
-        if let Ok(user_theme) = Self::load_user_themes() {
-            themes.extend(user_theme);
+        let mut schemes = Vec::new();
+
+        for scheme in COLORSCHEMES {
+            let colorscheme: SchemeConfig = toml::from_str(scheme)?;
+            schemes.push(colorscheme.into());
         }
-        Ok(themes)
+        if let Ok(user_theme) = Self::load_user_themes() {
+            schemes.extend(user_theme);
+        }
+
+        Ok(schemes)
     }
 }
