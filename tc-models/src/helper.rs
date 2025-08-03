@@ -15,12 +15,12 @@ pub(crate) struct ArtBlock<'a> {
 pub(crate) fn art_block<'a>(
     ascii_art: &'a str,
     led_coords: &'a Vec<Vec<(u32, u32)>>,
-    time_value_p: u32,
+    time_value: u32,
 ) -> ArtBlock<'a> {
     ArtBlock {
         ascii_art,
         led_coords,
-        time_value: time_value_p,
+        time_value,
     }
 }
 

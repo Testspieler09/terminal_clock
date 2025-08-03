@@ -38,22 +38,18 @@ impl From<toml::de::Error> for ColorSchemeLoadError {
     }
 }
 
-// TODO: adjust for general use
 pub(crate) fn get_user_config_path() -> LoaderResult<PathBuf> {
     #[cfg(target_os = "windows")]
     {
         let appdata = std::env::var("APPDATA")
             .map_err(|e| ColorSchemeLoadError::ConfigPath(e.to_string()))?;
-        Ok(PathBuf::from(appdata).join("terminal_clock").join("themes"))
+        Ok(PathBuf::from(appdata).join("terminal_clock"))
     }
 
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     {
         let home =
             std::env::var("HOME").map_err(|e| ColorSchemeLoadError::ConfigPath(e.to_string()))?;
-        Ok(PathBuf::from(home)
-            .join(".config")
-            .join("terminal_clock")
-            .join("themes"))
+        Ok(PathBuf::from(home).join(".config").join("terminal_clock"))
     }
 }

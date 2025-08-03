@@ -35,9 +35,9 @@ impl TuiRenderer {
         };
         let mut tui_state = TuiState {
             application_state: ApplicationState::Running,
-            current_clock_face: &*tui_assets.clock_faces[0],
-            current_colorscheme: &tui_assets.colorschemes[0],
-            current_quote: Some(&tui_assets.quotes[0]),
+            current_clock_face: tui_assets.clock_faces[0].clone(),
+            current_colorscheme: tui_assets.colorschemes[0].clone(),
+            current_quote: Some(tui_assets.quotes[0].clone()),
             current_pomodoro: None,
             help_box: HelpBox::default(),
             refresh_rate: 100,
@@ -57,8 +57,9 @@ impl TuiRenderer {
     }
 
     fn render(frame: &mut Frame, config: &TuiState) {
-        let (ascii_art_paragraph, width, height) =
-            config.current_clock_face.draw_clockface("HH:MM:SS");
+        let (ascii_art_paragraph, width, height) = config
+            .current_clock_face
+            .draw_clockface(&config.current_colorscheme);
         let area = center_widget(
             frame.area(),
             Constraint::Length(width as u16),
@@ -79,7 +80,7 @@ impl TuiRenderer {
                         area.y + area.height + 1,
                     );
 
-                    frame.render_widget(quote.render(), quote_area);
+                    frame.render_widget(quote.render(&config.current_colorscheme), quote_area);
                 }
 
                 // Render Pomodoro if active
@@ -87,12 +88,17 @@ impl TuiRenderer {
                     todo!()
                 }
             }
+            ApplicationState::ShowingHero => {
+                todo!()
+            }
             ApplicationState::ShowingHelp => {
                 // Render HelpBox if toggled
                 frame.render_widget(config.help_box.clone(), frame.area());
             }
-            // TODO: implement the logic for the other states later
-            _ => {}
+            ApplicationState::ShowingSettings => {
+                todo!()
+            }
+            ApplicationState::Finished => {}
         }
     }
 }

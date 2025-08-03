@@ -1,11 +1,12 @@
 use crate::{LoaderResult, clock_face_loader, default_themes::CLOCK_FACES};
 use ratatui::style::Color;
 use serde::Deserialize;
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
 use tc_models::{
     analog_clock::AnalogClock,
-    clock::Clock,
+    clock::{Clock, TimeFormat},
     color_clock::ColorClock,
+    colorscheme::FALLBACK_COLORSCHEME,
     digital_clock::DigitalClock,
     helper::{TimeUnit, generate_binary_led_coords},
 };
@@ -13,17 +14,17 @@ use tc_models::{
 #[derive(Deserialize)]
 #[serde(tag = "clock_type", content = "config")]
 pub enum ClockConfig {
-    ColorClock(ColorClockConfig),
-    DigitalClock(DigitalClockConfig),
-    AnalogClock(AnalogClockConfig),
+    ColorClock(Box<ColorClockConfig>),
+    DigitalClock(Box<DigitalClockConfig>),
+    AnalogClock(Box<AnalogClockConfig>),
 }
 
-impl From<ClockConfig> for Box<dyn Clock> {
+impl From<ClockConfig> for Arc<dyn Clock> {
     fn from(config: ClockConfig) -> Self {
         match config {
-            ClockConfig::ColorClock(c) => Box::new(ColorClock::from(c)),
-            ClockConfig::AnalogClock(c) => Box::new(AnalogClock::from(c)),
-            ClockConfig::DigitalClock(c) => Box::new(DigitalClock::from(c)),
+            ClockConfig::ColorClock(c) => Arc::new(ColorClock::from(*c)),
+            ClockConfig::AnalogClock(c) => Arc::new(AnalogClock::from(*c)),
+            ClockConfig::DigitalClock(c) => Arc::new(DigitalClock::from(*c)),
         }
     }
 }
@@ -37,8 +38,8 @@ pub struct ColorClockConfig {
     pub minute_coords: [Vec<(u8, (u32, u32))>; 2],
     pub second_coords: [Vec<(u8, (u32, u32))>; 2],
     pub always_on_coords: Vec<(u32, u32)>,
-    pub accent_color: String,
-    pub format: Option<String>,
+    pub accent_color: Option<String>,
+    pub format: Option<TimeFormat>,
 }
 
 impl From<ColorClockConfig> for ColorClock {
@@ -61,6 +62,9 @@ impl From<ColorClockConfig> for ColorClock {
             config.always_on_coords.as_slice(),
             TimeUnit::Seconds,
         );
+        let accent_color = config
+            .accent_color
+            .map(|color| Color::from_str(&color).unwrap_or(FALLBACK_COLORSCHEME[0]));
 
         ColorClock::new(
             config.hour,
@@ -69,7 +73,8 @@ impl From<ColorClockConfig> for ColorClock {
             hour_coords,
             minute_coords,
             second_coords,
-            Color::from_str(config.accent_color.as_str()).unwrap_or(Color::White),
+            accent_color,
+            config.format,
         )
     }
 }
@@ -112,7 +117,7 @@ impl ClockFaceLoader {
         todo!()
     }
 
-    pub fn load_clockfaces() -> LoaderResult<Vec<Box<dyn Clock>>> {
+    pub fn load_clockfaces() -> LoaderResult<Vec<Arc<dyn Clock>>> {
         let mut clock_faces = Vec::new();
         for clock_face in CLOCK_FACES {
             let clock_config: ClockConfig = toml::from_str(clock_face)?;

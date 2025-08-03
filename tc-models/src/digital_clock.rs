@@ -1,4 +1,7 @@
-use crate::clock::Clock;
+use crate::{
+    clock::{Clock, TimeFormat},
+    colorscheme::ColorScheme,
+};
 use ratatui::widgets::Paragraph;
 
 pub struct DigitalClock {
@@ -9,7 +12,7 @@ pub struct DigitalClock {
 
 impl Clock for DigitalClock {
     // TODO: add a default implementaton of the func here
-    fn draw_clockface(&self, clock_format: &str) -> (Paragraph, usize, usize) {
+    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph, usize, usize) {
         todo!()
     }
 }

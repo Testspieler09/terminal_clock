@@ -75,5 +75,4 @@ second_coords = [
 
 always_on_coords = [[0, 14]]
 
-accent_color = "#7dcfff"
-format       = "HH:MM:SS"
+format = "Hms"

@@ -1,6 +1,8 @@
+use crate::{
+    clock::{Clock, TimeFormat},
+    colorscheme::ColorScheme,
+};
 use ratatui::widgets::Paragraph;
-
-use crate::clock::Clock;
 
 pub struct AnalogClock {
     // The static ascii art for the clock face
@@ -18,7 +20,7 @@ pub struct AnalogClock {
 
 impl Clock for AnalogClock {
     // TODO: add a default implementaton of the func here
-    fn draw_clockface(&self, clock_format: &str) -> (Paragraph, usize, usize) {
+    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph, usize, usize) {
         todo!()
     }
 }

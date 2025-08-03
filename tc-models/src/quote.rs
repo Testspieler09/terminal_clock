@@ -1,3 +1,4 @@
+use crate::colorscheme::{ColorScheme, FALLBACK_COLORSCHEME, SchemeColor};
 use ratatui::{
     style::{Color, Modifier, Style},
     text::Span,
@@ -7,11 +8,13 @@ use ratatui::{
 #[derive(Clone)]
 pub struct Quote {
     pub text: String,
-    pub accent_color: Color,
+
+    // None will use the default accent color of the colorscheme
+    pub accent_color: Option<Color>,
 }
 
 impl Quote {
-    pub fn new(text: impl Into<String>, color: Color) -> Self {
+    pub fn new(text: impl Into<String>, color: Option<Color>) -> Self {
         Self {
             text: text.into(),
             accent_color: color,
@@ -21,17 +24,26 @@ impl Quote {
     pub fn from_string(text: impl Into<String>) -> Self {
         Self {
             text: text.into(),
-            accent_color: Color::Blue,
+            accent_color: None,
         }
     }
 
     /// Returns a Paragraph widget to render the quote
-    pub fn render(&self) -> Paragraph {
-        Paragraph::new(Span::styled(
-            self.text.clone(),
-            Style::default()
-                .fg(self.accent_color)
-                .add_modifier(Modifier::BOLD),
-        ))
+    pub fn render(&self, scheme: &ColorScheme) -> Paragraph {
+        if let Some(color) = self.accent_color {
+            Paragraph::new(Span::styled(
+                self.text.clone(),
+                Style::default().fg(color).add_modifier(Modifier::BOLD),
+            ))
+        } else {
+            Paragraph::new(Span::styled(
+                self.text.clone(),
+                Style::default()
+                    .fg(*scheme
+                        .get(&SchemeColor::Cyan)
+                        .unwrap_or(&FALLBACK_COLORSCHEME[0]))
+                    .add_modifier(Modifier::BOLD),
+            ))
+        }
     }
 }
