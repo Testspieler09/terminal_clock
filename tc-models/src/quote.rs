@@ -9,7 +9,7 @@ use ratatui::{
 pub struct Quote {
     pub text: String,
 
-    // None will use the default accent color of the colorscheme
+    /// None will use the default accent color of the colorscheme
     pub accent_color: Option<Color>,
 }
 
