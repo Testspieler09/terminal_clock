@@ -1,0 +1,12 @@
+[package]
+name = "tc-user_config_loader"
+edition = "2024"
+
+[dependencies]
+tc-models            = { path = "../tc-models/" }
+
+# External dependencies
+ratatui              = { workspace = true }
+chrono               = { workspace = true }
+toml                 = { workspace = true }
+serde                = { workspace = true }

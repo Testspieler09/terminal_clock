@@ -1,0 +1,11 @@
+[package]
+name = "tc-models"
+edition = "2024"
+
+[dependencies]
+ratatui = { workspace = true }
+
+# External dependencies
+unicode-segmentation = { workspace = true }
+chrono               = { workspace = true }
+serde                = { workspace = true }
