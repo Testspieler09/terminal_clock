@@ -1,6 +1,6 @@
 use ratatui::layout::{Constraint, Flex, Layout, Rect};
 
-pub fn center_widget(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
+pub(crate) fn center_widget(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
     let [mut centered_area] = Layout::horizontal([horizontal])
         .flex(Flex::Center)
         .areas(area);
@@ -12,7 +12,7 @@ pub fn center_widget(area: Rect, horizontal: Constraint, vertical: Constraint) -
     centered_area
 }
 
-pub fn center_widget_horizontally(
+pub(crate) fn center_widget_horizontally(
     area: Rect,
     horizontal: Constraint,
     vertical: Constraint,

@@ -1,4 +1,4 @@
-use crate::components::{help_box::HelpBox, pomodoro::PomodoroTimer};
+use crate::components::{help_box::HelpBox, hero::Hero, pomodoro::PomodoroTimer};
 use std::sync::Arc;
 use tc_models::{clock::Clock, colorscheme::ColorScheme, quote::Quote};
 
@@ -25,13 +25,13 @@ pub enum ApplicationState {
     Finished,
 }
 
-// TODO: consider using the ARC here?!
-pub struct TuiState<'a> {
+pub struct TuiState {
     pub application_state: ApplicationState,
     pub current_colorscheme: Arc<ColorScheme>,
     pub current_clock_face: Arc<dyn Clock>,
     pub current_quote: Option<Arc<Quote>>,
     pub current_pomodoro: Option<Arc<PomodoroTimer>>,
-    pub help_box: HelpBox<'a>,
+    pub help_box: HelpBox,
+    pub hero: Hero,
     pub refresh_rate: u32,
 }

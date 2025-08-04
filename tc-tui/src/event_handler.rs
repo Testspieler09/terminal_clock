@@ -2,14 +2,25 @@ use crate::tui_models::{ApplicationState, TuiState};
 use ratatui::crossterm::event::{self, Event, KeyCode};
 use tokio::{io, time::Duration};
 
-pub struct EventHandler;
+pub(crate) struct EventHandler;
 
 impl EventHandler {
     pub fn handle_events(tui_state: &mut TuiState) -> io::Result<()> {
         if event::poll(Duration::from_secs(0))? {
+            // TODO: move the event handling into the components?!
             if let Event::Key(key_event) = event::read()? {
                 match key_event.code {
+                    KeyCode::Esc => {
+                        // FIX: should block toggle for other components
+                        tui_state.hero.toggle_visibility();
+                        tui_state.application_state = if tui_state.hero.is_visible() {
+                            ApplicationState::ShowingHero
+                        } else {
+                            ApplicationState::Running
+                        }
+                    }
                     KeyCode::Char('h') => {
+                        // FIX: should block toggle for other components
                         tui_state.help_box.toggle_visibility();
                         tui_state.application_state = if tui_state.help_box.is_visible() {
                             ApplicationState::ShowingHelp

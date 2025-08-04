@@ -4,7 +4,7 @@ pub(crate) mod helpers;
 pub(crate) mod tui_models;
 
 use crate::{
-    components::{help_box::HelpBox, pomodoro},
+    components::{help_box::HelpBox, hero::Hero, pomodoro},
     event_handler::EventHandler,
     helpers::{center_widget, center_widget_horizontally},
     tui_models::{ApplicationState, TuiAssets, TuiState},
@@ -40,6 +40,7 @@ impl TuiRenderer {
             current_quote: Some(tui_assets.quotes[0].clone()),
             current_pomodoro: None,
             help_box: HelpBox::default(),
+            hero: Hero::default(),
             refresh_rate: 100,
         };
 
@@ -89,7 +90,9 @@ impl TuiRenderer {
                 }
             }
             ApplicationState::ShowingHero => {
-                todo!()
+                // TODO: optimize the clone later -> use arc maybe but then widget trait
+                // cant be implemented
+                frame.render_widget(config.hero.clone(), frame.area());
             }
             ApplicationState::ShowingHelp => {
                 // Render HelpBox if toggled
