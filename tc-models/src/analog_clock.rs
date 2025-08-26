@@ -20,7 +20,7 @@ pub struct AnalogClock {
 
 impl Clock for AnalogClock {
     // TODO: add a default implementaton of the func here
-    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph, usize, usize) {
+    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph<'_>, usize, usize) {
         todo!()
     }
 }

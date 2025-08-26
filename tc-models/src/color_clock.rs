@@ -47,7 +47,7 @@ impl ColorClock {
 }
 
 impl Clock for ColorClock {
-    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph, usize, usize) {
+    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph<'_>, usize, usize) {
         let time_stamp = Local::now();
         let hour_value = time_stamp.hour();
         let minute_value = time_stamp.minute();

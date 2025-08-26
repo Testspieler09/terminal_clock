@@ -1,17 +1,17 @@
-use ratatui::style::Color;
+use ratatui::style::{Color, palette::tailwind};
 use std::collections::HashMap;
 
 pub const FALLBACK_COLORSCHEME: [Color; 10] = [
-    Color::White,
-    Color::DarkGray,
-    Color::Gray,
-    Color::Red,
-    Color::LightRed,
-    Color::Yellow,
-    Color::Green,
-    Color::Magenta,
-    Color::Cyan,
-    Color::LightMagenta,
+    tailwind::SLATE.c500,
+    tailwind::SLATE.c300,
+    tailwind::GRAY.c500,
+    tailwind::RED.c500,
+    tailwind::ROSE.c400,
+    tailwind::YELLOW.c500,
+    tailwind::GREEN.c500,
+    tailwind::PURPLE.c500,
+    tailwind::CYAN.c500,
+    tailwind::PINK.c500,
 ];
 
 #[derive(Clone, Eq, Hash, PartialEq)]

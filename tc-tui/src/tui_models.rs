@@ -1,4 +1,6 @@
-use crate::components::{help_box::HelpBox, hero::Hero, pomodoro::PomodoroTimer};
+use crate::components::{
+    help_box::HelpBox, hero::Hero, pomodoro::PomodoroTimer, settings_menu::SettingMenu,
+};
 use std::sync::Arc;
 use tc_models::{clock::Clock, colorscheme::ColorScheme, quote::Quote};
 
@@ -32,6 +34,7 @@ pub struct TuiState {
     pub current_quote: Option<Arc<Quote>>,
     pub current_pomodoro: Option<Arc<PomodoroTimer>>,
     pub help_box: HelpBox,
+    pub settings_menu: SettingMenu,
     pub hero: Hero,
-    pub refresh_rate: u32,
+    pub refresh_rate: u64,
 }

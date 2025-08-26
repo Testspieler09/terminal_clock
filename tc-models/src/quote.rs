@@ -29,7 +29,7 @@ impl Quote {
     }
 
     /// Returns a Paragraph widget to render the quote
-    pub fn render(&self, scheme: &ColorScheme) -> Paragraph {
+    pub fn render(&self, scheme: &ColorScheme) -> Paragraph<'_> {
         if let Some(color) = self.accent_color {
             Paragraph::new(Span::styled(
                 self.text.clone(),

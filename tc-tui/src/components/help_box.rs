@@ -1,3 +1,4 @@
+use crate::components::logo::Logo;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -9,22 +10,20 @@ const CONTENT: &str = "h .. Toggle this help box\nq .. Quit this program";
 
 #[derive(Default, Clone)]
 pub(crate) struct HelpBox {
-    visible: bool,
+    is_visible: bool,
 }
 
 impl HelpBox {
-    pub fn toggle_visibility(&mut self) {
-        self.visible = !self.visible;
-    }
-
-    pub fn is_visible(&self) -> bool {
-        self.visible
+    pub fn set_visibility(&mut self, visibility: bool) {
+        self.is_visible = visibility;
     }
 }
 
 impl Widget for HelpBox {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        if self.visible {
+        if self.is_visible {
+            Logo.render(area, buf);
+
             let block = Block::default()
                 .title("┤ Help Box ├")
                 .style(Style::default().bg(Color::Black))

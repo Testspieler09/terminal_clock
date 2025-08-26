@@ -4,7 +4,12 @@ pub(crate) mod helpers;
 pub(crate) mod tui_models;
 
 use crate::{
-    components::{help_box::HelpBox, hero::Hero, pomodoro},
+    components::{
+        help_box::HelpBox,
+        hero::Hero,
+        pomodoro::{PomodoroConfig, PomodoroTimer},
+        settings_menu::SettingMenu,
+    },
     event_handler::EventHandler,
     helpers::{center_widget, center_widget_horizontally},
     tui_models::{ApplicationState, TuiAssets, TuiState},
@@ -40,6 +45,7 @@ impl TuiRenderer {
             current_quote: Some(tui_assets.quotes[0].clone()),
             current_pomodoro: None,
             help_box: HelpBox::default(),
+            settings_menu: SettingMenu::default(),
             hero: Hero::default(),
             refresh_rate: 100,
         };
@@ -47,7 +53,7 @@ impl TuiRenderer {
         loop {
             terminal.draw(|frame| Self::render(frame, &tui_state))?;
 
-            sleep(Duration::from_millis(tui_state.refresh_rate as u64)).await;
+            sleep(Duration::from_millis(tui_state.refresh_rate)).await;
 
             EventHandler::handle_events(&mut tui_state)?;
 
@@ -86,7 +92,13 @@ impl TuiRenderer {
 
                 // Render Pomodoro if active
                 if let Some(_pomodoro) = &config.current_pomodoro {
-                    todo!()
+                    let _ = PomodoroTimer::new(PomodoroConfig {
+                        work_duration: 25,
+                        short_break_duration: 5,
+                        long_break_duration: 15,
+                        total_sessions: 5,
+                        sessions_before_long_break: 2,
+                    });
                 }
             }
             ApplicationState::ShowingHero => {
@@ -99,7 +111,7 @@ impl TuiRenderer {
                 frame.render_widget(config.help_box.clone(), frame.area());
             }
             ApplicationState::ShowingSettings => {
-                todo!()
+                frame.render_widget(config.settings_menu.clone(), frame.area());
             }
             ApplicationState::Finished => {}
         }

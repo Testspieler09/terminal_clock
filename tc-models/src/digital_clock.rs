@@ -12,7 +12,7 @@ pub struct DigitalClock {
 
 impl Clock for DigitalClock {
     // TODO: add a default implementaton of the func here
-    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph, usize, usize) {
+    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph<'_>, usize, usize) {
         todo!()
     }
 }

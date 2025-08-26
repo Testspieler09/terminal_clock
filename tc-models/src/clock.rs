@@ -10,5 +10,5 @@ pub enum TimeFormat {
 }
 
 pub trait Clock {
-    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph, usize, usize);
+    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph<'_>, usize, usize);
 }

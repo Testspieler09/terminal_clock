@@ -31,6 +31,7 @@ pub(crate) struct PomodoroTimer {
     config: PomodoroConfig,
     state: PomodoroState,
     last_tick: Instant,
+    is_visible: bool,
 }
 
 impl PomodoroTimer {
@@ -43,6 +44,7 @@ impl PomodoroTimer {
                 phase: TimerPhase::Work,
                 remaining_secs: work_duration * 60,
             },
+            is_visible: false,
             last_tick: Instant::now(),
         }
     }
@@ -88,7 +90,7 @@ impl PomodoroTimer {
     }
 
     /// Render a ratatui Paragraph to display the timer
-    pub fn render(&self) -> Paragraph {
+    pub fn render(&self) -> Paragraph<'_> {
         let (label, color) = match self.state.phase {
             TimerPhase::Work => ("Work", Color::Green),
             TimerPhase::ShortBreak => ("Short Break", Color::Blue),
