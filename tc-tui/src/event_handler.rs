@@ -46,10 +46,13 @@ impl EventHandler {
                     _ => false,
                 }
             }
-            KeyCode::Char('q') => {
-                tui_state.application_state = ApplicationState::Finished;
-                true
-            }
+            KeyCode::Char('q') => match tui_state.application_state {
+                ApplicationState::Running | ApplicationState::ShowingHelp => {
+                    tui_state.application_state = ApplicationState::Finished;
+                    true
+                }
+                _ => false,
+            },
             _ => false,
         }
     }

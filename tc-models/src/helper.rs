@@ -56,10 +56,9 @@ pub(crate) fn combine_ascii_art_while_applying_led<'a>(
     let paragraph_width = max_widths.iter().sum();
 
     let mut styled_text = Text::default();
-    let mut line_spans = Vec::with_capacity(paragraph_width);
 
     for line_index in 0..max_lines {
-        line_spans.clear();
+        let mut line_spans = Vec::with_capacity(paragraph_width);
 
         for (art_idx, lines) in split_lines.iter().enumerate() {
             let width = max_widths[art_idx];
@@ -91,7 +90,7 @@ pub(crate) fn combine_ascii_art_while_applying_led<'a>(
             }
         }
 
-        styled_text.lines.push(Line::from(line_spans.clone()));
+        styled_text.lines.push(Line::from(line_spans));
     }
 
     (

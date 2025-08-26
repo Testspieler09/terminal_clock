@@ -5,7 +5,6 @@ use ratatui::{
     widgets::Paragraph,
 };
 
-#[derive(Clone)]
 pub struct Quote {
     pub text: String,
 
@@ -37,7 +36,7 @@ impl Quote {
             ))
         } else {
             Paragraph::new(Span::styled(
-                self.text.clone(),
+                &self.text,
                 Style::default()
                     .fg(*scheme
                         .get(&SchemeColor::Cyan)

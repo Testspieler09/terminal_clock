@@ -8,7 +8,7 @@ use ratatui::{
 
 const CONTENT: &str = "h .. Toggle this help box\nq .. Quit this program";
 
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub(crate) struct HelpBox {
     is_visible: bool,
 }
@@ -19,7 +19,7 @@ impl HelpBox {
     }
 }
 
-impl Widget for HelpBox {
+impl Widget for &HelpBox {
     fn render(self, area: Rect, buf: &mut Buffer) {
         if self.is_visible {
             Logo.render(area, buf);
@@ -30,9 +30,9 @@ impl Widget for HelpBox {
                 .border_type(BorderType::Rounded)
                 .borders(Borders::ALL);
 
-            block.clone().render(area, buf);
-
             let inner_area = block.inner(area);
+
+            block.render(area, buf);
 
             // Render the help text within the computed inner area
             for (i, line) in CONTENT.split('\n').enumerate() {

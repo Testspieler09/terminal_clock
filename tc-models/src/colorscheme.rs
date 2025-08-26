@@ -28,7 +28,6 @@ pub enum SchemeColor {
     Pink,
 }
 
-#[derive(Clone)]
 pub struct ColorScheme {
     pub name: String,
     pub colors: HashMap<SchemeColor, Color>,

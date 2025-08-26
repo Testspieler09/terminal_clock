@@ -4,12 +4,15 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, Widget},
 };
 
-const LOGO: &str = "████████╗ ██████╗
-╚══██╔══╝██╔════╝
-   ██║   ██║
-   ██║   ██║
-   ██║   ╚██████╗
-   ╚═╝    ╚═════╝ v0.0.0";
+const FULL_LOGO: &str = concat!(
+    "████████╗ ██████╗\n",
+    "╚══██╔══╝██╔════╝\n",
+    "   ██║   ██║\n",
+    "   ██║   ██║\n",
+    "   ██║   ╚██████╗\n",
+    "   ╚═╝    ╚═════╝ v",
+    env!("CARGO_PKG_VERSION")
+);
 
 pub(crate) struct Logo;
 
@@ -31,7 +34,7 @@ impl Widget for Logo {
 
         let mut color_index = 0;
 
-        for (i, line) in LOGO.lines().enumerate() {
+        for (i, line) in FULL_LOGO.lines().enumerate() {
             let y = inner_area.y + i as u16;
             let mut x = inner_area.x;
 

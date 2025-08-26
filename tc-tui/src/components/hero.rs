@@ -4,7 +4,7 @@ use ratatui::{
     widgets::Widget,
 };
 
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub(crate) struct Hero {
     is_visible: bool,
 }
@@ -15,7 +15,7 @@ impl Hero {
     }
 }
 
-impl Widget for Hero {
+impl Widget for &Hero {
     fn render(self, area: Rect, buf: &mut Buffer) {
         if self.is_visible {
             Logo.render(area, buf);

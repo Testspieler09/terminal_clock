@@ -12,7 +12,6 @@ pub(crate) enum TimerPhase {
     Finished,
 }
 
-#[derive(Clone)]
 pub(crate) struct PomodoroConfig {
     pub work_duration: u64,
     pub short_break_duration: u64,

@@ -101,17 +101,10 @@ impl TuiRenderer {
                     });
                 }
             }
-            ApplicationState::ShowingHero => {
-                // TODO: optimize the clone later -> use arc maybe but then widget trait
-                // cant be implemented
-                frame.render_widget(config.hero.clone(), frame.area());
-            }
-            ApplicationState::ShowingHelp => {
-                // Render HelpBox if toggled
-                frame.render_widget(config.help_box.clone(), frame.area());
-            }
+            ApplicationState::ShowingHero => frame.render_widget(&config.hero, frame.area()),
+            ApplicationState::ShowingHelp => frame.render_widget(&config.help_box, frame.area()),
             ApplicationState::ShowingSettings => {
-                frame.render_widget(config.settings_menu.clone(), frame.area());
+                frame.render_widget(&config.settings_menu, frame.area())
             }
             ApplicationState::Finished => {}
         }

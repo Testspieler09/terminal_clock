@@ -6,7 +6,7 @@ use ratatui::{
 };
 use strum::{Display, EnumIter, FromRepr, IntoEnumIterator};
 
-#[derive(Default, Display, Clone)]
+#[derive(Default, Display)]
 enum SelectedTab {
     #[default]
     #[strum(to_string = "general")]
@@ -17,7 +17,7 @@ enum SelectedTab {
     Tab3,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub struct SettingMenu {
     current_tab: SelectedTab,
     is_visible: bool,
@@ -29,7 +29,7 @@ impl SettingMenu {
     }
 }
 
-impl Widget for SettingMenu {
+impl Widget for &SettingMenu {
     fn render(self, area: Rect, buf: &mut Buffer) {
         if self.is_visible {
             Logo.render(area, buf);

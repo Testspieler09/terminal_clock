@@ -1,5 +1,6 @@
 [package]
-name = "tc-tui"
+name    = "tc-tui"
+version = "0.0.0"
 edition = "2024"
 
 [dependencies]
