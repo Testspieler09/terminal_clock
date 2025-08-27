@@ -32,7 +32,8 @@ impl SettingMenu {
 impl Widget for &SettingMenu {
     fn render(self, area: Rect, buf: &mut Buffer) {
         if self.is_visible {
-            Logo.render(area, buf);
+            let logo = Logo::default();
+            logo.render(area, buf);
             buf.set_string(0, 7, "Settings Menu", Style::default());
         }
     }

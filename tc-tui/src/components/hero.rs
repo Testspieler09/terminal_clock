@@ -1,15 +1,74 @@
 use crate::components::logo::Logo;
 use ratatui::{
-    prelude::{Buffer, Rect},
+    layout::Flex,
+    prelude::{Buffer, Constraint, Direction, Layout, Rect},
+    text::{Line, Span},
     widgets::Widget,
 };
+use strum::{EnumCount, EnumIter, EnumProperty, IntoEnumIterator};
+
+#[derive(Default, EnumProperty, EnumIter, EnumCount, PartialEq, Eq, Clone)]
+pub enum MenuLabel {
+    #[default]
+    #[strum(props(
+        inactive = "┌─┐┌─┐┌┬┐┌┬┐┬┌┐┌┌─┐┌─┐\n└─┐├┤  │  │ │││││ ┬└─┐\n└─┘└─┘ ┴  ┴ ┴┘└┘└─┘└─┘",
+        active = "╔═╗╔═╗╔╦╗╔╦╗╦╔╗╔╔═╗╔═╗\n╚═╗╠╣  ║  ║ ║║║║║ ╦╚═╗\n╚═╝╚═╝ ╩  ╩ ╩╝╚╝╚═╝╚═╝"
+    ))]
+    SETTINGS,
+    #[strum(props(
+        inactive = "┬ ┬┌─┐┬  ┌─┐\n├─┤├┤ │  ├─┘\n┴ ┴└─┘┴─┘┴",
+        active = "╦ ╦╔═╗╦  ╔═╗\n╠═╣╠╣ ║  ╠═╝\n╩ ╩╚═╝╩═╝╩"
+    ))]
+    HELP,
+    #[strum(props(
+        inactive = "┌─┐ ┬ ┬ ┬┌┬┐\n│─┼┐│ │ │ │ \n└─┘└└─┘ ┴ ┴ ",
+        active = "╔═╗ ╦ ╦ ╦╔╦╗\n║═╬╗║ ║ ║ ║ \n╚═╝╚╚═╝ ╩ ╩  "
+    ))]
+    QUIT,
+}
 
 #[derive(Default)]
 pub(crate) struct Hero {
+    pub active_label: MenuLabel,
     is_visible: bool,
 }
 
 impl Hero {
+    fn map_label_to_ascii(label: &MenuLabel, active_label: &MenuLabel) -> Vec<Line<'static>> {
+        let ascii = label
+            .get_str(if *active_label == *label {
+                "active"
+            } else {
+                "inactive"
+            })
+            .unwrap();
+
+        ascii
+            .lines()
+            .map(|line| Line::from(Span::from(line)))
+            .collect()
+    }
+
+    pub fn next_label(&mut self) {
+        self.active_label = MenuLabel::iter()
+            .cycle()
+            .skip_while(|label| *label != self.active_label)
+            .skip(1)
+            .next()
+            .unwrap();
+    }
+
+    pub fn prev_label(&mut self) {
+        let labels: Vec<MenuLabel> = MenuLabel::iter().collect();
+        let current_index = labels
+            .iter()
+            .position(|label| *label == self.active_label)
+            .unwrap();
+
+        let next_index = (current_index + MenuLabel::COUNT - 1) % MenuLabel::COUNT;
+        self.active_label = labels[next_index].clone();
+    }
+
     pub fn set_visibility(&mut self, visibility: bool) {
         self.is_visible = visibility;
     }
@@ -18,7 +77,50 @@ impl Hero {
 impl Widget for &Hero {
     fn render(self, area: Rect, buf: &mut Buffer) {
         if self.is_visible {
-            Logo.render(area, buf);
+            let logo = Logo::default();
+            let logo_height = *logo.height() as u16;
+            let logo_width = *logo.width() as u16;
+
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(logo_height), Constraint::Length(15)].as_ref())
+                .margin((area.height - (logo_height + 15)) / 2)
+                .split(area);
+
+            let logo_layout = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Length(logo_width)].as_ref())
+                .flex(Flex::Center)
+                .split(chunks[0]);
+
+            let mut box_layout = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Length(25)].as_ref())
+                .flex(Flex::Center)
+                .split(chunks[1]);
+
+            box_layout = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Length(3),
+                    Constraint::Length(3),
+                    Constraint::Length(3),
+                ])
+                .split(box_layout[0]);
+
+            logo.render(logo_layout[0], buf);
+
+            for (index, label) in MenuLabel::iter().enumerate() {
+                let lines = Hero::map_label_to_ascii(&label, &self.active_label);
+                for (i, line) in lines.iter().enumerate() {
+                    buf.set_line(
+                        box_layout[index].x,
+                        box_layout[index].y + i as u16,
+                        &line,
+                        box_layout[index].width,
+                    );
+                }
+            }
         }
     }
 }

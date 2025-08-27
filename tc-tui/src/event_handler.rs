@@ -1,4 +1,7 @@
-use crate::tui_models::{ApplicationState, TuiState};
+use crate::{
+    components::hero::MenuLabel,
+    tui_models::{ApplicationState, TuiState},
+};
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
 use tokio::{io, time::Duration};
 
@@ -16,12 +19,11 @@ impl EventHandler {
                 // Then handle state-specific keys
                 match tui_state.application_state {
                     ApplicationState::ShowingHero => Self::handle_hero_keys(key_event, tui_state),
-                    ApplicationState::ShowingHelp => Self::handle_help_keys(key_event, tui_state),
                     ApplicationState::ShowingSettings => {
                         Self::handle_setting_keys(key_event, tui_state)
                     }
                     ApplicationState::Running => Self::handle_normal_keys(key_event, tui_state),
-                    ApplicationState::Finished => {}
+                    ApplicationState::ShowingHelp | ApplicationState::Finished => {}
                 }
             }
         }
@@ -63,7 +65,7 @@ impl EventHandler {
                 tui_state.hero.set_visibility(true);
                 tui_state.application_state = ApplicationState::ShowingHero;
             }
-            KeyCode::Char('?') => {
+            KeyCode::Char('?') | KeyCode::Char('h') => {
                 tui_state.help_box.set_visibility(true);
                 tui_state.application_state = ApplicationState::ShowingHelp;
             }
@@ -71,24 +73,14 @@ impl EventHandler {
         }
     }
 
-    fn handle_help_keys(key_event: KeyEvent, tui_state: &mut TuiState) {
-        match key_event.code {
-            KeyCode::Char('?') => {
-                tui_state.help_box.set_visibility(false);
-                tui_state.application_state = ApplicationState::Running;
-            }
-            _ => {}
-        }
-    }
-
     fn handle_hero_keys(key_event: KeyEvent, tui_state: &mut TuiState) {
         match key_event.code {
-            KeyCode::Char('j') | KeyCode::Down => {}
-            KeyCode::Char('k') | KeyCode::Up => {}
-            KeyCode::Char('s') => {
-                tui_state.settings_menu.set_visibility(true);
-                tui_state.application_state = ApplicationState::ShowingSettings;
-            }
+            KeyCode::Char('j') | KeyCode::Down => tui_state.hero.next_label(),
+            KeyCode::Char('k') | KeyCode::Up => tui_state.hero.prev_label(),
+            KeyCode::Enter => match tui_state.hero.active_label {
+                MenuLabel::QUIT => tui_state.application_state = ApplicationState::Finished,
+                _ => {}
+            },
             _ => {}
         }
     }

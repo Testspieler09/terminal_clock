@@ -3,18 +3,45 @@ use ratatui::{
     style::{Color, Style},
     widgets::{Block, BorderType, Borders, Widget},
 };
+use unicode_segmentation::UnicodeSegmentation;
 
-const FULL_LOGO: &str = concat!(
-    "████████╗ ██████╗\n",
-    "╚══██╔══╝██╔════╝\n",
-    "   ██║   ██║\n",
-    "   ██║   ██║\n",
-    "   ██║   ╚██████╗\n",
-    "   ╚═╝    ╚═════╝ v",
-    env!("CARGO_PKG_VERSION")
-);
+pub(crate) struct Logo {
+    height: usize,
+    width: usize,
+}
 
-pub(crate) struct Logo;
+impl Default for Logo {
+    fn default() -> Self {
+        Logo {
+            height: Logo::FULL_LOGO.lines().count() + 2,
+            width: Logo::FULL_LOGO
+                .lines()
+                .map(|i| i.graphemes(true).count() + 2)
+                .max()
+                .unwrap_or(0),
+        }
+    }
+}
+
+impl Logo {
+    const FULL_LOGO: &str = concat!(
+        "████████╗ ██████╗\n",
+        "╚══██╔══╝██╔════╝\n",
+        "   ██║   ██║\n",
+        "   ██║   ██║\n",
+        "   ██║   ╚██████╗\n",
+        "   ╚═╝    ╚═════╝ v",
+        env!("CARGO_PKG_VERSION")
+    );
+
+    pub fn height(&self) -> &usize {
+        &self.height
+    }
+
+    pub fn width(&self) -> &usize {
+        &self.width
+    }
+}
 
 impl Widget for Logo {
     fn render(self, area: Rect, buf: &mut Buffer) {
@@ -34,7 +61,7 @@ impl Widget for Logo {
 
         let mut color_index = 0;
 
-        for (i, line) in FULL_LOGO.lines().enumerate() {
+        for (i, line) in Logo::FULL_LOGO.lines().enumerate() {
             let y = inner_area.y + i as u16;
             let mut x = inner_area.x;
 
@@ -55,6 +82,7 @@ impl Widget for Logo {
                     Color::Gray
                 });
 
+                // FIX: expect should be replaced with error handling
                 buf.cell_mut((x, y))
                     .expect("")
                     .set_symbol(ch.encode_utf8(&mut buf_str))
