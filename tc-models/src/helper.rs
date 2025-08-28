@@ -109,6 +109,49 @@ pub enum TimeUnit {
     Hours,
 }
 
+pub fn generate_led_coords_to_base(
+    base: u8,
+    digit_positions: &[&[(u8, (u32, u32))]],
+    always_on: &[(u32, u32)],
+    unit: TimeUnit,
+) -> Vec<Vec<(u32, u32)>> {
+    let max_value = match unit {
+        TimeUnit::Minutes | TimeUnit::Seconds => 60,
+        TimeUnit::Hours => 24,
+    };
+
+    let mut result = Vec::with_capacity(max_value as usize);
+
+    for value in 0..max_value {
+        let mut coords = Vec::new();
+        coords.extend_from_slice(always_on);
+
+        let mut digits = Vec::new();
+        let mut remaining_value = value;
+
+        while remaining_value > 0 {
+            digits.push((remaining_value % base as u32) as u8);
+            remaining_value /= base as u32;
+        }
+
+        while digits.len() < digit_positions.len() {
+            digits.push(0);
+        }
+
+        for (digit, positions) in digits.iter().zip(digit_positions) {
+            for &(expected_digit, coord) in *positions {
+                if *digit == expected_digit {
+                    coords.push(coord);
+                }
+            }
+        }
+
+        result.push(coords);
+    }
+
+    result
+}
+
 pub fn generate_binary_led_coords(
     tens_bits: &[(u8, (u32, u32))],
     units_bits: &[(u8, (u32, u32))],

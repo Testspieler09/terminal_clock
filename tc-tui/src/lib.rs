@@ -20,7 +20,6 @@ use tc_user_config_loader::{
     clock_face_loader::ClockFaceLoader, colorscheme_loader::ColorSchemeLoader,
     quote_loader::QuoteLoader,
 };
-use tokio::time::{Duration, sleep};
 
 pub struct TuiRenderer;
 
@@ -53,9 +52,9 @@ impl TuiRenderer {
         loop {
             terminal.draw(|frame| Self::render(frame, &tui_state))?;
 
-            sleep(Duration::from_millis(tui_state.refresh_rate)).await;
+            // sleep(Duration::from_millis(tui_state.refresh_rate)).await;
 
-            EventHandler::handle_events(&mut tui_state)?;
+            EventHandler::handle_events(&mut tui_state).await?;
 
             if matches!(tui_state.application_state, ApplicationState::Finished) {
                 break Ok(());

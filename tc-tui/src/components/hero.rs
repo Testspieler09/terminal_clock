@@ -1,25 +1,55 @@
-use crate::components::logo::Logo;
+use crate::components::logo::{CYAN_SHADES, GRAY_SHADES, Logo};
 use ratatui::{
     layout::Flex,
     prelude::{Buffer, Constraint, Direction, Layout, Rect},
+    style::Style,
     text::{Line, Span},
     widgets::Widget,
 };
-use strum::{EnumCount, EnumIter, EnumProperty, IntoEnumIterator};
+use strum::{EnumIter, EnumProperty, IntoEnumIterator};
 
-#[derive(Default, EnumProperty, EnumIter, EnumCount, PartialEq, Eq, Clone)]
+#[derive(Default, EnumProperty, EnumIter, PartialEq, Eq, Clone, Copy)]
 pub enum MenuLabel {
+    /// inactive
+    /// ┌─┐┌─┐┌┬┐┌┬┐┬┌┐┌┌─┐┌─┐
+    /// └─┐├┤  │  │ │││││ ┬└─┐
+    /// └─┘└─┘ ┴  ┴ ┴┘└┘└─┘└─┘
+    ///
+    /// active
+    /// ╔═╗╔═╗╔╦╗╔╦╗╦╔╗╔╔═╗╔═╗
+    /// ╚═╗╠╣  ║  ║ ║║║║║ ╦╚═╗
+    /// ╚═╝╚═╝ ╩  ╩ ╩╝╚╝╚═╝╚═╝
     #[default]
     #[strum(props(
         inactive = "┌─┐┌─┐┌┬┐┌┬┐┬┌┐┌┌─┐┌─┐\n└─┐├┤  │  │ │││││ ┬└─┐\n└─┘└─┘ ┴  ┴ ┴┘└┘└─┘└─┘",
         active = "╔═╗╔═╗╔╦╗╔╦╗╦╔╗╔╔═╗╔═╗\n╚═╗╠╣  ║  ║ ║║║║║ ╦╚═╗\n╚═╝╚═╝ ╩  ╩ ╩╝╚╝╚═╝╚═╝"
     ))]
     SETTINGS,
+
+    /// inactive
+    /// ┬ ┬┌─┐┬  ┌─┐
+    /// ├─┤├┤ │  ├─┘
+    /// ┴ ┴└─┘┴─┘┴
+    ///
+    /// active
+    /// ╦ ╦╔═╗╦  ╔═╗
+    /// ╠═╣╠╣ ║  ╠═╝
+    /// ╩ ╩╚═╝╩═╝╩
     #[strum(props(
-        inactive = "┬ ┬┌─┐┬  ┌─┐\n├─┤├┤ │  ├─┘\n┴ ┴└─┘┴─┘┴",
-        active = "╦ ╦╔═╗╦  ╔═╗\n╠═╣╠╣ ║  ╠═╝\n╩ ╩╚═╝╩═╝╩"
+        inactive = "┬ ┬┌─┐┬  ┌─┐\n├─┤├┤ │  ├─┘\n┴ ┴└─┘┴─┘┴  ",
+        active = "╦ ╦╔═╗╦  ╔═╗\n╠═╣╠╣ ║  ╠═╝\n╩ ╩╚═╝╩═╝╩  "
     ))]
     HELP,
+
+    /// inactive
+    /// ┌─┐ ┬ ┬ ┬┌┬┐
+    /// │─┼┐│ │ │ │
+    /// └─┘└└─┘ ┴ ┴
+    ///
+    /// active
+    /// ╔═╗ ╦ ╦ ╦╔╦╗
+    /// ║═╬╗║ ║ ║ ║
+    /// ╚═╝╚╚═╝ ╩ ╩
     #[strum(props(
         inactive = "┌─┐ ┬ ┬ ┬┌┬┐\n│─┼┐│ │ │ │ \n└─┘└└─┘ ┴ ┴ ",
         active = "╔═╗ ╦ ╦ ╦╔╦╗\n║═╬╗║ ║ ║ ║ \n╚═╝╚╚═╝ ╩ ╩  "
@@ -45,7 +75,12 @@ impl Hero {
 
         ascii
             .lines()
-            .map(|line| Line::from(Span::from(line)))
+            .zip(if label == active_label {
+                CYAN_SHADES
+            } else {
+                GRAY_SHADES
+            })
+            .map(|(line, color)| Line::from(Span::from(line).style(Style::default().fg(color))))
             .collect()
     }
 
@@ -59,14 +94,19 @@ impl Hero {
     }
 
     pub fn prev_label(&mut self) {
-        let labels: Vec<MenuLabel> = MenuLabel::iter().collect();
-        let current_index = labels
+        let label = MenuLabel::iter().collect::<Vec<_>>();
+        let current_position = label
             .iter()
-            .position(|label| *label == self.active_label)
+            .position(|tab| *tab == self.active_label)
             .unwrap();
 
-        let next_index = (current_index + MenuLabel::COUNT - 1) % MenuLabel::COUNT;
-        self.active_label = labels[next_index].clone();
+        let previous_position = if current_position == 0 {
+            label.len() - 1
+        } else {
+            current_position - 1
+        };
+
+        self.active_label = label[previous_position];
     }
 
     pub fn set_visibility(&mut self, visibility: bool) {
@@ -81,10 +121,18 @@ impl Widget for &Hero {
             let logo_height = *logo.height() as u16;
             let logo_width = *logo.width() as u16;
 
+            let label_height = 12; // MenuLabel::COUNT * 3 + 3
+
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints([Constraint::Length(logo_height), Constraint::Length(15)].as_ref())
-                .margin((area.height - (logo_height + 15)) / 2)
+                .constraints(
+                    [
+                        Constraint::Length(logo_height),
+                        Constraint::Length(label_height),
+                    ]
+                    .as_ref(),
+                )
+                .margin((area.height - (logo_height + label_height)) / 2)
                 .split(area);
 
             let logo_layout = Layout::default()
@@ -92,6 +140,8 @@ impl Widget for &Hero {
                 .constraints([Constraint::Length(logo_width)].as_ref())
                 .flex(Flex::Center)
                 .split(chunks[0]);
+
+            logo.render(logo_layout[0], buf);
 
             let mut box_layout = Layout::default()
                 .direction(Direction::Horizontal)
@@ -108,13 +158,12 @@ impl Widget for &Hero {
                 ])
                 .split(box_layout[0]);
 
-            logo.render(logo_layout[0], buf);
-
             for (index, label) in MenuLabel::iter().enumerate() {
                 let lines = Hero::map_label_to_ascii(&label, &self.active_label);
                 for (i, line) in lines.iter().enumerate() {
+                    let offset = (box_layout[index].width.saturating_sub(line.width() as u16)) / 2;
                     buf.set_line(
-                        box_layout[index].x,
+                        box_layout[index].x + offset,
                         box_layout[index].y + i as u16,
                         &line,
                         box_layout[index].width,

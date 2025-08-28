@@ -10,6 +10,26 @@ pub(crate) struct Logo {
     width: usize,
 }
 
+/// Mainly used for Logo and Hero
+pub(super) const CYAN_SHADES: [Color; 6] = [
+    Color::Rgb(0x44, 0xAE, 0xB3),
+    Color::Rgb(0x24, 0x9E, 0xA0),
+    Color::Rgb(0x00, 0x8B, 0x8B),
+    Color::Rgb(0x00, 0x79, 0x79),
+    Color::Rgb(0x00, 0x67, 0x67),
+    Color::Rgb(0x00, 0x55, 0x55),
+];
+
+/// Mainly used for Logo and Hero
+pub(super) const GRAY_SHADES: [Color; 6] = [
+    Color::Rgb(0xBB, 0xBB, 0xBB),
+    Color::Rgb(0xAA, 0xAA, 0xAA),
+    Color::Rgb(0x99, 0x99, 0x99),
+    Color::Rgb(0x88, 0x88, 0x88),
+    Color::Rgb(0x77, 0x77, 0x77),
+    Color::Rgb(0x66, 0x66, 0x66),
+];
+
 impl Default for Logo {
     fn default() -> Self {
         Logo {
@@ -51,35 +71,25 @@ impl Widget for Logo {
 
         let inner_area = block.inner(area);
 
-        let cyan_shades = [
-            Color::Rgb(0x44, 0xAE, 0xB3),
-            Color::Rgb(0x24, 0x9E, 0xA0),
-            Color::Rgb(0x00, 0x8B, 0x8B),
-            Color::Rgb(0x00, 0x79, 0x79),
-            Color::Rgb(0x00, 0x67, 0x67),
-        ];
-
         let mut color_index = 0;
 
         for (i, line) in Logo::FULL_LOGO.lines().enumerate() {
             let y = inner_area.y + i as u16;
             let mut x = inner_area.x;
 
-            let has_block = line.contains('█');
-            let block_color = if has_block {
-                let c = cyan_shades.get(color_index).copied().unwrap_or(Color::Cyan);
-                color_index += 1;
-                c
-            } else {
-                Color::Gray
-            };
+            let line_cyan = CYAN_SHADES.get(color_index).copied().unwrap_or(Color::Cyan);
+            let line_gray = GRAY_SHADES.get(color_index).copied().unwrap_or(Color::Gray);
+
+            color_index += 1;
 
             let mut buf_str = [0u8; 4];
             for ch in line.chars() {
-                let style = Style::default().fg(if ch == '█' && has_block {
-                    block_color
+                let style = Style::default().fg(if ch == '█' {
+                    line_cyan
+                } else if matches!(ch, 'v' | '.' | '0'..'9') {
+                    Color::Yellow
                 } else {
-                    Color::Gray
+                    line_gray
                 });
 
                 // FIX: expect should be replaced with error handling

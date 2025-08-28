@@ -13,6 +13,7 @@ pub(crate) struct HelpBox {
     height: u16,
     width: u16,
     is_visible: bool,
+    called_from_hero: bool,
 }
 
 impl Default for HelpBox {
@@ -25,19 +26,25 @@ impl Default for HelpBox {
                 .max()
                 .unwrap_or(0) as u16,
             is_visible: false,
+            called_from_hero: false,
         }
     }
 }
 
 impl HelpBox {
     const CONTENT: [[&str; 2]; 3] = [
-        ["?, h", "Toggle this help box"],
+        ["?, h", "Show this help box"],
         ["q", "Quit this program"],
         ["ESC", "Toggles main menu"],
     ];
 
-    pub fn set_visibility(&mut self, visibility: bool) {
+    pub fn set_visibility(&mut self, visibility: bool, was_called_from_hero: bool) {
+        self.called_from_hero = was_called_from_hero;
         self.is_visible = visibility;
+    }
+
+    pub fn was_called_from_hero(&self) -> bool {
+        self.called_from_hero
     }
 }
 
