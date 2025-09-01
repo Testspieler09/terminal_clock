@@ -39,10 +39,10 @@ impl TuiRenderer {
         };
         let mut tui_state = TuiState {
             application_state: ApplicationState::Running,
-            current_clock_face: tui_assets.clock_faces[0].clone(),
-            current_colorscheme: tui_assets.colorschemes[0].clone(),
-            current_quote: Some(tui_assets.quotes[0].clone()),
-            current_pomodoro: None,
+            clock_face: tui_assets.clock_faces[0].clone(),
+            colorscheme: tui_assets.colorschemes[0].clone(),
+            quote: Some(tui_assets.quotes[0].clone()),
+            pomodoro: None,
             help_box: HelpBox::default(),
             settings_menu: SettingMenu::default(),
             hero: Hero::default(),
@@ -51,8 +51,6 @@ impl TuiRenderer {
 
         loop {
             terminal.draw(|frame| Self::render(frame, &tui_state))?;
-
-            // sleep(Duration::from_millis(tui_state.refresh_rate)).await;
 
             EventHandler::handle_events(&mut tui_state).await?;
 
@@ -63,9 +61,8 @@ impl TuiRenderer {
     }
 
     fn render(frame: &mut Frame, config: &TuiState) {
-        let (ascii_art_paragraph, width, height) = config
-            .current_clock_face
-            .draw_clockface(&config.current_colorscheme);
+        let (ascii_art_paragraph, width, height) =
+            config.clock_face.draw_clockface(&config.colorscheme);
         let area = center_widget(
             frame.area(),
             Constraint::Length(width as u16),
@@ -78,7 +75,7 @@ impl TuiRenderer {
                 frame.render_widget(ascii_art_paragraph, area);
 
                 // Render Quote if exists
-                if let Some(quote) = &config.current_quote {
+                if let Some(quote) = &config.quote {
                     let quote_area = center_widget_horizontally(
                         frame.area(),
                         Constraint::Length(quote.text.len() as u16),
@@ -86,11 +83,11 @@ impl TuiRenderer {
                         area.y + area.height + 1,
                     );
 
-                    frame.render_widget(quote.render(&config.current_colorscheme), quote_area);
+                    frame.render_widget(quote.render(&config.colorscheme), quote_area);
                 }
 
                 // Render Pomodoro if active
-                if let Some(_pomodoro) = &config.current_pomodoro {
+                if let Some(_pomodoro) = &config.pomodoro {
                     let _ = PomodoroTimer::new(PomodoroConfig {
                         work_duration: 25,
                         short_break_duration: 5,

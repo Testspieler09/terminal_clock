@@ -1,7 +1,7 @@
 use crate::components::logo::{CYAN_SHADES, GRAY_SHADES, Logo};
 use ratatui::{
     layout::Flex,
-    prelude::{Buffer, Constraint, Direction, Layout, Rect},
+    prelude::{Buffer, Constraint, Layout, Rect},
     style::Style,
     text::{Line, Span},
     widgets::Widget,
@@ -123,40 +123,32 @@ impl Widget for &Hero {
 
             let label_height = 12; // MenuLabel::COUNT * 3 + 3
 
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints(
-                    [
-                        Constraint::Length(logo_height),
-                        Constraint::Length(label_height),
-                    ]
-                    .as_ref(),
-                )
-                .margin((area.height - (logo_height + label_height)) / 2)
-                .split(area);
+            let [logo_section, label_section] = Layout::vertical(
+                [
+                    Constraint::Length(logo_height),
+                    Constraint::Length(label_height),
+                ]
+                .as_ref(),
+            )
+            .margin((area.height - (logo_height + label_height)) / 2)
+            .areas(area);
 
-            let logo_layout = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Length(logo_width)].as_ref())
+            let [logo_layout] = Layout::horizontal([Constraint::Length(logo_width)])
                 .flex(Flex::Center)
-                .split(chunks[0]);
+                .areas(logo_section);
 
-            logo.render(logo_layout[0], buf);
+            logo.render(logo_layout, buf);
 
-            let mut box_layout = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Length(25)].as_ref())
+            let mut box_layout = Layout::horizontal([Constraint::Length(25)])
                 .flex(Flex::Center)
-                .split(chunks[1]);
+                .split(label_section);
 
-            box_layout = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Length(3),
-                    Constraint::Length(3),
-                    Constraint::Length(3),
-                ])
-                .split(box_layout[0]);
+            box_layout = Layout::vertical([
+                Constraint::Length(3),
+                Constraint::Length(3),
+                Constraint::Length(3),
+            ])
+            .split(box_layout[0]);
 
             for (index, label) in MenuLabel::iter().enumerate() {
                 let lines = Hero::map_label_to_ascii(&label, &self.active_label);

@@ -1,4 +1,4 @@
-use crate::components::logo::Logo;
+use crate::{components::logo::Logo, helpers::generate_title};
 use ratatui::{
     buffer::Buffer,
     layout::{Flex, Rect},
@@ -55,51 +55,37 @@ impl Widget for &HelpBox {
             let logo_height = *logo.height() as u16;
             let logo_width = *logo.width() as u16;
 
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints(
-                    [
-                        Constraint::Length(logo_height),
-                        Constraint::Length(self.height),
-                    ]
-                    .as_ref(),
-                )
-                .margin((area.height - (logo_height + self.height)) / 2)
-                .split(area);
+            let [top_box, bottom_box] = Layout::vertical([
+                Constraint::Length(logo_height),
+                Constraint::Length(self.height),
+            ])
+            .margin((area.height - (logo_height + self.height)) / 2)
+            .areas(area);
 
-            let logo_layout = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Length(logo_width)].as_ref())
+            let [logo_layout] = Layout::horizontal([Constraint::Length(logo_width)])
                 .flex(Flex::Center)
-                .split(chunks[0]);
+                .areas(top_box);
 
-            let box_layout = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Length(self.width)].as_ref())
+            let [box_layout] = Layout::horizontal([Constraint::Length(self.width)])
                 .flex(Flex::Center)
-                .split(chunks[1]);
+                .areas(bottom_box);
 
             // Render the Logo
-            logo.render(logo_layout[0], buf);
+            logo.render(logo_layout, buf);
 
-            let block = Block::default()
-                .title(Line::from(vec![
-                    Span::from("┐"),
-                    Span::from("help").style(Style::default().fg(Color::White)),
-                    Span::from("┌"),
-                ]))
+            let block = Block::bordered()
+                .title(generate_title("help".to_string()))
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(Color::DarkGray))
-                .borders(Borders::ALL);
+                .border_style(Style::default().fg(Color::DarkGray));
 
-            let inner_area = block.inner(box_layout[0]);
+            let inner_area = block.inner(box_layout);
 
             // Render the HelpBox
-            block.render(box_layout[0], buf);
+            block.render(box_layout, buf);
 
             let table_layout = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
+                .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
                 .split(inner_area);
 
             fn center_text(buf: &mut Buffer, area: Rect, text: &str, style: Style) {
@@ -109,6 +95,7 @@ impl Widget for &HelpBox {
             }
 
             // Render table headers
+            // TODO: use a paragraph here with alignement center
             center_text(
                 buf,
                 table_layout[0],

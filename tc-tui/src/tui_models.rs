@@ -29,19 +29,12 @@ pub enum ApplicationState {
 
 pub struct TuiState {
     pub application_state: ApplicationState,
-    pub current_colorscheme: Arc<ColorScheme>,
-    pub current_clock_face: Arc<dyn Clock>,
-    pub current_quote: Option<Arc<Quote>>,
-    pub current_pomodoro: Option<Arc<PomodoroTimer>>,
-    // pub static_components: TuiStaticComponents,
+    pub colorscheme: Arc<ColorScheme>,
+    pub clock_face: Arc<dyn Clock>,
+    pub quote: Option<Arc<Quote>>,
+    pub pomodoro: Option<Arc<PomodoroTimer>>,
     pub help_box: HelpBox,
     pub settings_menu: SettingMenu,
     pub hero: Hero,
     pub refresh_rate: u64,
 }
-
-// struct TuiStaticComponents {
-//     pub help_box: HelpBox,
-//     pub settings_menu: SettingMenu,
-//     pub hero: Hero,
-// }

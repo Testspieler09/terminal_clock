@@ -1,11 +1,14 @@
-use crate::components::logo::Logo;
-use ratatui::widgets::Tabs;
+use crate::{components::logo::Logo, helpers::generate_title};
 use ratatui::{
     layout::Flex,
-    prelude::{Buffer, Constraint, Direction, Layout, Rect},
+    prelude::{Alignment, Buffer, Constraint, Layout, Rect},
     style::{Color, Style},
+    symbols::{
+        border::{ROUNDED, Set},
+        line::NORMAL,
+    },
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Widget},
+    widgets::{Block, BorderType, Borders, Paragraph, Widget},
 };
 use strum::{AsRefStr, EnumIter, IntoEnumIterator};
 
@@ -73,71 +76,92 @@ impl Widget for &SettingMenu {
 
             let box_height = 20;
 
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints(
-                    [
-                        Constraint::Length(logo_height),
-                        Constraint::Length(box_height),
-                    ]
-                    .as_ref(),
-                )
-                .margin((area.height - (logo_height + box_height)) / 2)
-                .split(area);
+            let [logo_section, setting_section] = Layout::vertical([
+                Constraint::Length(logo_height),
+                Constraint::Length(box_height),
+            ])
+            .margin((area.height - (logo_height + box_height)) / 2)
+            .areas(area);
 
-            let logo_layout = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Length(logo_width)].as_ref())
+            let [logo_layout] = Layout::horizontal([Constraint::Length(logo_width)])
                 .flex(Flex::Center)
-                .split(chunks[0]);
+                .areas(logo_section);
 
-            logo.render(logo_layout[0], buf);
+            let [box_layout] = Layout::horizontal([Constraint::Length(50)])
+                .flex(Flex::Center)
+                .areas(setting_section);
 
-            let settings_block = Block::default()
-                .title(Line::from(vec![
-                    Span::from("┐"),
-                    Span::from("tab➔").style(Style::default().fg(Color::White)),
-                    Span::from("┌"),
-                ]))
+            logo.render(logo_layout, buf);
+
+            let settings_block = Block::bordered()
+                .title(generate_title("tab➔".to_string()))
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(Color::DarkGray))
-                .borders(Borders::ALL);
+                .border_style(Style::default().fg(Color::Red));
 
-            // TODO: do not use the tabs struct, do it custom
-            // [     1General        [Pomodoro]         3Color     ]
-            // -----------------------------------------------------
-            // |                 |                                 |
-            let tabs = Tabs::new(
-                SettingsTab::iter()
-                    .enumerate()
-                    .map(|(i, tab)| {
-                        if tab == self.current_tab {
-                            Line::from(vec![
-                                Span::from("[").style(Style::default().fg(Color::DarkGray)),
-                                Span::from(tab.as_ref().to_owned()),
-                                Span::from("]").style(Style::default().fg(Color::DarkGray)),
-                            ])
-                        } else {
-                            Line::from(vec![
-                                Span::from(format!("{}", i + 1))
-                                    .style(Style::default().fg(Color::DarkGray)),
-                                Span::from(tab.as_ref().to_owned() + " "),
-                            ])
-                        }
-                    })
-                    .collect::<Vec<_>>(),
-            )
-            .block(settings_block)
-            .highlight_style(Style::default())
-            .divider("");
+            let [_, header_section, content_section] = Layout::vertical([
+                // This constraint is in place, to avoid writing the
+                // tab labels over the border of the settings box
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Fill(1),
+            ])
+            .areas(box_layout);
 
-            let box_layout = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Length(50)].as_ref())
-                .flex(Flex::Center)
-                .split(chunks[1]);
+            let header_layout = Layout::horizontal([
+                Constraint::Fill(1),
+                Constraint::Fill(1),
+                Constraint::Fill(1),
+            ])
+            .split(header_section);
 
-            tabs.render(box_layout[0], buf);
+            settings_block.render(box_layout, buf);
+
+            for (i, (tab, area)) in SettingsTab::iter()
+                .zip(header_layout.into_iter())
+                .enumerate()
+            {
+                let is_active = tab == self.current_tab;
+                let text = if is_active {
+                    Line::from(vec![
+                        Span::from("[").style(Style::default().fg(Color::Red)),
+                        Span::from(tab.as_ref()).style(Style::default().fg(Color::White)),
+                        Span::from("]").style(Style::default().fg(Color::Red)),
+                    ])
+                } else {
+                    Line::from(vec![
+                        Span::from(format!("{}", i + 1)).style(Style::default().fg(Color::Red)),
+                        Span::from(tab.as_ref().to_owned() + " "),
+                    ])
+                };
+
+                Paragraph::new(text)
+                    .alignment(Alignment::Center)
+                    .render(*area, buf);
+            }
+
+            let interactive_settings_block = Block::default()
+                .borders(Borders::TOP | Borders::LEFT | Borders::BOTTOM)
+                .border_set(Set {
+                    top_left: NORMAL.vertical_right,
+                    ..ROUNDED
+                })
+                .border_style(Style::default().fg(Color::Red));
+
+            let description_block = Block::bordered()
+                .border_set(Set {
+                    top_left: NORMAL.horizontal_down,
+                    top_right: NORMAL.vertical_left,
+                    bottom_left: NORMAL.horizontal_up,
+                    ..ROUNDED
+                })
+                .border_style(Style::default().fg(Color::Red));
+
+            let [interactive_section, description_section] =
+                Layout::horizontal([Constraint::Fill(1), Constraint::Fill(2)])
+                    .areas(content_section);
+
+            interactive_settings_block.render(interactive_section, buf);
+            description_block.render(description_section, buf);
 
             match self.current_tab {
                 SettingsTab::General => {}
