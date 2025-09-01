@@ -1,6 +1,6 @@
 use crate::{
     clock::{Clock, TimeFormat},
-    colorscheme::{ColorScheme, FALLBACK_COLORSCHEME, SchemeColor},
+    colorscheme::{ColorScheme, SchemeColor},
     helper::{art_block, combine_ascii_art_while_applying_led},
 };
 use chrono::{Local, Timelike};
@@ -77,9 +77,7 @@ impl Clock for ColorClock {
         let color = if let Some(color) = self.accent_color {
             color
         } else {
-            *scheme
-                .get(&SchemeColor::Cyan)
-                .unwrap_or(&FALLBACK_COLORSCHEME[SchemeColor::Cyan as usize])
+            *scheme.get(&SchemeColor::Cyan)
         };
 
         combine_ascii_art_while_applying_led(&result.0, &result.1, &result.2, color)

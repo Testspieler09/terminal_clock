@@ -2,7 +2,7 @@ use crate::{components::logo::Logo, helpers::generate_title};
 use ratatui::{
     layout::Flex,
     prelude::{Alignment, Buffer, Constraint, Layout, Rect},
-    style::{Color, Style},
+    style::Style,
     symbols::{
         border::{ROUNDED, Set},
         line::NORMAL,
@@ -10,7 +10,9 @@ use ratatui::{
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Paragraph, Widget},
 };
+use std::sync::Arc;
 use strum::{AsRefStr, EnumIter, IntoEnumIterator};
+use tc_models::colorscheme::{ColorScheme, SchemeColor};
 
 #[derive(Default, EnumIter, Clone, Copy, PartialEq, Eq, AsRefStr)]
 pub enum SettingsTab {
@@ -20,14 +22,23 @@ pub enum SettingsTab {
     Color,
 }
 
-#[derive(Default)]
 pub struct SettingMenu {
     current_tab: SettingsTab,
     is_visible: bool,
     called_from_hero: bool,
+    colorscheme: Arc<ColorScheme>,
 }
 
 impl SettingMenu {
+    pub fn new(colorscheme: Arc<ColorScheme>) -> SettingMenu {
+        SettingMenu {
+            current_tab: SettingsTab::default(),
+            is_visible: false,
+            called_from_hero: false,
+            colorscheme,
+        }
+    }
+
     pub fn display_tab(&mut self, tab: SettingsTab) {
         self.current_tab = tab;
     }
@@ -74,6 +85,10 @@ impl Widget for &SettingMenu {
             let logo_height = *logo.height() as u16;
             let logo_width = *logo.width() as u16;
 
+            // Color Settings for this widget
+            let border_color = self.colorscheme.get(&SchemeColor::Comment);
+            let tab_highlighting_color = self.colorscheme.get(&SchemeColor::Red);
+
             let box_height = 20;
 
             let [logo_section, setting_section] = Layout::vertical([
@@ -96,7 +111,7 @@ impl Widget for &SettingMenu {
             let settings_block = Block::bordered()
                 .title(generate_title("tab➔".to_string()))
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(Color::Red));
+                .border_style(Style::default().fg(*border_color));
 
             let [_, header_section, content_section] = Layout::vertical([
                 // This constraint is in place, to avoid writing the
@@ -123,13 +138,14 @@ impl Widget for &SettingMenu {
                 let is_active = tab == self.current_tab;
                 let text = if is_active {
                     Line::from(vec![
-                        Span::from("[").style(Style::default().fg(Color::Red)),
-                        Span::from(tab.as_ref()).style(Style::default().fg(Color::White)),
-                        Span::from("]").style(Style::default().fg(Color::Red)),
+                        Span::from("[").style(Style::default().fg(*tab_highlighting_color)),
+                        Span::from(tab.as_ref()),
+                        Span::from("]").style(Style::default().fg(*tab_highlighting_color)),
                     ])
                 } else {
                     Line::from(vec![
-                        Span::from(format!("{}", i + 1)).style(Style::default().fg(Color::Red)),
+                        Span::from(format!("{}", i + 1))
+                            .style(Style::default().fg(*tab_highlighting_color)),
                         Span::from(tab.as_ref().to_owned() + " "),
                     ])
                 };
@@ -145,7 +161,7 @@ impl Widget for &SettingMenu {
                     top_left: NORMAL.vertical_right,
                     ..ROUNDED
                 })
-                .border_style(Style::default().fg(Color::Red));
+                .border_style(Style::default().fg(*border_color));
 
             let description_block = Block::bordered()
                 .border_set(Set {
@@ -154,7 +170,7 @@ impl Widget for &SettingMenu {
                     bottom_left: NORMAL.horizontal_up,
                     ..ROUNDED
                 })
-                .border_style(Style::default().fg(Color::Red));
+                .border_style(Style::default().fg(*border_color));
 
             let [interactive_section, description_section] =
                 Layout::horizontal([Constraint::Fill(1), Constraint::Fill(2)])

@@ -4,9 +4,10 @@ use ratatui::{
     layout::{Flex, Rect},
     prelude::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Widget},
+    widgets::{Block, BorderType, Widget},
 };
+use std::sync::Arc;
+use tc_models::colorscheme::{ColorScheme, SchemeColor};
 
 // FIX: this will never change -> static should not be computed every time it is rendered
 pub(crate) struct HelpBox {
@@ -14,10 +15,17 @@ pub(crate) struct HelpBox {
     width: u16,
     is_visible: bool,
     called_from_hero: bool,
+    colorscheme: Arc<ColorScheme>,
 }
 
-impl Default for HelpBox {
-    fn default() -> Self {
+impl HelpBox {
+    const CONTENT: [[&str; 2]; 3] = [
+        ["?, h", "Show this help box"],
+        ["q", "Quit this program"],
+        ["ESC", "Toggles main menu"],
+    ];
+
+    pub fn new(colorscheme: Arc<ColorScheme>) -> Self {
         HelpBox {
             height: HelpBox::CONTENT.len() as u16 + 3, // Border (2) + Tableheader (1)
             width: HelpBox::CONTENT
@@ -27,16 +35,9 @@ impl Default for HelpBox {
                 .unwrap_or(0) as u16,
             is_visible: false,
             called_from_hero: false,
+            colorscheme,
         }
     }
-}
-
-impl HelpBox {
-    const CONTENT: [[&str; 2]; 3] = [
-        ["?, h", "Show this help box"],
-        ["q", "Quit this program"],
-        ["ESC", "Toggles main menu"],
-    ];
 
     pub fn set_visibility(&mut self, visibility: bool, was_called_from_hero: bool) {
         self.called_from_hero = was_called_from_hero;
@@ -54,6 +55,10 @@ impl Widget for &HelpBox {
             let logo = Logo::default();
             let logo_height = *logo.height() as u16;
             let logo_width = *logo.width() as u16;
+
+            // Color Settings for this widget
+            let border_color = self.colorscheme.get(&SchemeColor::Comment);
+            let highlight_color = self.colorscheme.get(&SchemeColor::Green);
 
             let [top_box, bottom_box] = Layout::vertical([
                 Constraint::Length(logo_height),
@@ -76,7 +81,7 @@ impl Widget for &HelpBox {
             let block = Block::bordered()
                 .title(generate_title("help".to_string()))
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(Color::DarkGray));
+                .border_style(Style::default().fg(*border_color));
 
             let inner_area = block.inner(box_layout);
 
@@ -101,7 +106,7 @@ impl Widget for &HelpBox {
                 table_layout[0],
                 "Key:",
                 Style::default()
-                    .fg(Color::Yellow)
+                    .fg(*highlight_color)
                     .add_modifier(Modifier::BOLD),
             );
 
@@ -110,7 +115,7 @@ impl Widget for &HelpBox {
                 table_layout[1].y,
                 "Description:",
                 Style::default()
-                    .fg(Color::Yellow)
+                    .fg(*highlight_color)
                     .add_modifier(Modifier::BOLD),
             );
 

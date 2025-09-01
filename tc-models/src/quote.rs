@@ -1,4 +1,4 @@
-use crate::colorscheme::{ColorScheme, FALLBACK_COLORSCHEME, SchemeColor};
+use crate::colorscheme::{ColorScheme, SchemeColor};
 use ratatui::{
     style::{Color, Modifier, Style},
     text::Span,
@@ -38,9 +38,7 @@ impl Quote {
             Paragraph::new(Span::styled(
                 &self.text,
                 Style::default()
-                    .fg(*scheme
-                        .get(&SchemeColor::Cyan)
-                        .unwrap_or(&FALLBACK_COLORSCHEME[0]))
+                    .fg(*scheme.get(&SchemeColor::Cyan))
                     .add_modifier(Modifier::BOLD),
             ))
         }

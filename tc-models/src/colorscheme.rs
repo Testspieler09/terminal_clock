@@ -34,7 +34,9 @@ pub struct ColorScheme {
 }
 
 impl ColorScheme {
-    pub fn get(&self, key: &SchemeColor) -> Option<&Color> {
-        self.colors.get(key)
+    pub fn get(&self, key: &SchemeColor) -> &Color {
+        self.colors
+            .get(key)
+            .unwrap_or(&FALLBACK_COLORSCHEME[key.clone() as usize])
     }
 }

@@ -37,14 +37,15 @@ impl TuiRenderer {
             quotes: QuoteLoader::load_quotes()?,
             colorschemes: ColorSchemeLoader::load_colorschemes()?,
         };
+
         let mut tui_state = TuiState {
             application_state: ApplicationState::Running,
             clock_face: tui_assets.clock_faces[0].clone(),
             colorscheme: tui_assets.colorschemes[0].clone(),
             quote: Some(tui_assets.quotes[0].clone()),
             pomodoro: None,
-            help_box: HelpBox::default(),
-            settings_menu: SettingMenu::default(),
+            help_box: HelpBox::new(tui_assets.colorschemes[0].clone()),
+            settings_menu: SettingMenu::new(tui_assets.colorschemes[0].clone()),
             hero: Hero::default(),
             refresh_rate: 100,
         };
