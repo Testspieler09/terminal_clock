@@ -5,4 +5,3 @@ pub mod colorscheme;
 pub mod digital_clock;
 pub mod helper;
 pub mod quote;
-

@@ -9,7 +9,7 @@ use ratatui::{
 use strum::{EnumIter, EnumProperty, IntoEnumIterator};
 
 #[derive(Default, EnumProperty, EnumIter, PartialEq, Eq, Clone, Copy)]
-pub enum MenuLabel {
+pub(crate) enum MenuLabel {
     /// inactive
     /// ┌─┐┌─┐┌┬┐┌┬┐┬┌┐┌┌─┐┌─┐
     /// └─┐├┤  │  │ │││││ ┬└─┐

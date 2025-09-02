@@ -3,6 +3,8 @@ use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
 };
+use std::sync::Arc;
+use tc_models::colorscheme::{ColorScheme, SchemeColor};
 
 pub(crate) fn center_widget(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
     let [mut centered_area] = Layout::horizontal([horizontal])
@@ -32,10 +34,10 @@ pub(crate) fn center_widget_horizontally(
     centered_area
 }
 
-pub(crate) fn generate_title(title: String) -> Line<'static> {
+pub(crate) fn generate_title(title: String, fg: Color) -> Line<'static> {
     Line::from(vec![
         Span::from("┐"),
-        Span::from(title).style(Style::default().fg(Color::White)),
+        Span::from(title).style(Style::default().fg(fg)),
         Span::from("┌"),
     ])
 }

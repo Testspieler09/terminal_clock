@@ -11,6 +11,10 @@ impl EventHandler {
     pub async fn handle_events(tui_state: &mut TuiState) -> io::Result<()> {
         if event::poll(Duration::from_millis(tui_state.refresh_rate))? {
             if let Event::Key(key_event) = event::read()? {
+                if matches!(key_event.kind, event::KeyEventKind::Release) {
+                    return Ok(());
+                }
+
                 // Handle global keys first (like Esc to close buffer/windows)
                 if Self::handle_global_keys(key_event, tui_state) {
                     return Ok(());

@@ -4,13 +4,13 @@ use crate::components::{
 use std::sync::Arc;
 use tc_models::{clock::Clock, colorscheme::ColorScheme, quote::Quote};
 
-pub struct TuiAssets {
+pub(crate) struct TuiAssets {
     pub colorschemes: Vec<Arc<ColorScheme>>,
     pub clock_faces: Vec<Arc<dyn Clock>>,
     pub quotes: Vec<Arc<Quote>>,
 }
 
-pub enum ApplicationState {
+pub(crate) enum ApplicationState {
     /// The clock is running and displayed for the user
     Running,
 
@@ -27,7 +27,7 @@ pub enum ApplicationState {
     Finished,
 }
 
-pub struct TuiState {
+pub(crate) struct TuiState {
     pub application_state: ApplicationState,
     pub colorscheme: Arc<ColorScheme>,
     pub clock_face: Arc<dyn Clock>,

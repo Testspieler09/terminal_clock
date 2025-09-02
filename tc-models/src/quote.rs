@@ -38,7 +38,7 @@ impl Quote {
             Paragraph::new(Span::styled(
                 &self.text,
                 Style::default()
-                    .fg(*scheme.get(&SchemeColor::Cyan))
+                    .fg(*scheme.get(&SchemeColor::Accent))
                     .add_modifier(Modifier::BOLD),
             ))
         }

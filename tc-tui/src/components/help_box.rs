@@ -3,7 +3,7 @@ use ratatui::{
     buffer::Buffer,
     layout::{Flex, Rect},
     prelude::{Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     widgets::{Block, BorderType, Widget},
 };
 use std::sync::Arc;
@@ -57,8 +57,9 @@ impl Widget for &HelpBox {
             let logo_width = *logo.width() as u16;
 
             // Color Settings for this widget
-            let border_color = self.colorscheme.get(&SchemeColor::Comment);
-            let highlight_color = self.colorscheme.get(&SchemeColor::Green);
+            let fg_color = self.colorscheme.get(&SchemeColor::Foreground);
+            let border_color = self.colorscheme.get(&SchemeColor::Borders);
+            let highlight_color = self.colorscheme.get(&SchemeColor::Accent);
 
             let [top_box, bottom_box] = Layout::vertical([
                 Constraint::Length(logo_height),
@@ -79,7 +80,8 @@ impl Widget for &HelpBox {
             logo.render(logo_layout, buf);
 
             let block = Block::bordered()
-                .title(generate_title("help".to_string()))
+                .title(generate_title("help".to_string(), *fg_color))
+                .style(Style::default().fg(*fg_color))
                 .border_type(BorderType::Rounded)
                 .border_style(Style::default().fg(*border_color));
 
@@ -88,10 +90,9 @@ impl Widget for &HelpBox {
             // Render the HelpBox
             block.render(box_layout, buf);
 
-            let table_layout = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
-                .split(inner_area);
+            let table_layout =
+                Layout::horizontal([Constraint::Percentage(30), Constraint::Percentage(70)])
+                    .split(inner_area);
 
             fn center_text(buf: &mut Buffer, area: Rect, text: &str, style: Style) {
                 let text_width = text.len() as u16;
@@ -129,14 +130,14 @@ impl Widget for &HelpBox {
                         height: 1,
                     },
                     line[0],
-                    Style::default(),
+                    Style::default().fg(*fg_color),
                 );
 
                 buf.set_string(
                     table_layout[1].x,
                     table_layout[1].y + i as u16 + 1,
                     line[1],
-                    Style::default(),
+                    Style::default().fg(*fg_color),
                 );
             }
         }

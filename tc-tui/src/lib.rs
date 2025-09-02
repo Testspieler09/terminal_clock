@@ -15,7 +15,13 @@ use crate::{
     tui_models::{ApplicationState, TuiAssets, TuiState},
 };
 use color_eyre::Result;
-use ratatui::{DefaultTerminal, Frame, prelude::Constraint};
+use ratatui::{
+    DefaultTerminal, Frame,
+    prelude::Constraint,
+    style::Style,
+    widgets::{Block, BorderType},
+};
+use tc_models::colorscheme::SchemeColor;
 use tc_user_config_loader::{
     clock_face_loader::ClockFaceLoader, colorscheme_loader::ColorSchemeLoader,
     quote_loader::QuoteLoader,
@@ -24,7 +30,20 @@ use tc_user_config_loader::{
 pub struct TuiRenderer;
 
 impl TuiRenderer {
-    pub async fn start_renderer() -> Result<()> {
+    /// Initializes the terminal UI, runs the main rendering loop, and restores the terminal state.
+    ///
+    /// This async function sets up the terminal using the `ratatui` backend, calls the internal
+    /// [`Self::run`] method to execute the rendering loop, and ensures the terminal is properly
+    /// restored to its original state afterward, even if an error occurs.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` indicating whether the renderer executed successfully or returned an error.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the rendering loop fails during execution.
+    pub async fn execute_renderer() -> Result<()> {
         let terminal = ratatui::init();
         let result = Self::run(terminal).await;
         ratatui::restore();
@@ -38,16 +57,18 @@ impl TuiRenderer {
             colorschemes: ColorSchemeLoader::load_colorschemes()?,
         };
 
+        let starting_colorscheme = tui_assets.colorschemes[0].clone();
+
         let mut tui_state = TuiState {
             application_state: ApplicationState::Running,
             clock_face: tui_assets.clock_faces[0].clone(),
-            colorscheme: tui_assets.colorschemes[0].clone(),
+            colorscheme: starting_colorscheme.clone(),
             quote: Some(tui_assets.quotes[0].clone()),
             pomodoro: None,
-            help_box: HelpBox::new(tui_assets.colorschemes[0].clone()),
-            settings_menu: SettingMenu::new(tui_assets.colorschemes[0].clone()),
+            help_box: HelpBox::new(starting_colorscheme.clone()),
+            settings_menu: SettingMenu::new(starting_colorscheme),
             hero: Hero::default(),
-            refresh_rate: 100,
+            refresh_rate: 500,
         };
 
         loop {
@@ -68,6 +89,15 @@ impl TuiRenderer {
             frame.area(),
             Constraint::Length(width as u16),
             Constraint::Length(height as u16),
+        );
+
+        // Set the right background with a nice border
+        frame.render_widget(
+            Block::bordered()
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(*config.colorscheme.get(&SchemeColor::Borders)))
+                .style(config.colorscheme.default_style()),
+            frame.area(),
         );
 
         match config.application_state {

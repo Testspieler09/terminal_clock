@@ -1,22 +1,21 @@
 use crate::{LoaderResult, default_themes::COLORSCHEMES, get_user_config_path};
 use ratatui::style::Color;
 use serde::Deserialize;
-use std::{collections::HashMap, str::FromStr, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+    sync::Arc,
+};
 use tc_models::colorscheme::{ColorScheme, FALLBACK_COLORSCHEME, SchemeColor};
 
 #[derive(Deserialize)]
 pub(crate) struct SchemeConfig {
     pub name: Option<String>,
     pub foreground: Option<String>,
+    pub background: Option<String>,
     pub selection: Option<String>,
-    pub comment: Option<String>,
-    pub red: Option<String>,
-    pub orange: Option<String>,
-    pub yellow: Option<String>,
-    pub green: Option<String>,
-    pub purple: Option<String>,
-    pub cyan: Option<String>,
-    pub pink: Option<String>,
+    pub accent: Option<String>,
+    pub borders: Option<String>,
 }
 
 impl From<SchemeConfig> for ColorScheme {
@@ -28,6 +27,7 @@ impl From<SchemeConfig> for ColorScheme {
         }
 
         let mut colors = HashMap::new();
+        let mut transparent_colors = HashSet::new();
 
         colors.insert(
             SchemeColor::Foreground,
@@ -36,6 +36,17 @@ impl From<SchemeConfig> for ColorScheme {
                 FALLBACK_COLORSCHEME[SchemeColor::Foreground as usize],
             ),
         );
+
+        let background_color = config
+            .background
+            .as_deref()
+            .and_then(|s| Color::from_str(s).ok());
+        if let Some(bg_color) = background_color {
+            colors.insert(SchemeColor::Background, bg_color);
+        } else {
+            transparent_colors.insert(SchemeColor::Background);
+        }
+
         colors.insert(
             SchemeColor::Selection,
             parse_color(
@@ -44,62 +55,24 @@ impl From<SchemeConfig> for ColorScheme {
             ),
         );
         colors.insert(
-            SchemeColor::Comment,
+            SchemeColor::Accent,
             parse_color(
-                config.comment,
-                FALLBACK_COLORSCHEME[SchemeColor::Comment as usize],
+                config.accent,
+                FALLBACK_COLORSCHEME[SchemeColor::Accent as usize],
             ),
         );
         colors.insert(
-            SchemeColor::Red,
-            parse_color(config.red, FALLBACK_COLORSCHEME[SchemeColor::Red as usize]),
-        );
-        colors.insert(
-            SchemeColor::Orange,
+            SchemeColor::Borders,
             parse_color(
-                config.orange,
-                FALLBACK_COLORSCHEME[SchemeColor::Orange as usize],
-            ),
-        );
-        colors.insert(
-            SchemeColor::Yellow,
-            parse_color(
-                config.yellow,
-                FALLBACK_COLORSCHEME[SchemeColor::Yellow as usize],
-            ),
-        );
-        colors.insert(
-            SchemeColor::Green,
-            parse_color(
-                config.green,
-                FALLBACK_COLORSCHEME[SchemeColor::Green as usize],
-            ),
-        );
-        colors.insert(
-            SchemeColor::Purple,
-            parse_color(
-                config.purple,
-                FALLBACK_COLORSCHEME[SchemeColor::Purple as usize],
-            ),
-        );
-        colors.insert(
-            SchemeColor::Cyan,
-            parse_color(
-                config.cyan,
-                FALLBACK_COLORSCHEME[SchemeColor::Cyan as usize],
-            ),
-        );
-        colors.insert(
-            SchemeColor::Pink,
-            parse_color(
-                config.pink,
-                FALLBACK_COLORSCHEME[SchemeColor::Pink as usize],
+                config.borders,
+                FALLBACK_COLORSCHEME[SchemeColor::Borders as usize],
             ),
         );
 
         ColorScheme {
             name: config.name.expect("Expected the theme to have a name."),
             colors,
+            transparent_colors,
         }
     }
 }

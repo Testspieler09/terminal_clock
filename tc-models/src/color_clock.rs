@@ -77,7 +77,7 @@ impl Clock for ColorClock {
         let color = if let Some(color) = self.accent_color {
             color
         } else {
-            *scheme.get(&SchemeColor::Cyan)
+            *scheme.get(&SchemeColor::Accent)
         };
 
         combine_ascii_art_while_applying_led(&result.0, &result.1, &result.2, color)

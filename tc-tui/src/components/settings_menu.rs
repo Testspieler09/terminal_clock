@@ -15,14 +15,14 @@ use strum::{AsRefStr, EnumIter, IntoEnumIterator};
 use tc_models::colorscheme::{ColorScheme, SchemeColor};
 
 #[derive(Default, EnumIter, Clone, Copy, PartialEq, Eq, AsRefStr)]
-pub enum SettingsTab {
+pub(crate) enum SettingsTab {
     #[default]
     General,
     Pomodoro,
     Color,
 }
 
-pub struct SettingMenu {
+pub(crate) struct SettingMenu {
     current_tab: SettingsTab,
     is_visible: bool,
     called_from_hero: bool,
@@ -86,10 +86,12 @@ impl Widget for &SettingMenu {
             let logo_width = *logo.width() as u16;
 
             // Color Settings for this widget
-            let border_color = self.colorscheme.get(&SchemeColor::Comment);
-            let tab_highlighting_color = self.colorscheme.get(&SchemeColor::Red);
+            let fg_color = self.colorscheme.get(&SchemeColor::Foreground);
+            let border_color = self.colorscheme.get(&SchemeColor::Borders);
+            let selection_color = self.colorscheme.get(&SchemeColor::Selection);
 
-            let box_height = 20;
+            let box_height = 30;
+            let box_width = 70;
 
             let [logo_section, setting_section] = Layout::vertical([
                 Constraint::Length(logo_height),
@@ -102,14 +104,15 @@ impl Widget for &SettingMenu {
                 .flex(Flex::Center)
                 .areas(logo_section);
 
-            let [box_layout] = Layout::horizontal([Constraint::Length(50)])
+            let [box_layout] = Layout::horizontal([Constraint::Length(box_width)])
                 .flex(Flex::Center)
                 .areas(setting_section);
 
             logo.render(logo_layout, buf);
 
             let settings_block = Block::bordered()
-                .title(generate_title("tab➔".to_string()))
+                .title(generate_title("tab➔".to_string(), *fg_color))
+                .style(Style::default().fg(*fg_color))
                 .border_type(BorderType::Rounded)
                 .border_style(Style::default().fg(*border_color));
 
@@ -138,15 +141,16 @@ impl Widget for &SettingMenu {
                 let is_active = tab == self.current_tab;
                 let text = if is_active {
                     Line::from(vec![
-                        Span::from("[").style(Style::default().fg(*tab_highlighting_color)),
+                        Span::from("[").style(Style::default().fg(*selection_color)),
                         Span::from(tab.as_ref()),
-                        Span::from("]").style(Style::default().fg(*tab_highlighting_color)),
+                        Span::from("]").style(Style::default().fg(*selection_color)),
                     ])
                 } else {
                     Line::from(vec![
                         Span::from(format!("{}", i + 1))
-                            .style(Style::default().fg(*tab_highlighting_color)),
-                        Span::from(tab.as_ref().to_owned() + " "),
+                            .style(Style::default().fg(*selection_color)),
+                        Span::from(tab.as_ref().to_owned() + " ")
+                            .style(Style::default().fg(*fg_color)),
                     ])
                 };
 
@@ -161,6 +165,7 @@ impl Widget for &SettingMenu {
                     top_left: NORMAL.vertical_right,
                     ..ROUNDED
                 })
+                .style(Style::default().fg(*fg_color))
                 .border_style(Style::default().fg(*border_color));
 
             let description_block = Block::bordered()
@@ -170,6 +175,7 @@ impl Widget for &SettingMenu {
                     bottom_left: NORMAL.horizontal_up,
                     ..ROUNDED
                 })
+                .style(Style::default().fg(*fg_color))
                 .border_style(Style::default().fg(*border_color));
 
             let [interactive_section, description_section] =
