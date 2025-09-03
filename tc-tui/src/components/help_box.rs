@@ -1,8 +1,8 @@
-use crate::{components::logo::Logo, helpers::generate_title};
+use crate::helpers::generate_title;
 use ratatui::{
     buffer::Buffer,
-    layout::{Flex, Rect},
-    prelude::{Constraint, Direction, Layout},
+    layout::Rect,
+    prelude::{Constraint, Layout},
     style::{Modifier, Style},
     widgets::{Block, BorderType, Widget},
 };
@@ -11,9 +11,8 @@ use tc_models::colorscheme::{ColorScheme, SchemeColor};
 
 // FIX: this will never change -> static should not be computed every time it is rendered
 pub(crate) struct HelpBox {
-    height: u16,
-    width: u16,
-    is_visible: bool,
+    pub height: u16,
+    pub width: u16,
     called_from_hero: bool,
     colorscheme: Arc<ColorScheme>,
 }
@@ -33,15 +32,13 @@ impl HelpBox {
                 .map(|pair| pair[0].len() + pair[1].len() + 15)
                 .max()
                 .unwrap_or(0) as u16,
-            is_visible: false,
             called_from_hero: false,
             colorscheme,
         }
     }
 
-    pub fn set_visibility(&mut self, visibility: bool, was_called_from_hero: bool) {
+    pub fn set_called_from_hero(&mut self, was_called_from_hero: bool) {
         self.called_from_hero = was_called_from_hero;
-        self.is_visible = visibility;
     }
 
     pub fn was_called_from_hero(&self) -> bool {
@@ -51,95 +48,71 @@ impl HelpBox {
 
 impl Widget for &HelpBox {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        if self.is_visible {
-            let logo = Logo::default();
-            let logo_height = *logo.height() as u16;
-            let logo_width = *logo.width() as u16;
+        // Color Settings for this widget
+        let fg_color = self.colorscheme.get(&SchemeColor::Foreground);
+        let border_color = self.colorscheme.get(&SchemeColor::Borders);
+        let highlight_color = self.colorscheme.get(&SchemeColor::Accent);
 
-            // Color Settings for this widget
-            let fg_color = self.colorscheme.get(&SchemeColor::Foreground);
-            let border_color = self.colorscheme.get(&SchemeColor::Borders);
-            let highlight_color = self.colorscheme.get(&SchemeColor::Accent);
+        let block = Block::bordered()
+            .title(generate_title("help".to_string(), *fg_color))
+            .style(Style::default().fg(*fg_color))
+            .border_type(BorderType::Rounded)
+            .border_style(Style::default().fg(*border_color));
 
-            let [top_box, bottom_box] = Layout::vertical([
-                Constraint::Length(logo_height),
-                Constraint::Length(self.height),
-            ])
-            .margin((area.height - (logo_height + self.height)) / 2)
-            .areas(area);
+        let inner_area = block.inner(area);
 
-            let [logo_layout] = Layout::horizontal([Constraint::Length(logo_width)])
-                .flex(Flex::Center)
-                .areas(top_box);
+        // Render the HelpBox
+        block.render(area, buf);
 
-            let [box_layout] = Layout::horizontal([Constraint::Length(self.width)])
-                .flex(Flex::Center)
-                .areas(bottom_box);
+        let table_layout =
+            Layout::horizontal([Constraint::Percentage(30), Constraint::Percentage(70)])
+                .split(inner_area);
 
-            // Render the Logo
-            logo.render(logo_layout, buf);
+        fn center_text(buf: &mut Buffer, area: Rect, text: &str, style: Style) {
+            let text_width = text.len() as u16;
+            let offset = (area.width.saturating_sub(text_width)) / 2;
+            buf.set_string(area.x + offset, area.y, text, style);
+        }
 
-            let block = Block::bordered()
-                .title(generate_title("help".to_string(), *fg_color))
-                .style(Style::default().fg(*fg_color))
-                .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(*border_color));
+        // Render table headers
+        // TODO: use a paragraph here with alignement center
+        center_text(
+            buf,
+            table_layout[0],
+            "Key:",
+            Style::default()
+                .fg(*highlight_color)
+                .add_modifier(Modifier::BOLD),
+        );
 
-            let inner_area = block.inner(box_layout);
+        buf.set_string(
+            table_layout[1].x,
+            table_layout[1].y,
+            "Description:",
+            Style::default()
+                .fg(*highlight_color)
+                .add_modifier(Modifier::BOLD),
+        );
 
-            // Render the HelpBox
-            block.render(box_layout, buf);
-
-            let table_layout =
-                Layout::horizontal([Constraint::Percentage(30), Constraint::Percentage(70)])
-                    .split(inner_area);
-
-            fn center_text(buf: &mut Buffer, area: Rect, text: &str, style: Style) {
-                let text_width = text.len() as u16;
-                let offset = (area.width.saturating_sub(text_width)) / 2;
-                buf.set_string(area.x + offset, area.y, text, style);
-            }
-
-            // Render table headers
-            // TODO: use a paragraph here with alignement center
+        for (i, line) in HelpBox::CONTENT.iter().enumerate() {
             center_text(
                 buf,
-                table_layout[0],
-                "Key:",
-                Style::default()
-                    .fg(*highlight_color)
-                    .add_modifier(Modifier::BOLD),
+                Rect {
+                    x: table_layout[0].x,
+                    y: table_layout[1].y + i as u16 + 1,
+                    width: table_layout[0].width,
+                    height: 1,
+                },
+                line[0],
+                Style::default().fg(*fg_color),
             );
 
             buf.set_string(
                 table_layout[1].x,
-                table_layout[1].y,
-                "Description:",
-                Style::default()
-                    .fg(*highlight_color)
-                    .add_modifier(Modifier::BOLD),
+                table_layout[1].y + i as u16 + 1,
+                line[1],
+                Style::default().fg(*fg_color),
             );
-
-            for (i, line) in HelpBox::CONTENT.iter().enumerate() {
-                center_text(
-                    buf,
-                    Rect {
-                        x: table_layout[0].x,
-                        y: table_layout[1].y + i as u16 + 1,
-                        width: table_layout[0].width,
-                        height: 1,
-                    },
-                    line[0],
-                    Style::default().fg(*fg_color),
-                );
-
-                buf.set_string(
-                    table_layout[1].x,
-                    table_layout[1].y + i as u16 + 1,
-                    line[1],
-                    Style::default().fg(*fg_color),
-                );
-            }
         }
     }
 }

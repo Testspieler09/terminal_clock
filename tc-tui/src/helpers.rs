@@ -3,8 +3,6 @@ use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
 };
-use std::sync::Arc;
-use tc_models::colorscheme::{ColorScheme, SchemeColor};
 
 pub(crate) fn center_widget(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
     let [mut centered_area] = Layout::horizontal([horizontal])

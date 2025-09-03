@@ -1,0 +1,9 @@
+#Source: https://catppuccin.com/palette/
+
+name = "Catppuccin Mocha"
+
+foreground = "#cdd6f4"
+background = "#1e1e2e"
+selection  = "#cba6f7"
+accent     = "#fab387"
+borders    = "#74c7ec"

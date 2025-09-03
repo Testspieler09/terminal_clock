@@ -39,7 +39,6 @@ impl EventHandler {
             KeyCode::Esc | KeyCode::Char('q') => match tui_state.application_state {
                 ApplicationState::ShowingHero => {
                     tui_state.application_state = ApplicationState::Running;
-                    tui_state.hero.set_visibility(false);
                     true
                 }
                 ApplicationState::ShowingHelp => {
@@ -48,7 +47,7 @@ impl EventHandler {
                     } else {
                         tui_state.application_state = ApplicationState::Running;
                     }
-                    tui_state.help_box.set_visibility(false, false);
+                    tui_state.help_box.set_called_from_hero(false);
                     true
                 }
                 ApplicationState::ShowingSettings => {
@@ -57,7 +56,7 @@ impl EventHandler {
                     } else {
                         tui_state.application_state = ApplicationState::Running;
                     }
-                    tui_state.settings_menu.set_visibility(false, false);
+                    tui_state.settings_menu.set_called_from_hero(false);
                     true
                 }
                 ApplicationState::Running => {
@@ -77,15 +76,14 @@ impl EventHandler {
     fn handle_normal_keys(key_event: KeyEvent, tui_state: &mut TuiState) {
         match key_event.code {
             KeyCode::Esc => {
-                tui_state.hero.set_visibility(true);
                 tui_state.application_state = ApplicationState::ShowingHero;
             }
             KeyCode::Char('?') | KeyCode::Char('h') => {
-                tui_state.help_box.set_visibility(true, false);
+                tui_state.help_box.set_called_from_hero(false);
                 tui_state.application_state = ApplicationState::ShowingHelp;
             }
             KeyCode::Char('s') => {
-                tui_state.settings_menu.set_visibility(true, false);
+                tui_state.settings_menu.set_called_from_hero(false);
                 tui_state.application_state = ApplicationState::ShowingSettings;
             }
             _ => {}
@@ -99,11 +97,11 @@ impl EventHandler {
             KeyCode::Enter => match tui_state.hero.active_label {
                 MenuLabel::QUIT => tui_state.application_state = ApplicationState::Finished,
                 MenuLabel::HELP => {
-                    tui_state.help_box.set_visibility(true, true);
+                    tui_state.help_box.set_called_from_hero(true);
                     tui_state.application_state = ApplicationState::ShowingHelp;
                 }
                 MenuLabel::SETTINGS => {
-                    tui_state.settings_menu.set_visibility(true, true);
+                    tui_state.settings_menu.set_called_from_hero(true);
                     tui_state.application_state = ApplicationState::ShowingSettings;
                 }
             },
@@ -128,7 +126,7 @@ impl EventHandler {
                 } else {
                     tui_state.application_state = ApplicationState::Running;
                 }
-                tui_state.settings_menu.set_visibility(false, false);
+                tui_state.settings_menu.set_called_from_hero(false);
             }
             _ => {}
         }

@@ -2,22 +2,20 @@ pub(crate) mod components;
 pub(crate) mod event_handler;
 pub(crate) mod helpers;
 pub(crate) mod tui_models;
+pub(crate) mod views;
 
 use crate::{
-    components::{
-        help_box::HelpBox,
-        hero::Hero,
-        pomodoro::{PomodoroConfig, PomodoroTimer},
-        settings_menu::SettingMenu,
-    },
+    components::{help_box::HelpBox, hero::Hero, settings_menu::SettingMenu},
     event_handler::EventHandler,
-    helpers::{center_widget, center_widget_horizontally},
     tui_models::{ApplicationState, TuiAssets, TuiState},
+    views::{
+        clock::render_clock_view, help::render_help_view, hero::render_hero_view,
+        settings::render_settings_view,
+    },
 };
 use color_eyre::Result;
 use ratatui::{
     DefaultTerminal, Frame,
-    prelude::Constraint,
     style::Style,
     widgets::{Block, BorderType},
 };
@@ -83,14 +81,6 @@ impl TuiRenderer {
     }
 
     fn render(frame: &mut Frame, config: &TuiState) {
-        let (ascii_art_paragraph, width, height) =
-            config.clock_face.draw_clockface(&config.colorscheme);
-        let area = center_widget(
-            frame.area(),
-            Constraint::Length(width as u16),
-            Constraint::Length(height as u16),
-        );
-
         // Set the right background with a nice border
         frame.render_widget(
             Block::bordered()
@@ -101,38 +91,10 @@ impl TuiRenderer {
         );
 
         match config.application_state {
-            ApplicationState::Running => {
-                // Render Clock
-                frame.render_widget(ascii_art_paragraph, area);
-
-                // Render Quote if exists
-                if let Some(quote) = &config.quote {
-                    let quote_area = center_widget_horizontally(
-                        frame.area(),
-                        Constraint::Length(quote.text.len() as u16),
-                        Constraint::Length(1),
-                        area.y + area.height + 1,
-                    );
-
-                    frame.render_widget(quote.render(&config.colorscheme), quote_area);
-                }
-
-                // Render Pomodoro if active
-                if let Some(_pomodoro) = &config.pomodoro {
-                    let _ = PomodoroTimer::new(PomodoroConfig {
-                        work_duration: 25,
-                        short_break_duration: 5,
-                        long_break_duration: 15,
-                        total_sessions: 5,
-                        sessions_before_long_break: 2,
-                    });
-                }
-            }
-            ApplicationState::ShowingHero => frame.render_widget(&config.hero, frame.area()),
-            ApplicationState::ShowingHelp => frame.render_widget(&config.help_box, frame.area()),
-            ApplicationState::ShowingSettings => {
-                frame.render_widget(&config.settings_menu, frame.area())
-            }
+            ApplicationState::Running => render_clock_view(frame, config),
+            ApplicationState::ShowingHero => render_hero_view(frame, config),
+            ApplicationState::ShowingHelp => render_help_view(frame, config),
+            ApplicationState::ShowingSettings => render_settings_view(frame, config),
             ApplicationState::Finished => {}
         }
     }

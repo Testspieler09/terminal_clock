@@ -1,5 +1,5 @@
-pub(crate) mod help_box;
-pub(crate) mod hero;
-pub(crate) mod logo;
-pub(crate) mod pomodoro;
-pub(crate) mod settings_menu;
+pub(super) mod help_box;
+pub(super) mod hero;
+pub(super) mod logo;
+pub(super) mod pomodoro;
+pub(super) mod settings_menu;
