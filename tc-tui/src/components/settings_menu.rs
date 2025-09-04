@@ -1,4 +1,4 @@
-use crate::helpers::generate_title;
+use crate::{components::Dimensions, helpers::generate_title};
 use ratatui::{
     prelude::{Alignment, Buffer, Constraint, Layout, Rect},
     style::Style,
@@ -25,6 +25,8 @@ pub(crate) struct SettingMenu {
     current_tab: SettingsTab,
     called_from_hero: bool,
     colorscheme: Arc<ColorScheme>,
+    height: u16,
+    width: u16,
 }
 
 impl SettingMenu {
@@ -33,6 +35,9 @@ impl SettingMenu {
             current_tab: SettingsTab::default(),
             called_from_hero: false,
             colorscheme,
+            // TODO: adjust based on content of menu
+            height: 40u16,
+            width: 75u16,
         }
     }
 
@@ -71,6 +76,16 @@ impl SettingMenu {
 
     pub fn was_called_from_hero(&self) -> bool {
         self.called_from_hero
+    }
+}
+
+impl Dimensions for &SettingMenu {
+    fn height(&self) -> u16 {
+        self.height
+    }
+
+    fn width(&self) -> u16 {
+        self.width
     }
 }
 

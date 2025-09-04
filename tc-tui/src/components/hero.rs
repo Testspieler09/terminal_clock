@@ -1,4 +1,4 @@
-use crate::components::logo::{CYAN_SHADES, GRAY_SHADES};
+use crate::components::{CYAN_SHADES, Dimensions, GRAY_SHADES};
 use ratatui::{
     layout::Flex,
     prelude::{Buffer, Constraint, Layout, Rect},
@@ -57,9 +57,10 @@ pub(crate) enum MenuLabel {
     QUIT,
 }
 
-#[derive(Default)]
 pub(crate) struct Hero {
     pub active_label: MenuLabel,
+    height: u16,
+    width: u16,
 }
 
 impl Hero {
@@ -70,7 +71,9 @@ impl Hero {
             } else {
                 "inactive"
             })
-            .unwrap();
+            .expect(
+                "All MenuLabel enum variants should have an active and inactive representation",
+            );
 
         ascii
             .lines()
@@ -109,28 +112,67 @@ impl Hero {
     }
 }
 
+impl Default for Hero {
+    fn default() -> Self {
+        Hero {
+            active_label: MenuLabel::default(),
+            height: {
+                // Each MenuLabel has 3 lines, and we display them vertically
+                MenuLabel::iter().count() as u16 * 3
+            },
+            width: {
+                MenuLabel::iter()
+                    .map(|label| {
+                        label
+                            .get_str("active")
+                            .expect("All labels should have a string representation")
+                            .lines()
+                            .filter_map(|line| Some(line.len()))
+                            .max()
+                            .expect("The labels string representation should not be empty")
+                    })
+                    .max()
+                    .unwrap() as u16
+            },
+        }
+    }
+}
+
+impl Dimensions for &Hero {
+    fn height(&self) -> u16 {
+        self.height
+    }
+
+    fn width(&self) -> u16 {
+        self.width
+    }
+}
+
 impl Widget for &Hero {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let mut box_layout = Layout::horizontal([Constraint::Length(25)])
+        let mut label_layout = Layout::horizontal([Constraint::Length(25)])
             .flex(Flex::Center)
             .split(area);
 
-        box_layout = Layout::vertical([
+        label_layout = Layout::vertical([
             Constraint::Length(3),
             Constraint::Length(3),
             Constraint::Length(3),
         ])
-        .split(box_layout[0]);
+        .split(label_layout[0]);
 
         for (index, label) in MenuLabel::iter().enumerate() {
             let lines = Hero::map_label_to_ascii(&label, &self.active_label);
             for (i, line) in lines.iter().enumerate() {
-                let offset = (box_layout[index].width.saturating_sub(line.width() as u16)) / 2;
+                let offset = (label_layout[index]
+                    .width
+                    .saturating_sub(line.width() as u16))
+                    / 2;
                 buf.set_line(
-                    box_layout[index].x + offset,
-                    box_layout[index].y + i as u16,
+                    label_layout[index].x + offset,
+                    label_layout[index].y + i as u16,
                     &line,
-                    box_layout[index].width,
+                    label_layout[index].width,
                 );
             }
         }

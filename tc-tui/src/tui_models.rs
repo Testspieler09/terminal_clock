@@ -1,5 +1,5 @@
 use crate::components::{
-    help_box::HelpBox, hero::Hero, pomodoro::PomodoroTimer, settings_menu::SettingMenu,
+    help_box::HelpBox, hero::Hero, logo::Logo, pomodoro::PomodoroTimer, settings_menu::SettingMenu,
 };
 use std::sync::Arc;
 use tc_models::{clock::Clock, colorscheme::ColorScheme, quote::Quote};
@@ -36,5 +36,6 @@ pub(crate) struct TuiState {
     pub help_box: HelpBox,
     pub settings_menu: SettingMenu,
     pub hero: Hero,
+    pub logo: Logo,
     pub refresh_rate: u64,
 }

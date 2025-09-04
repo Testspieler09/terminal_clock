@@ -1,4 +1,4 @@
-use crate::helpers::generate_title;
+use crate::{components::Dimensions, helpers::generate_title};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -11,8 +11,8 @@ use tc_models::colorscheme::{ColorScheme, SchemeColor};
 
 // FIX: this will never change -> static should not be computed every time it is rendered
 pub(crate) struct HelpBox {
-    pub height: u16,
-    pub width: u16,
+    height: u16,
+    width: u16,
     called_from_hero: bool,
     colorscheme: Arc<ColorScheme>,
 }
@@ -31,7 +31,7 @@ impl HelpBox {
                 .iter()
                 .map(|pair| pair[0].len() + pair[1].len() + 15)
                 .max()
-                .unwrap_or(0) as u16,
+                .unwrap() as u16,
             called_from_hero: false,
             colorscheme,
         }
@@ -43,6 +43,16 @@ impl HelpBox {
 
     pub fn was_called_from_hero(&self) -> bool {
         self.called_from_hero
+    }
+}
+
+impl Dimensions for &HelpBox {
+    fn height(&self) -> u16 {
+        self.height
+    }
+
+    fn width(&self) -> u16 {
+        self.width
     }
 }
 

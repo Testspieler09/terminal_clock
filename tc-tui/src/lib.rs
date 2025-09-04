@@ -5,13 +5,10 @@ pub(crate) mod tui_models;
 pub(crate) mod views;
 
 use crate::{
-    components::{help_box::HelpBox, hero::Hero, settings_menu::SettingMenu},
+    components::{help_box::HelpBox, hero::Hero, logo::Logo, settings_menu::SettingMenu},
     event_handler::EventHandler,
     tui_models::{ApplicationState, TuiAssets, TuiState},
-    views::{
-        clock::render_clock_view, help::render_help_view, hero::render_hero_view,
-        settings::render_settings_view,
-    },
+    views::clock::render_clock_view,
 };
 use color_eyre::Result;
 use ratatui::{
@@ -55,7 +52,7 @@ impl TuiRenderer {
             colorschemes: ColorSchemeLoader::load_colorschemes()?,
         };
 
-        let starting_colorscheme = tui_assets.colorschemes[0].clone();
+        let starting_colorscheme = tui_assets.colorschemes[2].clone();
 
         let mut tui_state = TuiState {
             application_state: ApplicationState::Running,
@@ -66,6 +63,7 @@ impl TuiRenderer {
             help_box: HelpBox::new(starting_colorscheme.clone()),
             settings_menu: SettingMenu::new(starting_colorscheme),
             hero: Hero::default(),
+            logo: Logo::default(),
             refresh_rate: 500,
         };
 
@@ -92,9 +90,15 @@ impl TuiRenderer {
 
         match config.application_state {
             ApplicationState::Running => render_clock_view(frame, config),
-            ApplicationState::ShowingHero => render_hero_view(frame, config),
-            ApplicationState::ShowingHelp => render_help_view(frame, config),
-            ApplicationState::ShowingSettings => render_settings_view(frame, config),
+            ApplicationState::ShowingHero => {
+                config.logo.render_component_with_logo(&config.hero, frame)
+            }
+            ApplicationState::ShowingHelp => config
+                .logo
+                .render_component_with_logo(&config.help_box, frame),
+            ApplicationState::ShowingSettings => config
+                .logo
+                .render_component_with_logo(&config.settings_menu, frame),
             ApplicationState::Finished => {}
         }
     }

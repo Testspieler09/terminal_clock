@@ -1,46 +1,18 @@
+use crate::components::{CYAN_SHADES, Dimensions, GRAY_SHADES};
 use ratatui::{
-    prelude::{Buffer, Rect},
+    Frame,
+    layout::Flex,
+    prelude::{Buffer, Constraint, Layout, Rect},
     style::{Color, Style},
-    widgets::{Block, BorderType, Borders, Widget},
+    text::{Line, Span, Text},
+    widgets::{Paragraph, Widget, WidgetRef},
 };
 use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) struct Logo {
-    height: usize,
-    width: usize,
-}
-
-/// Mainly used for Logo and Hero
-pub(super) const CYAN_SHADES: [Color; 6] = [
-    Color::Rgb(0x44, 0xAE, 0xB3),
-    Color::Rgb(0x24, 0x9E, 0xA0),
-    Color::Rgb(0x00, 0x8B, 0x8B),
-    Color::Rgb(0x00, 0x79, 0x79),
-    Color::Rgb(0x00, 0x67, 0x67),
-    Color::Rgb(0x00, 0x55, 0x55),
-];
-
-/// Mainly used for Logo and Hero
-pub(super) const GRAY_SHADES: [Color; 6] = [
-    Color::Rgb(0xBB, 0xBB, 0xBB),
-    Color::Rgb(0xAA, 0xAA, 0xAA),
-    Color::Rgb(0x99, 0x99, 0x99),
-    Color::Rgb(0x88, 0x88, 0x88),
-    Color::Rgb(0x77, 0x77, 0x77),
-    Color::Rgb(0x66, 0x66, 0x66),
-];
-
-impl Default for Logo {
-    fn default() -> Self {
-        Logo {
-            height: Logo::FULL_LOGO.lines().count() + 2,
-            width: Logo::FULL_LOGO
-                .lines()
-                .map(|i| i.graphemes(true).count() + 2)
-                .max()
-                .unwrap_or(0),
-        }
-    }
+    height: u16,
+    width: u16,
+    paragraph: Paragraph<'static>,
 }
 
 impl Logo {
@@ -54,35 +26,22 @@ impl Logo {
         env!("CARGO_PKG_VERSION")
     );
 
-    pub fn height(&self) -> &usize {
-        &self.height
-    }
-
-    pub fn width(&self) -> &usize {
-        &self.width
-    }
-}
-
-impl Widget for Logo {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let block = Block::default()
-            .border_type(BorderType::Rounded)
-            .borders(Borders::ALL);
-
-        let inner_area = block.inner(area);
-
+    fn init() -> Paragraph<'static> {
+        let mut spans_vec = Vec::new();
         let mut color_index = 0;
 
-        for (i, line) in Logo::FULL_LOGO.lines().enumerate() {
-            let y = inner_area.y + i as u16;
-            let mut x = inner_area.x;
+        for line in Logo::FULL_LOGO.lines() {
+            let mut line_spans = Vec::new();
 
             let line_cyan = CYAN_SHADES.get(color_index).copied().unwrap_or(Color::Cyan);
             let line_gray = GRAY_SHADES.get(color_index).copied().unwrap_or(Color::Gray);
 
             color_index += 1;
 
-            let mut buf_str = [0u8; 4];
+            // Process each character in the line
+            let mut current_style = None;
+            let mut current_text = String::new();
+
             for ch in line.chars() {
                 let style = Style::default().fg(if ch == '█' {
                     line_cyan
@@ -92,13 +51,92 @@ impl Widget for Logo {
                     line_gray
                 });
 
-                // FIX: expect should be replaced with error handling
-                buf.cell_mut((x, y))
-                    .expect("")
-                    .set_symbol(ch.encode_utf8(&mut buf_str))
-                    .set_style(style);
-                x += 1;
+                // If we encounter a new style or this is the first character
+                if current_style.map_or(true, |s| s != style) {
+                    // Push the accumulated text with its style
+                    if !current_text.is_empty() {
+                        line_spans.push(Span::styled(current_text, current_style.unwrap()));
+                        current_text = String::new();
+                    }
+                    current_style = Some(style);
+                }
+
+                current_text.push(ch);
             }
+
+            // Add the last span
+            if !current_text.is_empty() && current_style.is_some() {
+                line_spans.push(Span::styled(current_text, current_style.unwrap()));
+            }
+
+            spans_vec.push(Line::from(line_spans));
         }
+
+        let text = Text::from(spans_vec);
+        Paragraph::new(text)
+    }
+
+    pub fn render_component_with_logo<W: Widget + Dimensions>(
+        &self,
+        component: W,
+        frame: &mut Frame,
+    ) {
+        let area = frame.area();
+        let buf = frame.buffer_mut();
+
+        let component_height = component.height();
+        let component_width = component.width();
+
+        let logo_height = self.height;
+        let logo_width = self.width;
+
+        let [logo_section, setting_section] = Layout::vertical([
+            Constraint::Length(logo_height),
+            Constraint::Length(component_height),
+        ])
+        .margin((area.height - (logo_height + component_height)) / 2)
+        .areas(area);
+
+        let [logo_layout] = Layout::horizontal([Constraint::Length(logo_width)])
+            .flex(Flex::Center)
+            .areas(logo_section);
+
+        let [settings_layout] = Layout::horizontal([Constraint::Length(component_width)])
+            .flex(Flex::Center)
+            .areas(setting_section);
+
+        self.render(logo_layout, buf);
+        component.render(settings_layout, buf);
+    }
+}
+
+impl Default for Logo {
+    fn default() -> Self {
+        Logo {
+            height: Logo::FULL_LOGO.lines().count() as u16 + 2,
+            width: Logo::FULL_LOGO
+                .lines()
+                .map(|i| i.graphemes(true).count() + 2)
+                .max()
+                .unwrap() as u16,
+            paragraph: Self::init(),
+        }
+    }
+}
+
+impl Dimensions for Logo {
+    fn height(&self) -> u16 {
+        self.height
+    }
+
+    fn width(&self) -> u16 {
+        self.width
+    }
+}
+
+impl Widget for &Logo {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        // Render the static paragraph
+        self.paragraph.render_ref(area, buf);
     }
 }
