@@ -31,6 +31,10 @@ impl ColorScheme {
             .unwrap_or(&FALLBACK_COLORSCHEME[key.clone() as usize])
     }
 
+    pub fn update(&mut self, key: SchemeColor, new_value: Color) {
+        self.colors.insert(key, new_value);
+    }
+
     pub fn try_get(&self, key: &SchemeColor) -> Option<&Color> {
         if self.transparent_colors.contains(key) {
             None

@@ -1,4 +1,5 @@
 use crate::{
+    TuiComponents,
     components::{hero::MenuLabel, settings_menu::SettingsTab},
     tui_models::{ApplicationState, TuiState},
 };
@@ -8,7 +9,10 @@ use tokio::{io, time::Duration};
 pub(crate) struct EventHandler;
 
 impl EventHandler {
-    pub async fn handle_events(tui_state: &mut TuiState) -> io::Result<()> {
+    pub fn handle_events(
+        tui_state: &mut TuiState,
+        components: &mut TuiComponents,
+    ) -> io::Result<()> {
         if event::poll(Duration::from_millis(tui_state.refresh_rate))? {
             if let Event::Key(key_event) = event::read()? {
                 if matches!(key_event.kind, event::KeyEventKind::Release) {
@@ -16,16 +20,20 @@ impl EventHandler {
                 }
 
                 // Handle global keys first (like Esc to close buffer/windows)
-                if Self::handle_global_keys(key_event, tui_state) {
+                if Self::handle_global_keys(key_event, tui_state, components) {
                     return Ok(());
                 }
 
                 // Then handle state-specific keys
                 match tui_state.application_state {
-                    ApplicationState::Running => Self::handle_normal_keys(key_event, tui_state),
-                    ApplicationState::ShowingHero => Self::handle_hero_keys(key_event, tui_state),
+                    ApplicationState::Running => {
+                        Self::handle_normal_keys(key_event, tui_state, components)
+                    }
+                    ApplicationState::ShowingHero => {
+                        Self::handle_hero_keys(key_event, tui_state, components)
+                    }
                     ApplicationState::ShowingSettings => {
-                        Self::handle_setting_keys(key_event, tui_state)
+                        Self::handle_setting_keys(key_event, tui_state, components)
                     }
                     ApplicationState::ShowingHelp | ApplicationState::Finished => {}
                 }
@@ -34,7 +42,11 @@ impl EventHandler {
         Ok(())
     }
 
-    fn handle_global_keys(key_event: KeyEvent, tui_state: &mut TuiState) -> bool {
+    fn handle_global_keys(
+        key_event: KeyEvent,
+        tui_state: &mut TuiState,
+        components: &mut TuiComponents,
+    ) -> bool {
         match key_event.code {
             KeyCode::Esc | KeyCode::Char('q') => match tui_state.application_state {
                 ApplicationState::ShowingHero => {
@@ -42,21 +54,21 @@ impl EventHandler {
                     true
                 }
                 ApplicationState::ShowingHelp => {
-                    if tui_state.help_box.was_called_from_hero() {
+                    if components.help_box.was_called_from_hero() {
                         tui_state.application_state = ApplicationState::ShowingHero;
                     } else {
                         tui_state.application_state = ApplicationState::Running;
                     }
-                    tui_state.help_box.set_called_from_hero(false);
+                    components.help_box.set_called_from_hero(false);
                     true
                 }
                 ApplicationState::ShowingSettings => {
-                    if tui_state.settings_menu.was_called_from_hero() {
+                    if components.settings_menu.was_called_from_hero() {
                         tui_state.application_state = ApplicationState::ShowingHero;
                     } else {
                         tui_state.application_state = ApplicationState::Running;
                     }
-                    tui_state.settings_menu.set_called_from_hero(false);
+                    components.settings_menu.set_called_from_hero(false);
                     true
                 }
                 ApplicationState::Running => {
@@ -73,35 +85,43 @@ impl EventHandler {
         }
     }
 
-    fn handle_normal_keys(key_event: KeyEvent, tui_state: &mut TuiState) {
+    fn handle_normal_keys(
+        key_event: KeyEvent,
+        tui_state: &mut TuiState,
+        components: &mut TuiComponents,
+    ) {
         match key_event.code {
             KeyCode::Esc => {
                 tui_state.application_state = ApplicationState::ShowingHero;
             }
             KeyCode::Char('?') | KeyCode::Char('h') => {
-                tui_state.help_box.set_called_from_hero(false);
+                components.help_box.set_called_from_hero(false);
                 tui_state.application_state = ApplicationState::ShowingHelp;
             }
             KeyCode::Char('s') => {
-                tui_state.settings_menu.set_called_from_hero(false);
+                components.settings_menu.set_called_from_hero(false);
                 tui_state.application_state = ApplicationState::ShowingSettings;
             }
             _ => {}
         }
     }
 
-    fn handle_hero_keys(key_event: KeyEvent, tui_state: &mut TuiState) {
+    fn handle_hero_keys(
+        key_event: KeyEvent,
+        tui_state: &mut TuiState,
+        components: &mut TuiComponents,
+    ) {
         match key_event.code {
-            KeyCode::Char('j') | KeyCode::Down => tui_state.hero.next_label(),
-            KeyCode::Char('k') | KeyCode::Up => tui_state.hero.prev_label(),
-            KeyCode::Enter => match tui_state.hero.active_label {
+            KeyCode::Char('j') | KeyCode::Down => components.hero.next_label(),
+            KeyCode::Char('k') | KeyCode::Up => components.hero.prev_label(),
+            KeyCode::Enter => match components.hero.active_label {
                 MenuLabel::QUIT => tui_state.application_state = ApplicationState::Finished,
                 MenuLabel::HELP => {
-                    tui_state.help_box.set_called_from_hero(true);
+                    components.help_box.set_called_from_hero(true);
                     tui_state.application_state = ApplicationState::ShowingHelp;
                 }
                 MenuLabel::SETTINGS => {
-                    tui_state.settings_menu.set_called_from_hero(true);
+                    components.settings_menu.set_called_from_hero(true);
                     tui_state.application_state = ApplicationState::ShowingSettings;
                 }
             },
@@ -109,24 +129,28 @@ impl EventHandler {
         }
     }
 
-    fn handle_setting_keys(key_event: KeyEvent, tui_state: &mut TuiState) {
+    fn handle_setting_keys(
+        key_event: KeyEvent,
+        tui_state: &mut TuiState,
+        components: &mut TuiComponents,
+    ) {
         match key_event.code {
             KeyCode::Char('j') | KeyCode::Down => {}
             KeyCode::Char('k') | KeyCode::Up => {}
             KeyCode::Char('h') | KeyCode::Left => {}
             KeyCode::Char('l') | KeyCode::Right => {}
-            KeyCode::Tab => tui_state.settings_menu.next_label(),
-            KeyCode::BackTab => tui_state.settings_menu.prev_label(),
-            KeyCode::Char('1') => tui_state.settings_menu.display_tab(SettingsTab::General),
-            KeyCode::Char('2') => tui_state.settings_menu.display_tab(SettingsTab::Pomodoro),
-            KeyCode::Char('3') => tui_state.settings_menu.display_tab(SettingsTab::Color),
+            KeyCode::Tab => components.settings_menu.next_label(),
+            KeyCode::BackTab => components.settings_menu.prev_label(),
+            // KeyCode::Char('1') => components.settings_menu.display_tab(SettingsTab::General),
+            // KeyCode::Char('2') => components.settings_menu.display_tab(SettingsTab::Pomodoro),
+            // KeyCode::Char('3') => components.settings_menu.display_tab(SettingsTab::Color),
             KeyCode::Char('s') => {
-                if tui_state.settings_menu.was_called_from_hero() {
+                if components.settings_menu.was_called_from_hero() {
                     tui_state.application_state = ApplicationState::ShowingHero;
                 } else {
                     tui_state.application_state = ApplicationState::Running;
                 }
-                tui_state.settings_menu.set_called_from_hero(false);
+                components.settings_menu.set_called_from_hero(false);
             }
             _ => {}
         }

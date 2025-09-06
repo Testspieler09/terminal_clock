@@ -1,8 +1,11 @@
 use ratatui::style::Color;
 
+pub(super) mod carousel_selector;
+pub(super) mod color_input_field;
 pub(super) mod help_box;
 pub(super) mod hero;
 pub(super) mod logo;
+pub(super) mod number_input;
 pub(super) mod pomodoro;
 pub(super) mod settings_menu;
 

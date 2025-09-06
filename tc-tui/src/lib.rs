@@ -5,9 +5,7 @@ pub(crate) mod tui_models;
 pub(crate) mod views;
 
 use crate::{
-    components::{help_box::HelpBox, hero::Hero, logo::Logo, settings_menu::SettingMenu},
-    event_handler::EventHandler,
-    tui_models::{ApplicationState, TuiAssets, TuiState},
+    tui_models::{ApplicationState, TuiAssets, TuiComponents, TuiController, TuiState},
     views::clock::render_clock_view,
 };
 use color_eyre::Result;
@@ -16,11 +14,8 @@ use ratatui::{
     style::Style,
     widgets::{Block, BorderType},
 };
+use std::sync::{Arc, RwLock};
 use tc_models::colorscheme::SchemeColor;
-use tc_user_config_loader::{
-    clock_face_loader::ClockFaceLoader, colorscheme_loader::ColorSchemeLoader,
-    quote_loader::QuoteLoader,
-};
 
 pub struct TuiRenderer;
 
@@ -46,59 +41,55 @@ impl TuiRenderer {
     }
 
     async fn run(mut terminal: DefaultTerminal) -> Result<()> {
-        let tui_assets = TuiAssets {
-            clock_faces: ClockFaceLoader::load_clockfaces()?,
-            quotes: QuoteLoader::load_quotes()?,
-            colorschemes: ColorSchemeLoader::load_colorschemes()?,
-        };
+        let tui_assets = Arc::new(TuiAssets::try_default()?);
 
-        let starting_colorscheme = tui_assets.colorschemes[2].clone();
-
-        let mut tui_state = TuiState {
+        let tui_state = Arc::new(RwLock::new(TuiState {
             application_state: ApplicationState::Running,
             clock_face: tui_assets.clock_faces[0].clone(),
-            colorscheme: starting_colorscheme.clone(),
+            colorscheme: tui_assets.colorschemes[2].clone(),
             quote: Some(tui_assets.quotes[0].clone()),
             pomodoro: None,
-            help_box: HelpBox::new(starting_colorscheme.clone()),
-            settings_menu: SettingMenu::new(starting_colorscheme),
-            hero: Hero::default(),
-            logo: Logo::default(),
             refresh_rate: 500,
-        };
+        }));
+
+        let controller = Arc::new(TuiController::new(tui_state.clone(), tui_assets.clone()));
+
+        let mut tui_components = TuiComponents::new(controller.clone());
 
         loop {
-            terminal.draw(|frame| Self::render(frame, &tui_state))?;
+            {
+                let state_guard = tui_state.read().unwrap();
+                terminal.draw(|frame| Self::render(frame, &state_guard, &tui_components))?;
+            }
 
-            EventHandler::handle_events(&mut tui_state).await?;
-
-            if matches!(tui_state.application_state, ApplicationState::Finished) {
+            let should_exit = controller.handle_events(&mut tui_components)?;
+            if should_exit {
                 break Ok(());
             }
         }
     }
 
-    fn render(frame: &mut Frame, config: &TuiState) {
+    fn render(frame: &mut Frame, state: &TuiState, components: &TuiComponents) {
         // Set the right background with a nice border
         frame.render_widget(
             Block::bordered()
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(*config.colorscheme.get(&SchemeColor::Borders)))
-                .style(config.colorscheme.default_style()),
+                .border_style(Style::default().fg(*state.colorscheme.get(&SchemeColor::Borders)))
+                .style(state.colorscheme.default_style()),
             frame.area(),
         );
 
-        match config.application_state {
-            ApplicationState::Running => render_clock_view(frame, config),
-            ApplicationState::ShowingHero => {
-                config.logo.render_component_with_logo(&config.hero, frame)
-            }
-            ApplicationState::ShowingHelp => config
+        match state.application_state {
+            ApplicationState::Running => render_clock_view(frame, state),
+            ApplicationState::ShowingHero => components
                 .logo
-                .render_component_with_logo(&config.help_box, frame),
-            ApplicationState::ShowingSettings => config
+                .render_component_with_logo(&components.hero, frame),
+            ApplicationState::ShowingHelp => components
                 .logo
-                .render_component_with_logo(&config.settings_menu, frame),
+                .render_component_with_logo(&components.help_box, frame),
+            ApplicationState::ShowingSettings => components
+                .logo
+                .render_component_with_logo(&components.settings_menu, frame),
             ApplicationState::Finished => {}
         }
     }

@@ -1,7 +1,7 @@
-use crate::{components::Dimensions, helpers::generate_title};
+use crate::{components::Dimensions, helpers::generate_title, tui_models::TuiController};
 use ratatui::{
     prelude::{Alignment, Buffer, Constraint, Layout, Rect},
-    style::Style,
+    style::{Color, Style},
     symbols::{
         border::{ROUNDED, Set},
         line::NORMAL,
@@ -11,31 +11,49 @@ use ratatui::{
 };
 use std::sync::Arc;
 use strum::{AsRefStr, EnumIter, IntoEnumIterator};
-use tc_models::colorscheme::{ColorScheme, SchemeColor};
+use tc_models::{clock::Clock, colorscheme::SchemeColor, quote::Quote};
 
-#[derive(Default, EnumIter, Clone, Copy, PartialEq, Eq, AsRefStr)]
+#[derive(EnumIter, Clone, Copy, PartialEq, Eq, AsRefStr)]
 pub(crate) enum SettingsTab {
-    #[default]
-    General,
-    Pomodoro,
-    Color,
+    General(u16),
+    Pomodoro(u16),
+    Color(u16),
+}
+
+impl Default for SettingsTab {
+    fn default() -> Self {
+        SettingsTab::General(0)
+    }
+}
+
+impl SettingsTab {
+    pub fn next_option() {}
+    pub fn prev_option() {}
+}
+
+pub(crate) enum SettingsAction {
+    UpdateClockFace(Arc<dyn Clock>),
+    UpdateColor(SchemeColor, Color),
+    UpdateQuote(Arc<Quote>),
+    UpdateRefreshRate(u64),
 }
 
 pub(crate) struct SettingMenu {
     current_tab: SettingsTab,
     called_from_hero: bool,
-    colorscheme: Arc<ColorScheme>,
+    tui_controller: Arc<TuiController>,
+    pending_action: Option<SettingsAction>,
     height: u16,
     width: u16,
 }
 
 impl SettingMenu {
-    pub fn new(colorscheme: Arc<ColorScheme>) -> SettingMenu {
+    pub fn new(tui_controller: Arc<TuiController>) -> SettingMenu {
         SettingMenu {
             current_tab: SettingsTab::default(),
             called_from_hero: false,
-            colorscheme,
-            // TODO: adjust based on content of menu
+            tui_controller,
+            pending_action: None,
             height: 40u16,
             width: 75u16,
         }
@@ -77,6 +95,10 @@ impl SettingMenu {
     pub fn was_called_from_hero(&self) -> bool {
         self.called_from_hero
     }
+
+    fn render_general_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect) {}
+    fn render_pomodoro_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect) {}
+    fn render_color_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect) {}
 }
 
 impl Dimensions for &SettingMenu {
@@ -92,15 +114,15 @@ impl Dimensions for &SettingMenu {
 impl Widget for &SettingMenu {
     fn render(self, area: Rect, buf: &mut Buffer) {
         // Color Settings for this widget
-        let fg_color = self.colorscheme.get(&SchemeColor::Foreground);
-        let border_color = self.colorscheme.get(&SchemeColor::Borders);
-        let selection_color = self.colorscheme.get(&SchemeColor::Selection);
+        let fg_color = self.tui_controller.get_color(&SchemeColor::Foreground);
+        let border_color = self.tui_controller.get_color(&SchemeColor::Borders);
+        let selection_color = self.tui_controller.get_color(&SchemeColor::Selection);
 
         let settings_block = Block::bordered()
-            .title(generate_title("tab➔".to_string(), *fg_color))
-            .style(Style::default().fg(*fg_color))
+            .title(generate_title("tab➔".to_string(), fg_color))
+            .style(Style::default().fg(fg_color))
             .border_type(BorderType::Rounded)
-            .border_style(Style::default().fg(*border_color));
+            .border_style(Style::default().fg(border_color));
 
         let [_, header_section, content_section] = Layout::vertical([
             // This constraint is in place, to avoid writing the
@@ -127,14 +149,14 @@ impl Widget for &SettingMenu {
             let is_active = tab == self.current_tab;
             let text = if is_active {
                 Line::from(vec![
-                    Span::from("[").style(Style::default().fg(*selection_color)),
+                    Span::from("[").style(Style::default().fg(selection_color)),
                     Span::from(tab.as_ref()),
-                    Span::from("]").style(Style::default().fg(*selection_color)),
+                    Span::from("]").style(Style::default().fg(selection_color)),
                 ])
             } else {
                 Line::from(vec![
-                    Span::from(format!("{}", i + 1)).style(Style::default().fg(*selection_color)),
-                    Span::from(tab.as_ref().to_owned() + " ").style(Style::default().fg(*fg_color)),
+                    Span::from(format!("{}", i + 1)).style(Style::default().fg(selection_color)),
+                    Span::from(tab.as_ref().to_owned() + " ").style(Style::default().fg(fg_color)),
                 ])
             };
 
@@ -149,8 +171,8 @@ impl Widget for &SettingMenu {
                 top_left: NORMAL.vertical_right,
                 ..ROUNDED
             })
-            .style(Style::default().fg(*fg_color))
-            .border_style(Style::default().fg(*border_color));
+            .style(Style::default().fg(fg_color))
+            .border_style(Style::default().fg(border_color));
 
         let description_block = Block::bordered()
             .border_set(Set {
@@ -159,8 +181,8 @@ impl Widget for &SettingMenu {
                 bottom_left: NORMAL.horizontal_up,
                 ..ROUNDED
             })
-            .style(Style::default().fg(*fg_color))
-            .border_style(Style::default().fg(*border_color));
+            .style(Style::default().fg(fg_color))
+            .border_style(Style::default().fg(border_color));
 
         let [interactive_section, description_section] =
             Layout::horizontal([Constraint::Fill(1), Constraint::Fill(2)]).areas(content_section);
@@ -169,9 +191,15 @@ impl Widget for &SettingMenu {
         description_block.render(description_section, buf);
 
         match self.current_tab {
-            SettingsTab::General => {}
-            SettingsTab::Pomodoro => {}
-            SettingsTab::Color => {}
+            SettingsTab::General(selected_entry) => {
+                self.render_general_tab(selected_entry, interactive_section, description_section)
+            }
+            SettingsTab::Pomodoro(selected_entry) => {
+                self.render_pomodoro_tab(selected_entry, interactive_section, description_section)
+            }
+            SettingsTab::Color(selected_entry) => {
+                self.render_color_tab(selected_entry, interactive_section, description_section)
+            }
         }
     }
 }

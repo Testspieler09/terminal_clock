@@ -5,7 +5,7 @@ pub mod quote_loader;
 
 use std::{fmt, io, path::PathBuf};
 
-type LoaderResult<T> = Result<T, ColorSchemeLoadError>;
+pub type LoaderResult<T> = Result<T, ColorSchemeLoadError>;
 
 #[derive(Debug)]
 pub enum ColorSchemeLoadError {

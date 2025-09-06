@@ -1,4 +1,4 @@
-use crate::{components::Dimensions, helpers::generate_title};
+use crate::{components::Dimensions, helpers::generate_title, tui_models::TuiController};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -7,14 +7,14 @@ use ratatui::{
     widgets::{Block, BorderType, Widget},
 };
 use std::sync::Arc;
-use tc_models::colorscheme::{ColorScheme, SchemeColor};
+use tc_models::colorscheme::SchemeColor;
 
 // FIX: this will never change -> static should not be computed every time it is rendered
 pub(crate) struct HelpBox {
     height: u16,
     width: u16,
     called_from_hero: bool,
-    colorscheme: Arc<ColorScheme>,
+    tui_controller: Arc<TuiController>,
 }
 
 impl HelpBox {
@@ -24,7 +24,7 @@ impl HelpBox {
         ["ESC", "Toggles main menu"],
     ];
 
-    pub fn new(colorscheme: Arc<ColorScheme>) -> Self {
+    pub fn new(tui_controller: Arc<TuiController>) -> Self {
         HelpBox {
             height: HelpBox::CONTENT.len() as u16 + 3, // Border (2) + Tableheader (1)
             width: HelpBox::CONTENT
@@ -33,7 +33,7 @@ impl HelpBox {
                 .max()
                 .unwrap() as u16,
             called_from_hero: false,
-            colorscheme,
+            tui_controller,
         }
     }
 
@@ -59,15 +59,15 @@ impl Dimensions for &HelpBox {
 impl Widget for &HelpBox {
     fn render(self, area: Rect, buf: &mut Buffer) {
         // Color Settings for this widget
-        let fg_color = self.colorscheme.get(&SchemeColor::Foreground);
-        let border_color = self.colorscheme.get(&SchemeColor::Borders);
-        let highlight_color = self.colorscheme.get(&SchemeColor::Accent);
+        let fg_color = self.tui_controller.get_color(&SchemeColor::Foreground);
+        let border_color = self.tui_controller.get_color(&SchemeColor::Borders);
+        let highlight_color = self.tui_controller.get_color(&SchemeColor::Accent);
 
         let block = Block::bordered()
-            .title(generate_title("help".to_string(), *fg_color))
-            .style(Style::default().fg(*fg_color))
+            .title(generate_title("help".to_string(), fg_color))
+            .style(Style::default().fg(fg_color))
             .border_type(BorderType::Rounded)
-            .border_style(Style::default().fg(*border_color));
+            .border_style(Style::default().fg(border_color));
 
         let inner_area = block.inner(area);
 
@@ -91,7 +91,7 @@ impl Widget for &HelpBox {
             table_layout[0],
             "Key:",
             Style::default()
-                .fg(*highlight_color)
+                .fg(highlight_color)
                 .add_modifier(Modifier::BOLD),
         );
 
@@ -100,7 +100,7 @@ impl Widget for &HelpBox {
             table_layout[1].y,
             "Description:",
             Style::default()
-                .fg(*highlight_color)
+                .fg(highlight_color)
                 .add_modifier(Modifier::BOLD),
         );
 
@@ -114,14 +114,14 @@ impl Widget for &HelpBox {
                     height: 1,
                 },
                 line[0],
-                Style::default().fg(*fg_color),
+                Style::default().fg(fg_color),
             );
 
             buf.set_string(
                 table_layout[1].x,
                 table_layout[1].y + i as u16 + 1,
                 line[1],
-                Style::default().fg(*fg_color),
+                Style::default().fg(fg_color),
             );
         }
     }
