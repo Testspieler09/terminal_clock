@@ -1,7 +1,7 @@
 use ratatui::style::{Color, Style, palette::tailwind};
 use std::collections::{HashMap, HashSet};
 
-pub const FALLBACK_COLORSCHEME: [Color; 5] = [
+pub const FALLBACK_COLOR_THEME: [Color; 5] = [
     tailwind::SLATE.c300,  // SchemeColor::Forground
     tailwind::GRAY.c500,   // SchemeColor::Background
     tailwind::CYAN.c500,   // SchemeColor::Selection
@@ -10,7 +10,7 @@ pub const FALLBACK_COLORSCHEME: [Color; 5] = [
 ];
 
 #[derive(Clone, Eq, Hash, PartialEq)]
-pub enum SchemeColor {
+pub enum ThemeColor {
     Foreground,
     Background,
     Selection,
@@ -18,24 +18,24 @@ pub enum SchemeColor {
     Borders,
 }
 
-pub struct ColorScheme {
+pub struct ColorTheme {
     pub name: String,
-    pub colors: HashMap<SchemeColor, Color>,
-    pub transparent_colors: HashSet<SchemeColor>,
+    pub colors: HashMap<ThemeColor, Color>,
+    pub transparent_colors: HashSet<ThemeColor>,
 }
 
-impl ColorScheme {
-    pub fn get(&self, key: &SchemeColor) -> &Color {
+impl ColorTheme {
+    pub fn get(&self, key: &ThemeColor) -> &Color {
         self.colors
             .get(key)
-            .unwrap_or(&FALLBACK_COLORSCHEME[key.clone() as usize])
+            .unwrap_or(&FALLBACK_COLOR_THEME[key.clone() as usize])
     }
 
-    pub fn update(&mut self, key: SchemeColor, new_value: Color) {
+    pub fn update(&mut self, key: ThemeColor, new_value: Color) {
         self.colors.insert(key, new_value);
     }
 
-    pub fn try_get(&self, key: &SchemeColor) -> Option<&Color> {
+    pub fn try_get(&self, key: &ThemeColor) -> Option<&Color> {
         if self.transparent_colors.contains(key) {
             None
         } else {
@@ -44,8 +44,8 @@ impl ColorScheme {
     }
 
     pub fn default_style(&self) -> Style {
-        let fg = *self.get(&SchemeColor::Foreground);
-        let bg = self.try_get(&SchemeColor::Background);
+        let fg = *self.get(&ThemeColor::Foreground);
+        let bg = self.try_get(&ThemeColor::Background);
 
         if let Some(bg) = bg {
             Style::default().fg(fg).bg(*bg)

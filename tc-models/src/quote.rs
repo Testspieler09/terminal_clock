@@ -1,4 +1,4 @@
-use crate::colorscheme::{ColorScheme, SchemeColor};
+use crate::color_theme::{ColorTheme, ThemeColor};
 use ratatui::{
     style::{Color, Modifier, Style},
     text::Span,
@@ -8,7 +8,7 @@ use ratatui::{
 pub struct Quote {
     pub text: String,
 
-    /// None will use the default accent color of the colorscheme
+    /// None will use the default accent color of the color theme
     pub accent_color: Option<Color>,
 }
 
@@ -28,7 +28,7 @@ impl Quote {
     }
 
     /// Returns a Paragraph widget to render the quote
-    pub fn render(&self, scheme: &ColorScheme) -> Paragraph<'_> {
+    pub fn render(&self, theme: &ColorTheme) -> Paragraph<'_> {
         if let Some(color) = self.accent_color {
             Paragraph::new(Span::styled(
                 self.text.clone(),
@@ -38,7 +38,7 @@ impl Quote {
             Paragraph::new(Span::styled(
                 &self.text,
                 Style::default()
-                    .fg(*scheme.get(&SchemeColor::Accent))
+                    .fg(*theme.get(&ThemeColor::Accent))
                     .add_modifier(Modifier::BOLD),
             ))
         }

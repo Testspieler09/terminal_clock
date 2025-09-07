@@ -15,7 +15,7 @@ use ratatui::{
     widgets::{Block, BorderType},
 };
 use std::sync::{Arc, RwLock};
-use tc_models::colorscheme::SchemeColor;
+use tc_models::color_theme::ThemeColor;
 
 pub struct TuiRenderer;
 
@@ -46,7 +46,7 @@ impl TuiRenderer {
         let tui_state = Arc::new(RwLock::new(TuiState {
             application_state: ApplicationState::Running,
             clock_face: tui_assets.clock_faces[0].clone(),
-            colorscheme: tui_assets.colorschemes[2].clone(),
+            colorscheme: tui_assets.color_themes[2].clone(),
             quote: Some(tui_assets.quotes[0].clone()),
             pomodoro: None,
             refresh_rate: 500,
@@ -74,7 +74,7 @@ impl TuiRenderer {
         frame.render_widget(
             Block::bordered()
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(*state.colorscheme.get(&SchemeColor::Borders)))
+                .border_style(Style::default().fg(*state.colorscheme.get(&ThemeColor::Borders)))
                 .style(state.colorscheme.default_style()),
             frame.area(),
         );

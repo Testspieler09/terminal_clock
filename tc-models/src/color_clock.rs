@@ -1,6 +1,6 @@
 use crate::{
     clock::{Clock, TimeFormat},
-    colorscheme::{ColorScheme, SchemeColor},
+    color_theme::{ColorTheme, ThemeColor},
     helper::{art_block, combine_ascii_art_while_applying_led},
 };
 use chrono::{Local, Timelike};
@@ -47,7 +47,7 @@ impl ColorClock {
 }
 
 impl Clock for ColorClock {
-    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph<'_>, usize, usize) {
+    fn draw_clockface(&self, theme: &ColorTheme) -> (Paragraph<'_>, usize, usize) {
         let time_stamp = Local::now();
         let hour_value = time_stamp.hour();
         let minute_value = time_stamp.minute();
@@ -77,9 +77,13 @@ impl Clock for ColorClock {
         let color = if let Some(color) = self.accent_color {
             color
         } else {
-            *scheme.get(&SchemeColor::Accent)
+            *theme.get(&ThemeColor::Accent)
         };
 
         combine_ascii_art_while_applying_led(&result.0, &result.1, &result.2, color)
+    }
+
+    fn set_clock_format_to(&mut self, fmt: TimeFormat) {
+        self.format = Some(fmt);
     }
 }

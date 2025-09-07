@@ -1,5 +1,5 @@
 [package]
-name = "tc-cli"
+name = "tc"
 edition = "2024"
 
 [dependencies]

@@ -1,4 +1,4 @@
-use crate::{LoaderResult, default_themes::COLORSCHEMES, get_user_config_path};
+use crate::{LoaderResult, default_themes::COLOR_THEMES, get_user_config_path};
 use ratatui::style::Color;
 use serde::Deserialize;
 use std::{
@@ -6,10 +6,10 @@ use std::{
     str::FromStr,
     sync::Arc,
 };
-use tc_models::colorscheme::{ColorScheme, FALLBACK_COLORSCHEME, SchemeColor};
+use tc_models::color_theme::{ColorTheme, FALLBACK_COLOR_THEME, ThemeColor};
 
 #[derive(Deserialize)]
-pub(crate) struct SchemeConfig {
+pub(crate) struct ThemeConfig {
     pub name: Option<String>,
     pub foreground: Option<String>,
     pub background: Option<String>,
@@ -18,8 +18,8 @@ pub(crate) struct SchemeConfig {
     pub borders: Option<String>,
 }
 
-impl From<SchemeConfig> for ColorScheme {
-    fn from(config: SchemeConfig) -> Self {
+impl From<ThemeConfig> for ColorTheme {
+    fn from(config: ThemeConfig) -> Self {
         fn parse_color(opt: Option<String>, fallback: Color) -> Color {
             opt.as_deref()
                 .and_then(|s| Color::from_str(s).ok())
@@ -30,10 +30,10 @@ impl From<SchemeConfig> for ColorScheme {
         let mut transparent_colors = HashSet::new();
 
         colors.insert(
-            SchemeColor::Foreground,
+            ThemeColor::Foreground,
             parse_color(
                 config.foreground,
-                FALLBACK_COLORSCHEME[SchemeColor::Foreground as usize],
+                FALLBACK_COLOR_THEME[ThemeColor::Foreground as usize],
             ),
         );
 
@@ -42,34 +42,34 @@ impl From<SchemeConfig> for ColorScheme {
             .as_deref()
             .and_then(|s| Color::from_str(s).ok());
         if let Some(bg_color) = background_color {
-            colors.insert(SchemeColor::Background, bg_color);
+            colors.insert(ThemeColor::Background, bg_color);
         } else {
-            transparent_colors.insert(SchemeColor::Background);
+            transparent_colors.insert(ThemeColor::Background);
         }
 
         colors.insert(
-            SchemeColor::Selection,
+            ThemeColor::Selection,
             parse_color(
                 config.selection,
-                FALLBACK_COLORSCHEME[SchemeColor::Selection as usize],
+                FALLBACK_COLOR_THEME[ThemeColor::Selection as usize],
             ),
         );
         colors.insert(
-            SchemeColor::Accent,
+            ThemeColor::Accent,
             parse_color(
                 config.accent,
-                FALLBACK_COLORSCHEME[SchemeColor::Accent as usize],
+                FALLBACK_COLOR_THEME[ThemeColor::Accent as usize],
             ),
         );
         colors.insert(
-            SchemeColor::Borders,
+            ThemeColor::Borders,
             parse_color(
                 config.borders,
-                FALLBACK_COLORSCHEME[SchemeColor::Borders as usize],
+                FALLBACK_COLOR_THEME[ThemeColor::Borders as usize],
             ),
         );
 
-        ColorScheme {
+        ColorTheme {
             name: config.name.expect("Expected the theme to have a name."),
             colors,
             transparent_colors,
@@ -77,10 +77,10 @@ impl From<SchemeConfig> for ColorScheme {
     }
 }
 
-pub struct ColorSchemeLoader;
+pub struct ColorThemeLoader;
 
-impl ColorSchemeLoader {
-    fn load_user_themes() -> LoaderResult<Vec<Arc<ColorScheme>>> {
+impl ColorThemeLoader {
+    fn load_user_themes() -> LoaderResult<Vec<Arc<ColorTheme>>> {
         let folder_path = get_user_config_path()?.join("themes");
 
         let toml_count = std::fs::read_dir(&folder_path)?
@@ -108,7 +108,7 @@ impl ColorSchemeLoader {
             }
 
             let content = std::fs::read_to_string(&path)?;
-            let mut parsed_theme: SchemeConfig = toml::from_str(&content)?;
+            let mut parsed_theme: ThemeConfig = toml::from_str(&content)?;
 
             if parsed_theme.name.is_none() {
                 let filename = path.file_name().and_then(|f| f.to_str());
@@ -121,11 +121,11 @@ impl ColorSchemeLoader {
         Ok(themes)
     }
 
-    pub fn load_colorschemes() -> LoaderResult<Vec<Arc<ColorScheme>>> {
+    pub fn load_color_themes() -> LoaderResult<Vec<Arc<ColorTheme>>> {
         let mut schemes = Vec::new();
 
-        for scheme in COLORSCHEMES {
-            let colorscheme: SchemeConfig = toml::from_str(scheme)?;
+        for scheme in COLOR_THEMES {
+            let colorscheme: ThemeConfig = toml::from_str(scheme)?;
             schemes.push(Arc::new(colorscheme.into()));
         }
         if let Ok(user_theme) = Self::load_user_themes() {

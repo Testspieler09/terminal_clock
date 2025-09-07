@@ -1,6 +1,6 @@
 use crate::{
     TuiComponents,
-    components::{hero::MenuLabel, settings_menu::SettingsTab},
+    components::hero::MenuLabel,
     tui_models::{ApplicationState, TuiState},
 };
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
@@ -139,8 +139,8 @@ impl EventHandler {
             KeyCode::Char('k') | KeyCode::Up => {}
             KeyCode::Char('h') | KeyCode::Left => {}
             KeyCode::Char('l') | KeyCode::Right => {}
-            KeyCode::Tab => components.settings_menu.next_label(),
-            KeyCode::BackTab => components.settings_menu.prev_label(),
+            KeyCode::Tab => components.settings_menu.next_tab(),
+            KeyCode::BackTab => components.settings_menu.prev_tab(),
             // KeyCode::Char('1') => components.settings_menu.display_tab(SettingsTab::General),
             // KeyCode::Char('2') => components.settings_menu.display_tab(SettingsTab::Pomodoro),
             // KeyCode::Char('3') => components.settings_menu.display_tab(SettingsTab::Color),

@@ -1,6 +1,6 @@
 use crate::{
     clock::{Clock, TimeFormat},
-    colorscheme::ColorScheme,
+    color_theme::ColorTheme,
 };
 use ratatui::widgets::Paragraph;
 
@@ -16,11 +16,17 @@ pub struct AnalogClock {
     hour_center: [u32; 2],
     minute_center: [u32; 2],
     seconds_center: [u32; 2],
+
+    format: Option<TimeFormat>,
 }
 
 impl Clock for AnalogClock {
     // TODO: add a default implementaton of the func here
-    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph<'_>, usize, usize) {
+    fn draw_clockface(&self, theme: &ColorTheme) -> (Paragraph<'_>, usize, usize) {
         todo!()
+    }
+
+    fn set_clock_format_to(&mut self, fmt: TimeFormat) {
+        self.format = Some(fmt);
     }
 }

@@ -887,7 +887,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tc-cli"
+name = "tc"
 version = "0.0.0"
 dependencies = [
  "clap",

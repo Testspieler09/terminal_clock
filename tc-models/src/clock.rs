@@ -1,4 +1,4 @@
-use crate::colorscheme::ColorScheme;
+use crate::color_theme::ColorTheme;
 use ratatui::widgets::Paragraph;
 use serde::Deserialize;
 
@@ -10,5 +10,6 @@ pub enum TimeFormat {
 }
 
 pub trait Clock {
-    fn draw_clockface(&self, scheme: &ColorScheme) -> (Paragraph<'_>, usize, usize);
+    fn draw_clockface(&self, theme: &ColorTheme) -> (Paragraph<'_>, usize, usize);
+    fn set_clock_format_to(&mut self, fmt: TimeFormat);
 }

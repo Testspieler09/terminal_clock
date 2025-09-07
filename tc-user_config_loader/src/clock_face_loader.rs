@@ -6,7 +6,7 @@ use tc_models::{
     analog_clock::AnalogClock,
     clock::{Clock, TimeFormat},
     color_clock::ColorClock,
-    colorscheme::FALLBACK_COLORSCHEME,
+    color_theme::FALLBACK_COLOR_THEME,
     digital_clock::DigitalClock,
     helper::{TimeUnit, generate_binary_led_coords},
 };
@@ -64,7 +64,7 @@ impl From<ColorClockConfig> for ColorClock {
         );
         let accent_color = config
             .accent_color
-            .map(|color| Color::from_str(&color).unwrap_or(FALLBACK_COLORSCHEME[0]));
+            .map(|color| Color::from_str(&color).unwrap_or(FALLBACK_COLOR_THEME[0]));
 
         ColorClock::new(
             config.hour,

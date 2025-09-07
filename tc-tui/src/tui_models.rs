@@ -12,18 +12,18 @@ use ratatui::{
 use std::sync::{Arc, RwLock};
 use tc_models::{
     clock::Clock,
-    colorscheme::{ColorScheme, SchemeColor},
+    color_theme::{ColorTheme, ThemeColor},
     quote::Quote,
 };
 use tc_user_config_loader::{
-    LoaderResult, clock_face_loader::ClockFaceLoader, colorscheme_loader::ColorSchemeLoader,
+    LoaderResult, clock_face_loader::ClockFaceLoader, color_theme_loader::ColorThemeLoader,
     quote_loader::QuoteLoader,
 };
 use tokio::{io, time::Duration};
 
 #[derive(Clone)]
 pub(crate) struct TuiAssets {
-    pub colorschemes: Vec<Arc<ColorScheme>>,
+    pub color_themes: Vec<Arc<ColorTheme>>,
     pub clock_faces: Vec<Arc<dyn Clock>>,
     pub quotes: Vec<Arc<Quote>>,
 }
@@ -31,7 +31,7 @@ pub(crate) struct TuiAssets {
 impl TuiAssets {
     pub fn try_default() -> LoaderResult<TuiAssets> {
         Ok(TuiAssets {
-            colorschemes: ColorSchemeLoader::load_colorschemes()?,
+            color_themes: ColorThemeLoader::load_color_themes()?,
             clock_faces: ClockFaceLoader::load_clockfaces()?,
             quotes: QuoteLoader::load_quotes()?,
         })
@@ -59,7 +59,7 @@ pub(crate) enum ApplicationState {
 #[derive(Clone)]
 pub(crate) struct TuiState {
     pub application_state: ApplicationState,
-    pub colorscheme: Arc<ColorScheme>,
+    pub colorscheme: Arc<ColorTheme>,
     pub clock_face: Arc<dyn Clock>,
     pub quote: Option<Arc<Quote>>,
     pub pomodoro: Option<Arc<PomodoroTimer>>,
@@ -104,10 +104,11 @@ impl TuiController {
             SettingsAction::UpdateQuote(new_quote) => {}
             SettingsAction::UpdateClockFace(new_clock_face) => {}
             SettingsAction::UpdateRefreshRate(new_refresh_rate) => {}
+            _ => {}
         }
     }
 
-    pub fn get_color(&self, key: &SchemeColor) -> Color {
+    pub fn get_color(&self, key: &ThemeColor) -> Color {
         let state = self.tui_state.read().unwrap();
         *state.colorscheme.get(key)
     }
@@ -244,8 +245,8 @@ impl TuiController {
             KeyCode::Char('k') | KeyCode::Up => {}
             KeyCode::Char('h') | KeyCode::Left => {}
             KeyCode::Char('l') | KeyCode::Right => {}
-            KeyCode::Tab => components.settings_menu.next_label(),
-            KeyCode::BackTab => components.settings_menu.prev_label(),
+            KeyCode::Tab => components.settings_menu.next_tab(),
+            KeyCode::BackTab => components.settings_menu.prev_tab(),
             KeyCode::Char('1') => components
                 .settings_menu
                 .display_tab(SettingsTab::General(0)),

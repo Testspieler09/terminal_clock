@@ -11,7 +11,16 @@ use ratatui::{
 };
 use std::sync::Arc;
 use strum::{AsRefStr, EnumIter, IntoEnumIterator};
-use tc_models::{clock::Clock, colorscheme::SchemeColor, quote::Quote};
+use tc_models::{
+    clock::{Clock, TimeFormat},
+    color_theme::{ColorTheme, ThemeColor},
+    quote::Quote,
+};
+
+enum PrimitiveOperation {
+    Increment,
+    Decrement,
+}
 
 #[derive(EnumIter, Clone, Copy, PartialEq, Eq, AsRefStr)]
 pub(crate) enum SettingsTab {
@@ -26,16 +35,23 @@ impl Default for SettingsTab {
     }
 }
 
-impl SettingsTab {
-    pub fn next_option() {}
-    pub fn prev_option() {}
-}
-
 pub(crate) enum SettingsAction {
-    UpdateClockFace(Arc<dyn Clock>),
-    UpdateColor(SchemeColor, Color),
-    UpdateQuote(Arc<Quote>),
+    /// General Tab
     UpdateRefreshRate(u64),
+    UpdateClockFace(Arc<dyn Clock>),
+    UpdateClockFormat(TimeFormat),
+    UpdateQuote(Arc<Quote>),
+
+    /// Pomodoro Tab
+    UpdateTotalSession(u32),
+    UpdateSessionsBeforeLongBreak(u32),
+    UpdateWorkDuration(u64),
+    UpdateShortBreakDuration(u64),
+    UpdateLongBreakDuration(u64),
+
+    /// Color Tab
+    UpdateColorTheme(ColorTheme),
+    UpdateColor(ThemeColor, Color),
 }
 
 pub(crate) struct SettingMenu {
@@ -48,6 +64,38 @@ pub(crate) struct SettingMenu {
 }
 
 impl SettingMenu {
+    const GENERAL_TAB_CONTENT: [(&str, &[&str]); 4] = [
+        (
+            "Refresh Rate",
+            &["The rate on which the screen gets refreshed"],
+        ),
+        ("Clock Face", &["The clock face you want to be displayed"]),
+        (
+            "Clock Format",
+            &[
+                "The format the time is diplayed in.",
+                "",
+                "The options are HH:MM:SS, MM:HH:SS and HH:MM",
+            ],
+        ),
+        ("Quote", &["The quote that is supposed to be rendered"]),
+    ];
+    const POMODORO_TAB_CONTENT: [(&str, &[&str]); 5] = [
+        ("Total Sessions", &[""]),
+        ("Sessions Before Long Break", &[""]),
+        ("Work Duration", &[""]),
+        ("Short Break Duration", &[""]),
+        ("Long Break Duration", &[""]),
+    ];
+    const COLOR_TAB_CONTENT: [(&str, &[&str]); 6] = [
+        ("Color Theme", &[""]),
+        ("Foreground Color", &[""]),
+        ("Background Color", &[""]),
+        ("Selection Color", &[""]),
+        ("Accent Color", &[""]),
+        ("Border Color", &[""]),
+    ];
+
     pub fn new(tui_controller: Arc<TuiController>) -> SettingMenu {
         SettingMenu {
             current_tab: SettingsTab::default(),
@@ -63,7 +111,7 @@ impl SettingMenu {
         self.current_tab = tab;
     }
 
-    pub fn next_label(&mut self) {
+    pub fn next_tab(&mut self) {
         self.current_tab = SettingsTab::iter()
             .cycle()
             .skip_while(|tab| *tab != self.current_tab)
@@ -72,7 +120,7 @@ impl SettingMenu {
             .unwrap();
     }
 
-    pub fn prev_label(&mut self) {
+    pub fn prev_tab(&mut self) {
         let tabs = SettingsTab::iter().collect::<Vec<_>>();
         let current_position = tabs
             .iter()
@@ -88,6 +136,45 @@ impl SettingMenu {
         self.current_tab = tabs[previous_position];
     }
 
+    fn update_option_index(&mut self, operation: PrimitiveOperation) {
+        self.current_tab = match self.current_tab {
+            SettingsTab::General(option_idx) => {
+                let new_idx =
+                    Self::update_index(option_idx, operation, Self::GENERAL_TAB_CONTENT.len());
+                SettingsTab::General(new_idx)
+            }
+            SettingsTab::Pomodoro(option_idx) => {
+                let new_idx =
+                    Self::update_index(option_idx, operation, Self::POMODORO_TAB_CONTENT.len());
+                SettingsTab::Pomodoro(new_idx)
+            }
+            SettingsTab::Color(option_idx) => {
+                let new_idx =
+                    Self::update_index(option_idx, operation, Self::COLOR_TAB_CONTENT.len());
+                SettingsTab::Color(new_idx)
+            }
+        }
+    }
+
+    fn update_index(current_index: u16, operation: PrimitiveOperation, max_len: usize) -> u16 {
+        let max_len = max_len as u16;
+        if matches!(operation, PrimitiveOperation::Increment) {
+            (current_index + 1) % max_len
+        } else if current_index == 0 {
+            max_len - 1
+        } else {
+            current_index - 1
+        }
+    }
+
+    fn next_settings_option(&mut self) {
+        self.update_option_index(PrimitiveOperation::Increment);
+    }
+
+    fn prev_settings_option(&mut self) {
+        self.update_option_index(PrimitiveOperation::Decrement);
+    }
+
     pub fn set_called_from_hero(&mut self, was_called_from_hero: bool) {
         self.called_from_hero = was_called_from_hero;
     }
@@ -96,9 +183,31 @@ impl SettingMenu {
         self.called_from_hero
     }
 
-    fn render_general_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect) {}
-    fn render_pomodoro_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect) {}
-    fn render_color_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect) {}
+    fn render_general_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect) {
+        // TODO:
+        // - refresh_rate
+        // - clock_face
+        // - clock-format
+        // - quote
+        // - rounded_corners
+        // - ...
+    }
+    fn render_pomodoro_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect) {
+        // TODO:
+        // - work_duration
+        // - short_break_duration
+        // - long_break_duration
+        // - total_sessions
+        // - sessions_before_long_break
+    }
+    fn render_color_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect) {
+        // TODO:
+        // - Foreground
+        // - Background
+        // - Selection
+        // - Accent
+        // - Borders
+    }
 }
 
 impl Dimensions for &SettingMenu {
@@ -114,9 +223,9 @@ impl Dimensions for &SettingMenu {
 impl Widget for &SettingMenu {
     fn render(self, area: Rect, buf: &mut Buffer) {
         // Color Settings for this widget
-        let fg_color = self.tui_controller.get_color(&SchemeColor::Foreground);
-        let border_color = self.tui_controller.get_color(&SchemeColor::Borders);
-        let selection_color = self.tui_controller.get_color(&SchemeColor::Selection);
+        let fg_color = self.tui_controller.get_color(&ThemeColor::Foreground);
+        let border_color = self.tui_controller.get_color(&ThemeColor::Borders);
+        let selection_color = self.tui_controller.get_color(&ThemeColor::Selection);
 
         let settings_block = Block::bordered()
             .title(generate_title("tab➔".to_string(), fg_color))
