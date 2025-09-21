@@ -1,6 +1,7 @@
-use crate::tui_models::TuiController;
+use crate::{components::settings_menu::SettingsAction, tui_models::TuiController};
 use ratatui::{
-    prelude::{Alignment, Buffer, Rect},
+    layout::Constraint,
+    prelude::{Alignment, Buffer, Layout, Rect, Stylize},
     style::Style,
     text::{Line, Span},
     widgets::{Paragraph, Widget, Wrap},
@@ -9,11 +10,14 @@ use std::sync::Arc;
 use tc_models::color_theme::ThemeColor;
 
 pub(crate) struct CarouselSelector {
+    /// Fields needed for event handling logic
     tui_controller: Arc<TuiController>,
+    is_active: bool,
+
+    /// Display fields
     title: String,
     options: Vec<String>,
     current_selection: usize,
-    action_callback: Box<dyn Fn(usize)>, // Callback to execute action
 }
 
 impl CarouselSelector {
@@ -21,14 +25,18 @@ impl CarouselSelector {
         tui_controller: Arc<TuiController>,
         title: String,
         options: Vec<String>,
-        action_callback: Box<dyn Fn(usize)>,
+        is_active: bool,
     ) -> CarouselSelector {
+        if options.is_empty() {
+            panic!("A carousel selector should always contain values.");
+        }
+
         CarouselSelector {
             tui_controller,
+            is_active,
             title,
             options,
             current_selection: 0,
-            action_callback,
         }
     }
 
@@ -48,8 +56,12 @@ impl CarouselSelector {
         }
     }
 
-    pub fn select(&self) {
-        (self.action_callback)(self.current_selection);
+    pub fn set_to_active(&mut self) {
+        self.is_active = true;
+    }
+
+    pub fn set_to_inactive(&mut self) {
+        self.is_active = false;
     }
 }
 
@@ -58,27 +70,34 @@ impl Widget for &CarouselSelector {
         let highlight_color = self.tui_controller.get_color(&ThemeColor::Selection);
         let default_color = self.tui_controller.get_color(&ThemeColor::Foreground);
 
+        let [_, bottom_row_section] =
+            Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(area);
+        let [button_left_section, _, button_right_section] = Layout::horizontal([
+            Constraint::Length(2),
+            Constraint::Fill(1),
+            Constraint::Length(2),
+        ])
+        .areas(bottom_row_section);
+
         let title = Line::from(vec![
-            Span::from(&self.title).style(Style::default().fg(default_color)),
+            // TODO: n / N if active
+            Span::from(&self.title).style(Style::default().fg(default_color).bold()),
         ]);
 
-        let mut spans = Vec::new();
+        Span::from(" ←").render(button_left_section, buf);
+        let text = Line::from(self.options[self.current_selection].clone());
+        Span::from("→ ").render(button_right_section, buf);
 
-        for (index, option) in self.options.iter().enumerate() {
-            let style = if index == self.current_selection {
-                Style::default().fg(default_color).bg(highlight_color)
-            } else {
-                Style::default().fg(default_color)
-            };
-
-            spans.push(Span::from(format!("← {} → ", option)).style(style));
-        }
-
-        let text = Line::from(spans);
+        let style = if self.is_active {
+            Style::default().fg(default_color).bg(highlight_color)
+        } else {
+            Style::default().fg(default_color)
+        };
 
         let paragraph = Paragraph::new(vec![title, text])
             .alignment(Alignment::Center)
-            .wrap(Wrap { trim: true });
+            .wrap(Wrap { trim: true })
+            .style(style);
 
         paragraph.render(area, buf);
     }

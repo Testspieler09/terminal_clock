@@ -1,5 +1,4 @@
 pub(crate) mod components;
-pub(crate) mod event_handler;
 pub(crate) mod helpers;
 pub(crate) mod tui_models;
 pub(crate) mod views;

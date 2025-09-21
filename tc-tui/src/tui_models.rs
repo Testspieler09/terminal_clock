@@ -3,7 +3,7 @@ use crate::components::{
     hero::{Hero, MenuLabel},
     logo::Logo,
     pomodoro::PomodoroTimer,
-    settings_menu::{SettingMenu, SettingsAction, SettingsTab},
+    settings_menu::{SettingMenu, SettingsAction},
 };
 use ratatui::{
     crossterm::event::{self, Event, KeyCode, KeyEvent},
@@ -97,7 +97,7 @@ impl TuiController {
         }
     }
 
-    pub fn process_settings_action(&mut self, action: SettingsAction) {
+    pub fn process_settings_action(&self, action: &SettingsAction) {
         let mut state = self.tui_state.write().unwrap();
         match action {
             SettingsAction::UpdateColor(variant, new_color) => {}
@@ -143,7 +143,9 @@ impl TuiController {
                     ApplicationState::Running => self.handle_normal_keys(key_event, components),
                     ApplicationState::ShowingHero => self.handle_hero_keys(key_event, components),
                     ApplicationState::ShowingSettings => {
-                        self.handle_setting_keys(key_event, components)
+                        components
+                            .settings_menu
+                            .handle_setting_keys(key_event, self.tui_state.clone());
                     }
                     ApplicationState::ShowingHelp | ApplicationState::Finished => {}
                 }
@@ -235,35 +237,6 @@ impl TuiController {
                     tui_state.application_state = ApplicationState::ShowingSettings;
                 }
             },
-            _ => {}
-        }
-    }
-
-    fn handle_setting_keys(&self, key_event: KeyEvent, components: &mut TuiComponents) {
-        match key_event.code {
-            KeyCode::Char('j') | KeyCode::Down => {}
-            KeyCode::Char('k') | KeyCode::Up => {}
-            KeyCode::Char('h') | KeyCode::Left => {}
-            KeyCode::Char('l') | KeyCode::Right => {}
-            KeyCode::Tab => components.settings_menu.next_tab(),
-            KeyCode::BackTab => components.settings_menu.prev_tab(),
-            KeyCode::Char('1') => components
-                .settings_menu
-                .display_tab(SettingsTab::General(0)),
-            KeyCode::Char('2') => components
-                .settings_menu
-                .display_tab(SettingsTab::Pomodoro(0)),
-            KeyCode::Char('3') => components.settings_menu.display_tab(SettingsTab::Color(0)),
-            KeyCode::Char('s') => {
-                let mut tui_state = self.tui_state.write().unwrap();
-
-                if components.settings_menu.was_called_from_hero() {
-                    tui_state.application_state = ApplicationState::ShowingHero;
-                } else {
-                    tui_state.application_state = ApplicationState::Running;
-                }
-                components.settings_menu.set_called_from_hero(false);
-            }
             _ => {}
         }
     }
