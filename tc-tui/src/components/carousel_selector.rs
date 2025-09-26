@@ -1,5 +1,6 @@
-use crate::{components::settings_menu::SettingsAction, tui_models::TuiController};
+use crate::{components::settings_menu::SettingsSelector, tui_models::TuiController};
 use ratatui::{
+    crossterm::event::{KeyCode, KeyEvent},
     layout::Constraint,
     prelude::{Alignment, Buffer, Layout, Rect, Stylize},
     style::Style,
@@ -7,7 +8,11 @@ use ratatui::{
     widgets::{Paragraph, Widget, Wrap},
 };
 use std::sync::Arc;
-use tc_models::color_theme::ThemeColor;
+use tc_models::{
+    color_theme::ThemeColor,
+    selectable_item::{Selectable, SelectableItem},
+    tui_action::TuiAction,
+};
 
 pub(crate) struct CarouselSelector {
     /// Fields needed for event handling logic
@@ -16,7 +21,7 @@ pub(crate) struct CarouselSelector {
 
     /// Display fields
     title: String,
-    options: Vec<String>,
+    options: Vec<SelectableItem>,
     current_selection: usize,
 }
 
@@ -24,7 +29,7 @@ impl CarouselSelector {
     pub fn new(
         tui_controller: Arc<TuiController>,
         title: String,
-        options: Vec<String>,
+        options: Vec<SelectableItem>,
         is_active: bool,
     ) -> CarouselSelector {
         if options.is_empty() {
@@ -40,13 +45,13 @@ impl CarouselSelector {
         }
     }
 
-    pub fn next_option(&mut self) {
+    fn next_option(&mut self) {
         if !self.options.is_empty() {
             self.current_selection = (self.current_selection + 1) % self.options.len();
         }
     }
 
-    pub fn prev_option(&mut self) {
+    fn prev_option(&mut self) {
         if !self.options.is_empty() {
             if self.current_selection == 0 {
                 self.current_selection = self.options.len() - 1;
@@ -55,12 +60,28 @@ impl CarouselSelector {
             }
         }
     }
+}
 
-    pub fn set_to_active(&mut self) {
+impl SettingsSelector for CarouselSelector {
+    fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction> {
+        match key_event.code {
+            KeyCode::Char('h') | KeyCode::Left => {
+                self.next_option();
+                Some(self.options[self.current_selection].get_corrosponding_action())
+            }
+            KeyCode::Char('l') | KeyCode::Right => {
+                self.prev_option();
+                Some(self.options[self.current_selection].get_corrosponding_action())
+            }
+            _ => None,
+        }
+    }
+
+    fn set_to_active(&mut self) {
         self.is_active = true;
     }
 
-    pub fn set_to_inactive(&mut self) {
+    fn set_to_inactive(&mut self) {
         self.is_active = false;
     }
 }
@@ -85,7 +106,7 @@ impl Widget for &CarouselSelector {
         ]);
 
         Span::from(" ←").render(button_left_section, buf);
-        let text = Line::from(self.options[self.current_selection].clone());
+        let text = Line::from(self.options[self.current_selection].get_name());
         Span::from("→ ").render(button_right_section, buf);
 
         let style = if self.is_active {

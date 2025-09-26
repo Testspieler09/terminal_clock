@@ -1,6 +1,6 @@
 name = "Terminal Clock"
 
 foreground = "#cae3e3"
-selection  = "#00adb0"
+selection  = "#004f4f"
 accent     = "#2ca1b0"
-borders    = "#004f4f"
+borders    = "#00adb0"

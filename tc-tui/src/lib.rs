@@ -45,7 +45,8 @@ impl TuiRenderer {
         let tui_state = Arc::new(RwLock::new(TuiState {
             application_state: ApplicationState::Running,
             clock_face: tui_assets.clock_faces[0].clone(),
-            colorscheme: tui_assets.color_themes[2].clone(),
+            // TODO: Load the config one as the first here
+            color_theme: tui_assets.color_themes[0].clone(),
             quote: Some(tui_assets.quotes[0].clone()),
             pomodoro: None,
             refresh_rate: 500,
@@ -73,8 +74,8 @@ impl TuiRenderer {
         frame.render_widget(
             Block::bordered()
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(*state.colorscheme.get(&ThemeColor::Borders)))
-                .style(state.colorscheme.default_style()),
+                .border_style(Style::default().fg(*state.color_theme.get(&ThemeColor::Borders)))
+                .style(state.color_theme.default_style()),
             frame.area(),
         );
 

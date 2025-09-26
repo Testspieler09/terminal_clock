@@ -1,4 +1,4 @@
-use crate::{LoaderResult, clock_face_loader, default_themes::CLOCK_FACES};
+use crate::{LoaderResult, default_themes::CLOCK_FACES};
 use ratatui::style::Color;
 use serde::Deserialize;
 use std::{str::FromStr, sync::Arc};

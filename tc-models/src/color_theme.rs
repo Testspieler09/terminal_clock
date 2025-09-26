@@ -31,6 +31,10 @@ impl ColorTheme {
             .unwrap_or(&FALLBACK_COLOR_THEME[key.clone() as usize])
     }
 
+    pub fn get_name(&self) -> &str {
+        &self.name.as_str()
+    }
+
     pub fn update(&mut self, key: ThemeColor, new_value: Color) {
         self.colors.insert(key, new_value);
     }

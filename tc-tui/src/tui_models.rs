@@ -3,7 +3,7 @@ use crate::components::{
     hero::{Hero, MenuLabel},
     logo::Logo,
     pomodoro::PomodoroTimer,
-    settings_menu::{SettingMenu, SettingsAction},
+    settings_menu::SettingMenu,
 };
 use ratatui::{
     crossterm::event::{self, Event, KeyCode, KeyEvent},
@@ -14,6 +14,8 @@ use tc_models::{
     clock::Clock,
     color_theme::{ColorTheme, ThemeColor},
     quote::Quote,
+    selectable_item::SelectableItem,
+    tui_action::TuiAction,
 };
 use tc_user_config_loader::{
     LoaderResult, clock_face_loader::ClockFaceLoader, color_theme_loader::ColorThemeLoader,
@@ -59,7 +61,7 @@ pub(crate) enum ApplicationState {
 #[derive(Clone)]
 pub(crate) struct TuiState {
     pub application_state: ApplicationState,
-    pub colorscheme: Arc<ColorTheme>,
+    pub color_theme: Arc<ColorTheme>,
     pub clock_face: Arc<dyn Clock>,
     pub quote: Option<Arc<Quote>>,
     pub pomodoro: Option<Arc<PomodoroTimer>>,
@@ -97,20 +99,38 @@ impl TuiController {
         }
     }
 
-    pub fn process_settings_action(&self, action: &SettingsAction) {
+    pub fn process_settings_action(&self, action: &TuiAction) {
         let mut state = self.tui_state.write().unwrap();
         match action {
-            SettingsAction::UpdateColor(variant, new_color) => {}
-            SettingsAction::UpdateQuote(new_quote) => {}
-            SettingsAction::UpdateClockFace(new_clock_face) => {}
-            SettingsAction::UpdateRefreshRate(new_refresh_rate) => {}
-            _ => {}
+            // = Settings actions
+            // == General settings
+            TuiAction::UpdateClockFace(new_clock_face) => {}
+            TuiAction::UpdateClockFormat(_) => {}
+            TuiAction::UpdateRefreshRate(new_refresh_rate) => {}
+            TuiAction::UpdateQuote(new_quote) => {}
+            // == Pomodoro settings
+            TuiAction::UpdateTotalSession(_) => {}
+            TuiAction::UpdateWorkDuration(_) => {}
+            TuiAction::UpdateLongBreakDuration(_) => {}
+            TuiAction::UpdateShortBreakDuration(_) => {}
+            TuiAction::UpdateSessionsBeforeLongBreak(_) => {}
+            // == Color settings
+            TuiAction::UpdateColorTheme(theme) => state.color_theme = theme.clone(),
+            TuiAction::UpdateColor(variant, new_color) => {}
         }
+    }
+
+    pub fn get_color_themes_as_selection(&self) -> Vec<SelectableItem> {
+        self.tui_assets
+            .color_themes
+            .iter()
+            .map(|color_theme| SelectableItem::Theme(Arc::clone(color_theme)))
+            .collect()
     }
 
     pub fn get_color(&self, key: &ThemeColor) -> Color {
         let state = self.tui_state.read().unwrap();
-        *state.colorscheme.get(key)
+        *state.color_theme.get(key)
     }
 
     pub fn handle_events(&self, components: &mut TuiComponents) -> io::Result<bool> {

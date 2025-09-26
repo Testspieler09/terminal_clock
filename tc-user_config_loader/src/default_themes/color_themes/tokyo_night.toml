@@ -3,6 +3,6 @@ name = "Tokyo Night"
 
 foreground = "#a9b1d6"
 background = "#16161e"
-selection  = "#e0af68"
+selection  = "#3d59a1"
 accent     = "#7aa2f7"
 borders    = "#bb9af7"

@@ -7,7 +7,7 @@ use crate::{
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     prelude::{Alignment, Buffer, Constraint, Layout, Rect},
-    style::{Color, Style},
+    style::Style,
     symbols::{
         border::{ROUNDED, Set},
         line::NORMAL,
@@ -17,11 +17,7 @@ use ratatui::{
 };
 use std::sync::{Arc, RwLock};
 use strum::{AsRefStr, EnumIter, IntoEnumIterator};
-use tc_models::{
-    clock::{Clock, TimeFormat},
-    color_theme::{ColorTheme, ThemeColor},
-    quote::Quote,
-};
+use tc_models::{color_theme::ThemeColor, tui_action::TuiAction};
 
 enum PrimitiveOperation {
     Increment,
@@ -34,6 +30,7 @@ pub(crate) enum SettingsTab {
     Pomodoro(u16),
     Color(u16),
 }
+
 impl PartialEq for SettingsTab {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -51,51 +48,67 @@ impl Default for SettingsTab {
     }
 }
 
-pub(crate) enum SettingsAction {
-    /// General Tab
-    UpdateRefreshRate(u64),
-    UpdateClockFace(Arc<dyn Clock>),
-    UpdateClockFormat(TimeFormat),
-    UpdateQuote(Arc<Quote>),
-
-    /// Pomodoro Tab
-    UpdateTotalSession(u32),
-    UpdateSessionsBeforeLongBreak(u32),
-    UpdateWorkDuration(u64),
-    UpdateShortBreakDuration(u64),
-    UpdateLongBreakDuration(u64),
-
-    /// Color Tab
-    UpdateColorTheme(ColorTheme),
-    UpdateColor(ThemeColor, Color),
+pub(crate) trait SettingsSelector {
+    fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction>;
+    fn set_to_active(&mut self);
+    fn set_to_inactive(&mut self);
 }
 
-pub(crate) trait SettingsSelector {
-    fn handle_keys(key_event: KeyEvent) -> SettingsAction;
+enum Selector {
+    Carousel(CarouselSelector),
+    // Color(ColorSelector),
+    // Number(NumberSelector),
+}
+
+impl SettingsSelector for Selector {
+    fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction> {
+        match self {
+            Selector::Carousel(selector) => selector.handle_keys(key_event),
+        }
+    }
+
+    fn set_to_active(&mut self) {
+        match self {
+            Selector::Carousel(selector) => selector.set_to_active(),
+        }
+    }
+
+    fn set_to_inactive(&mut self) {
+        match self {
+            Selector::Carousel(selector) => selector.set_to_inactive(),
+        }
+    }
+}
+
+impl Widget for &Selector {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        match self {
+            Selector::Carousel(selector) => selector.render(area, buf),
+        }
+    }
 }
 
 pub(crate) struct SettingMenu {
     current_tab: SettingsTab,
 
     /// All the selectors for the options available to the user
-    // TODO: Needs to be more dynamic later i.e. <dyn Selector>
-    general_tab_selectors: Vec<CarouselSelector>,
-    pomodoro_tab_selectors: Vec<CarouselSelector>,
-    color_tab_selectors: Vec<CarouselSelector>,
+    general_tab_selectors: Vec<Selector>,
+    pomodoro_tab_selectors: Vec<Selector>,
+    color_tab_selectors: Vec<Selector>,
 
     /// Needed for the navigation
     called_from_hero: bool,
 
     /// Fields for applying the action based on the changed option
     tui_controller: Arc<TuiController>,
-    pending_action: Option<SettingsAction>,
+    pending_action: Option<TuiAction>,
 
     height: u16,
     width: u16,
 }
 
 impl SettingMenu {
-    const GENERAL_TAB_CONTENT: [(&str, &[&str]); 4] = [
+    const GENERAL_TAB_CONTENT: [(&'static str, &'static [&'static str]); 4] = [
         (
             "Refresh Rate",
             &["The rate on which the screen gets refreshed"],
@@ -112,7 +125,7 @@ impl SettingMenu {
         ("Quote", &["The quote that is supposed to be rendered"]),
     ];
 
-    const POMODORO_TAB_CONTENT: [(&str, &[&str]); 5] = [
+    const POMODORO_TAB_CONTENT: [(&'static str, &'static [&'static str]); 5] = [
         ("Total Sessions", &["The total number of Pomodoro sessions"]),
         (
             "Sessions Before Long Break",
@@ -132,7 +145,7 @@ impl SettingMenu {
         ),
     ];
 
-    const COLOR_TAB_CONTENT: [(&str, &[&str]); 6] = [
+    const COLOR_TAB_CONTENT: [(&'static str, &'static [&'static str]); 6] = [
         (
             "Color Theme",
             &["The overall color theme used across the application"],
@@ -161,128 +174,15 @@ impl SettingMenu {
     ];
 
     pub fn new(tui_controller: Arc<TuiController>) -> SettingMenu {
-        // TODO: init the tab selectors here
-        let mut general_tab_selectors: Vec<CarouselSelector> = Self::GENERAL_TAB_CONTENT
-            .iter()
-            .map(|(title, _)| {
-                let options = match *title {
-                    "Refresh Rate" => vec![
-                        "30 FPS".to_string(),
-                        "60 FPS".to_string(),
-                        "120 FPS".to_string(),
-                    ],
-                    "Clock Face" => vec![
-                        "Analog".to_string(),
-                        "Digital".to_string(),
-                        "Binary".to_string(),
-                    ],
-                    "Clock Format" => vec![
-                        "HH:MM:SS".to_string(),
-                        "MM:HH:SS".to_string(),
-                        "HH:MM".to_string(),
-                    ],
-                    "Quote" => vec![
-                        "Inspirational".to_string(),
-                        "Funny".to_string(),
-                        "None".to_string(),
-                    ],
-                    _ => vec![
-                        "Option 1".to_string(),
-                        "Option 2".to_string(),
-                        "Option 3".to_string(),
-                    ],
-                };
-                CarouselSelector::new(
-                    Arc::clone(&tui_controller),
-                    title.to_string(),
-                    options,
-                    false,
-                )
-            })
-            .collect();
-        general_tab_selectors[0].set_to_active();
-
-        let mut pomodoro_tab_selectors: Vec<CarouselSelector> = Self::POMODORO_TAB_CONTENT
-            .iter()
-            .map(|(title, _)| {
-                let options = match *title {
-                    "Total Sessions" => vec!["4".to_string(), "8".to_string(), "12".to_string()],
-                    "Sessions Before Long Break" => {
-                        vec!["3".to_string(), "4".to_string(), "5".to_string()]
-                    }
-                    "Work Duration" => vec![
-                        "20 min".to_string(),
-                        "25 min".to_string(),
-                        "30 min".to_string(),
-                    ],
-                    "Short Break Duration" => vec![
-                        "5 min".to_string(),
-                        "10 min".to_string(),
-                        "15 min".to_string(),
-                    ],
-                    "Long Break Duration" => vec![
-                        "15 min".to_string(),
-                        "20 min".to_string(),
-                        "30 min".to_string(),
-                    ],
-                    _ => vec![
-                        "Value 1".to_string(),
-                        "Value 2".to_string(),
-                        "Value 3".to_string(),
-                    ],
-                };
-                CarouselSelector::new(
-                    Arc::clone(&tui_controller),
-                    title.to_string(),
-                    options,
-                    false,
-                )
-            })
-            .collect();
-        pomodoro_tab_selectors[0].set_to_active();
-
-        let mut color_tab_selectors: Vec<CarouselSelector> = Self::COLOR_TAB_CONTENT
-            .iter()
-            .map(|(title, _)| {
-                let options = match *title {
-                    "Color Theme" => vec![
-                        "Dark".to_string(),
-                        "Light".to_string(),
-                        "Custom".to_string(),
-                    ],
-                    "Foreground Color" => {
-                        vec!["White".to_string(), "Black".to_string(), "Gray".to_string()]
-                    }
-                    "Background Color" => vec![
-                        "Black".to_string(),
-                        "None".to_string(),
-                        "Dark Gray".to_string(),
-                    ],
-                    "Selection Color" => vec![
-                        "Blue".to_string(),
-                        "Green".to_string(),
-                        "Yellow".to_string(),
-                    ],
-                    "Accent Color" => {
-                        vec!["Red".to_string(), "Blue".to_string(), "Green".to_string()]
-                    }
-                    "Border Color" => {
-                        vec!["Gray".to_string(), "White".to_string(), "Black".to_string()]
-                    }
-                    _ => vec![
-                        "Color 1".to_string(),
-                        "Color 2".to_string(),
-                        "Color 3".to_string(),
-                    ],
-                };
-                CarouselSelector::new(
-                    Arc::clone(&tui_controller),
-                    title.to_string(),
-                    options,
-                    false,
-                )
-            })
-            .collect();
+        let general_tab_selectors: Vec<Selector> = Vec::new();
+        let pomodoro_tab_selectors: Vec<Selector> = Vec::new();
+        let mut color_tab_selectors: Vec<Selector> =
+            vec![Selector::Carousel(CarouselSelector::new(
+                Arc::clone(&tui_controller),
+                "Color Theme".to_string(),
+                tui_controller.get_color_themes_as_selection(),
+                false,
+            ))];
         color_tab_selectors[0].set_to_active();
 
         SettingMenu {
@@ -312,7 +212,7 @@ impl SettingMenu {
             SettingsTab::General(_) => self.general_tab_selectors[0].set_to_active(),
             SettingsTab::Pomodoro(_) => self.pomodoro_tab_selectors[0].set_to_active(),
             SettingsTab::Color(_) => self.color_tab_selectors[0].set_to_active(),
-        }
+        };
     }
 
     fn display_tab(&mut self, tab: SettingsTab) {
@@ -354,6 +254,7 @@ impl SettingMenu {
                 let new_idx =
                     Self::update_index(option_idx, operation, Self::GENERAL_TAB_CONTENT.len());
                 self.general_tab_selectors[new_idx as usize].set_to_active();
+
                 SettingsTab::General(new_idx)
             }
             SettingsTab::Pomodoro(option_idx) => {
@@ -361,6 +262,7 @@ impl SettingMenu {
                 let new_idx =
                     Self::update_index(option_idx, operation, Self::POMODORO_TAB_CONTENT.len());
                 self.pomodoro_tab_selectors[new_idx as usize].set_to_active();
+
                 SettingsTab::Pomodoro(new_idx)
             }
             SettingsTab::Color(option_idx) => {
@@ -368,6 +270,7 @@ impl SettingMenu {
                 let new_idx =
                     Self::update_index(option_idx, operation, Self::COLOR_TAB_CONTENT.len());
                 self.color_tab_selectors[new_idx as usize].set_to_active();
+
                 SettingsTab::Color(new_idx)
             }
         }
@@ -445,30 +348,6 @@ impl SettingMenu {
         match key_event.code {
             KeyCode::Char('j') | KeyCode::Down => self.next_settings_option(),
             KeyCode::Char('k') | KeyCode::Up => self.prev_settings_option(),
-            KeyCode::Char('h') | KeyCode::Left => {
-                /* self.pending_action = */
-                match self.current_tab {
-                    SettingsTab::General(idx) => {
-                        self.general_tab_selectors[idx as usize].next_option()
-                    }
-                    SettingsTab::Pomodoro(idx) => {
-                        self.pomodoro_tab_selectors[idx as usize].next_option()
-                    }
-                    SettingsTab::Color(idx) => self.color_tab_selectors[idx as usize].next_option(),
-                }
-            }
-            KeyCode::Char('l') | KeyCode::Right => {
-                /* self.pending_action = */
-                match self.current_tab {
-                    SettingsTab::General(idx) => {
-                        self.general_tab_selectors[idx as usize].prev_option()
-                    }
-                    SettingsTab::Pomodoro(idx) => {
-                        self.pomodoro_tab_selectors[idx as usize].prev_option()
-                    }
-                    SettingsTab::Color(idx) => self.color_tab_selectors[idx as usize].prev_option(),
-                }
-            }
             KeyCode::Tab => self.next_tab(),
             KeyCode::BackTab => self.prev_tab(),
             KeyCode::Char('1') => self.display_tab(SettingsTab::General(0)),
@@ -484,7 +363,19 @@ impl SettingMenu {
                 }
                 self.set_called_from_hero(false);
             }
-            _ => {}
+            _ => {
+                self.pending_action = match self.current_tab {
+                    SettingsTab::General(idx) => {
+                        self.general_tab_selectors[idx as usize].handle_keys(key_event)
+                    }
+                    SettingsTab::Pomodoro(idx) => {
+                        self.pomodoro_tab_selectors[idx as usize].handle_keys(key_event)
+                    }
+                    SettingsTab::Color(idx) => {
+                        self.color_tab_selectors[idx as usize].handle_keys(key_event)
+                    }
+                };
+            }
         }
 
         if let Some(action) = &self.pending_action {
@@ -508,7 +399,6 @@ impl Widget for &SettingMenu {
         // Color Settings for this widget
         let fg_color = self.tui_controller.get_color(&ThemeColor::Foreground);
         let border_color = self.tui_controller.get_color(&ThemeColor::Borders);
-        let selection_color = self.tui_controller.get_color(&ThemeColor::Selection);
 
         let settings_block = Block::bordered()
             .title(generate_title("tab➔".to_string(), fg_color))
@@ -545,13 +435,13 @@ impl Widget for &SettingMenu {
             let is_active = tab == self.current_tab;
             let text = if is_active {
                 Line::from(vec![
-                    Span::from("[").style(Style::default().fg(selection_color)),
+                    Span::from("[").style(Style::default().fg(border_color)),
                     Span::from(tab.as_ref()),
-                    Span::from("]").style(Style::default().fg(selection_color)),
+                    Span::from("]").style(Style::default().fg(border_color)),
                 ])
             } else {
                 Line::from(vec![
-                    Span::from(format!("{}", i + 1)).style(Style::default().fg(selection_color)),
+                    Span::from(format!("{}", i + 1)).style(Style::default().fg(border_color)),
                     Span::from(tab.as_ref().to_owned() + " ").style(Style::default().fg(fg_color)),
                 ])
             };

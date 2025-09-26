@@ -7,7 +7,7 @@ use ratatui::{Frame, prelude::Constraint};
 
 pub(crate) fn render_clock_view(frame: &mut Frame, config: &TuiState) {
     let (ascii_art_paragraph, width, height) =
-        config.clock_face.draw_clockface(&config.colorscheme);
+        config.clock_face.draw_clockface(&config.color_theme);
     let area = center_widget(
         frame.area(),
         Constraint::Length(width as u16),
@@ -26,7 +26,7 @@ pub(crate) fn render_clock_view(frame: &mut Frame, config: &TuiState) {
             area.y + area.height + 1,
         );
 
-        frame.render_widget(quote.render(&config.colorscheme), quote_area);
+        frame.render_widget(quote.render(&config.color_theme), quote_area);
     }
 
     // Render Pomodoro if active
