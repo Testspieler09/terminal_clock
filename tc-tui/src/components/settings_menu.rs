@@ -58,6 +58,7 @@ enum Selector {
     Carousel(CarouselSelector),
     // Color(ColorSelector),
     // Number(NumberSelector),
+    // Text(TextInput),
 }
 
 impl SettingsSelector for Selector {
@@ -108,7 +109,7 @@ pub(crate) struct SettingMenu {
 }
 
 impl SettingMenu {
-    const GENERAL_TAB_CONTENT: [(&'static str, &'static [&'static str]); 4] = [
+    const GENERAL_TAB_CONTENT: &[(&'static str, &'static [&'static str])] = &[
         (
             "Refresh Rate",
             &["The rate on which the screen gets refreshed"],
@@ -125,7 +126,7 @@ impl SettingMenu {
         ("Quote", &["The quote that is supposed to be rendered"]),
     ];
 
-    const POMODORO_TAB_CONTENT: [(&'static str, &'static [&'static str]); 5] = [
+    const POMODORO_TAB_CONTENT: &[(&'static str, &'static [&'static str])] = &[
         ("Total Sessions", &["The total number of Pomodoro sessions"]),
         (
             "Sessions Before Long Break",
@@ -145,7 +146,7 @@ impl SettingMenu {
         ),
     ];
 
-    const COLOR_TAB_CONTENT: [(&'static str, &'static [&'static str]); 6] = [
+    const COLOR_TAB_CONTENT: &[(&'static str, &'static [&'static str])] = &[
         (
             "Color Theme",
             &["The overall color theme used across the application"],
@@ -174,16 +175,41 @@ impl SettingMenu {
     ];
 
     pub fn new(tui_controller: Arc<TuiController>) -> SettingMenu {
-        let general_tab_selectors: Vec<Selector> = Vec::new();
-        let pomodoro_tab_selectors: Vec<Selector> = Vec::new();
-        let mut color_tab_selectors: Vec<Selector> =
-            vec![Selector::Carousel(CarouselSelector::new(
-                Arc::clone(&tui_controller),
-                "Color Theme".to_string(),
-                tui_controller.get_color_themes_as_selection(),
-                false,
-            ))];
-        color_tab_selectors[0].set_to_active();
+        let general_tab_selectors: Vec<Selector> = Self::GENERAL_TAB_CONTENT
+            .iter()
+            .enumerate()
+            .map(|(idx, (title, _))| {
+                let is_active = if idx == 0 { true } else { false };
+                Selector::Carousel(CarouselSelector::new(
+                    Arc::clone(&tui_controller),
+                    title.to_string(),
+                    tui_controller.get_color_themes_as_selection(),
+                    is_active,
+                ))
+            })
+            .collect();
+        let pomodoro_tab_selectors: Vec<Selector> = Self::POMODORO_TAB_CONTENT
+            .iter()
+            .map(|(title, _)| {
+                Selector::Carousel(CarouselSelector::new(
+                    Arc::clone(&tui_controller),
+                    title.to_string(),
+                    tui_controller.get_color_themes_as_selection(),
+                    false,
+                ))
+            })
+            .collect();
+        let color_tab_selectors: Vec<Selector> = Self::COLOR_TAB_CONTENT
+            .iter()
+            .map(|(title, _)| {
+                Selector::Carousel(CarouselSelector::new(
+                    Arc::clone(&tui_controller),
+                    title.to_string(),
+                    tui_controller.get_color_themes_as_selection(),
+                    false,
+                ))
+            })
+            .collect();
 
         SettingMenu {
             current_tab: SettingsTab::default(),
@@ -303,37 +329,36 @@ impl SettingMenu {
         self.called_from_hero
     }
 
-    // TODO: merge all the render tab functions into one general one, when we have the Selector
-    // Trait
-    fn render_general_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect, buf: &mut Buffer) {
-        // TODO:
-        // - refresh_rate
-        // - clock_face
-        // - clock-format
-        // - quote
-        // - rounded_corners
-        // - ...
-    }
-    fn render_pomodoro_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect, buf: &mut Buffer) {
-        // TODO:
-        // - work_duration
-        // - short_break_duration
-        // - long_break_duration
-        // - total_sessions
-        // - sessions_before_long_break
-    }
-    fn render_color_tab(&self, selected_idx: u16, lhs: Rect, rhs: Rect, buf: &mut Buffer) {
-        let constraints = vec![Constraint::Length(2); self.color_tab_selectors.len()];
+    fn render_tab(&self, lhs: Rect, rhs: Rect, buf: &mut Buffer) {
+        let (selectors, idx, content) = match self.current_tab {
+            SettingsTab::General(selected_idx) => (
+                &self.general_tab_selectors,
+                selected_idx,
+                Self::GENERAL_TAB_CONTENT,
+            ),
+            SettingsTab::Pomodoro(selected_idx) => (
+                &self.pomodoro_tab_selectors,
+                selected_idx,
+                Self::POMODORO_TAB_CONTENT,
+            ),
+            SettingsTab::Color(selected_idx) => (
+                &self.color_tab_selectors,
+                selected_idx,
+                Self::COLOR_TAB_CONTENT,
+            ),
+        };
+
+        let constraints = vec![Constraint::Length(2); selectors.len()];
 
         let layout = Layout::vertical(constraints).split(lhs);
 
-        for (i, selector) in self.color_tab_selectors.iter().enumerate() {
+        for (i, selector) in selectors.iter().enumerate() {
             if i < layout.len() {
                 selector.render(layout[i], buf);
             }
         }
 
-        if let Some((_title, description)) = Self::COLOR_TAB_CONTENT.get(selected_idx as usize) {
+        if let Some((_title, description)) = content.get(idx as usize) {
             let desc_text = description.join("\n");
             let desc_paragraph = Paragraph::new(desc_text)
                 .wrap(Wrap { trim: true })
@@ -480,25 +505,6 @@ impl Widget for &SettingMenu {
         interactive_settings_block.render(interactive_section, buf);
         description_block.render(description_section, buf);
 
-        match self.current_tab {
-            SettingsTab::General(selected_entry) => self.render_general_tab(
-                selected_entry,
-                inner_interactive_block,
-                inner_description_block,
-                buf,
-            ),
-            SettingsTab::Pomodoro(selected_entry) => self.render_pomodoro_tab(
-                selected_entry,
-                inner_interactive_block,
-                inner_description_block,
-                buf,
-            ),
-            SettingsTab::Color(selected_entry) => self.render_color_tab(
-                selected_entry,
-                inner_interactive_block,
-                inner_description_block,
-                buf,
-            ),
-        }
+        self.render_tab(inner_interactive_block, inner_description_block, buf);
     }
 }
