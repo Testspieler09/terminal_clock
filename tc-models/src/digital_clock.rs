@@ -1,5 +1,5 @@
 use crate::{
-    clock::{Clock, TimeFormat},
+    clock::{ClockBehaviour, TimeFormat},
     color_theme::ColorTheme,
 };
 use ratatui::widgets::Paragraph;
@@ -12,10 +12,13 @@ pub struct DigitalClock {
     format: Option<TimeFormat>,
 }
 
-impl Clock for DigitalClock {
+impl ClockBehaviour for DigitalClock {
     // TODO: add a default implementaton of the func here
-    fn draw_clockface(&self, theme: &ColorTheme) -> (Paragraph<'_>, usize, usize) {
-        todo!()
+    fn generate_clock_face_with_dimensions(
+        &self,
+        theme: &ColorTheme,
+    ) -> (Paragraph<'_>, usize, usize) {
+        todo!();
     }
 
     fn set_clock_format_to(&mut self, fmt: TimeFormat) {

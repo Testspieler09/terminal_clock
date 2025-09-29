@@ -4,14 +4,14 @@ use crate::{
     quote::Quote,
 };
 use ratatui::style::Color;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 pub enum TuiAction {
     /// General actions
     UpdateRefreshRate(u64),
-    UpdateClockFace(Arc<dyn Clock>),
+    UpdateClockFace(Arc<Mutex<Clock>>),
     UpdateClockFormat(TimeFormat),
-    UpdateQuote(Arc<Quote>),
+    UpdateQuote(Option<Arc<Quote>>),
 
     /// Pomodoro actions
     UpdateTotalSession(u32),
@@ -21,6 +21,6 @@ pub enum TuiAction {
     UpdateLongBreakDuration(u64),
 
     /// Color actions
-    UpdateColorTheme(Arc<ColorTheme>),
+    UpdateColorTheme(Arc<Mutex<ColorTheme>>),
     UpdateColor(ThemeColor, Color),
 }

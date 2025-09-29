@@ -4,7 +4,7 @@ use serde::Deserialize;
 use std::{
     collections::{HashMap, HashSet},
     str::FromStr,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 use tc_models::color_theme::{ColorTheme, FALLBACK_COLOR_THEME, ThemeColor};
 
@@ -80,7 +80,7 @@ impl From<ThemeConfig> for ColorTheme {
 pub struct ColorThemeLoader;
 
 impl ColorThemeLoader {
-    fn load_user_themes() -> LoaderResult<Vec<Arc<ColorTheme>>> {
+    fn load_user_themes() -> LoaderResult<Vec<Arc<Mutex<ColorTheme>>>> {
         let folder_path = get_user_config_path()?.join("themes");
 
         let toml_count = std::fs::read_dir(&folder_path)?
@@ -115,18 +115,18 @@ impl ColorThemeLoader {
                 parsed_theme.name = filename.map(|s| s.to_string());
             }
 
-            themes.push(Arc::new(parsed_theme.into()));
+            themes.push(Arc::new(Mutex::new(parsed_theme.into())));
         }
 
         Ok(themes)
     }
 
-    pub fn load_color_themes() -> LoaderResult<Vec<Arc<ColorTheme>>> {
+    pub fn load_color_themes() -> LoaderResult<Vec<Arc<Mutex<ColorTheme>>>> {
         let mut schemes = Vec::new();
 
         for scheme in COLOR_THEMES {
             let colorscheme: ThemeConfig = toml::from_str(scheme)?;
-            schemes.push(Arc::new(colorscheme.into()));
+            schemes.push(Arc::new(Mutex::new(colorscheme.into())));
         }
         if let Ok(user_theme) = Self::load_user_themes() {
             schemes.extend(user_theme);

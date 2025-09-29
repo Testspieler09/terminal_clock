@@ -13,7 +13,7 @@ use ratatui::{
     style::Style,
     widgets::{Block, BorderType},
 };
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use tc_models::color_theme::ThemeColor;
 
 pub struct TuiRenderer;
@@ -42,18 +42,19 @@ impl TuiRenderer {
     async fn run(mut terminal: DefaultTerminal) -> Result<()> {
         let tui_assets = Arc::new(TuiAssets::try_default()?);
 
+        let color_lock = tui_assets.color_themes[0].lock().unwrap();
         let tui_state = Arc::new(RwLock::new(TuiState {
             application_state: ApplicationState::Running,
             clock_face: tui_assets.clock_faces[0].clone(),
             // TODO: Load the config one as the first here
-            color_theme: tui_assets.color_themes[0].clone(),
+            color_theme: Arc::new(Mutex::new(color_lock.clone())),
             quote: Some(tui_assets.quotes[0].clone()),
             pomodoro: None,
             refresh_rate: 500,
         }));
+        drop(color_lock);
 
         let controller = Arc::new(TuiController::new(tui_state.clone(), tui_assets.clone()));
-
         let mut tui_components = TuiComponents::new(controller.clone());
 
         loop {
@@ -71,13 +72,15 @@ impl TuiRenderer {
 
     fn render(frame: &mut Frame, state: &TuiState, components: &TuiComponents) {
         // Set the right background with a nice border
+        let theme_lock = state.color_theme.lock().unwrap();
         frame.render_widget(
             Block::bordered()
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(*state.color_theme.get(&ThemeColor::Borders)))
-                .style(state.color_theme.default_style()),
+                .border_style(Style::default().fg(*theme_lock.get(&ThemeColor::Borders)))
+                .style(theme_lock.default_style()),
             frame.area(),
         );
+        drop(theme_lock);
 
         match state.application_state {
             ApplicationState::Running => render_clock_view(frame, state),

@@ -1,7 +1,10 @@
 use crate::{LoaderResult, default_themes::CLOCK_FACES};
 use ratatui::style::Color;
 use serde::Deserialize;
-use std::{str::FromStr, sync::Arc};
+use std::{
+    str::FromStr,
+    sync::{Arc, Mutex},
+};
 use tc_models::{
     analog_clock::AnalogClock,
     clock::{Clock, TimeFormat},
@@ -19,12 +22,12 @@ pub enum ClockConfig {
     AnalogClock(Box<AnalogClockConfig>),
 }
 
-impl From<ClockConfig> for Arc<dyn Clock> {
+impl From<ClockConfig> for Clock {
     fn from(config: ClockConfig) -> Self {
         match config {
-            ClockConfig::ColorClock(c) => Arc::new(ColorClock::from(*c)),
-            ClockConfig::AnalogClock(c) => Arc::new(AnalogClock::from(*c)),
-            ClockConfig::DigitalClock(c) => Arc::new(DigitalClock::from(*c)),
+            ClockConfig::ColorClock(c) => Clock::Color(ColorClock::from(*c)),
+            ClockConfig::AnalogClock(c) => Clock::Analog(AnalogClock::from(*c)),
+            ClockConfig::DigitalClock(c) => Clock::Digital(DigitalClock::from(*c)),
         }
     }
 }
@@ -113,15 +116,15 @@ impl From<AnalogClockConfig> for AnalogClock {
 pub struct ClockFaceLoader;
 
 impl ClockFaceLoader {
-    fn load_user_clockfaces() -> LoaderResult<Vec<Box<dyn Clock>>> {
+    fn load_user_clockfaces() -> LoaderResult<Vec<Box<Clock>>> {
         todo!()
     }
 
-    pub fn load_clockfaces() -> LoaderResult<Vec<Arc<dyn Clock>>> {
+    pub fn load_clockfaces() -> LoaderResult<Vec<Arc<Mutex<Clock>>>> {
         let mut clock_faces = Vec::new();
         for clock_face in CLOCK_FACES {
             let clock_config: ClockConfig = toml::from_str(clock_face)?;
-            clock_faces.push(clock_config.into());
+            clock_faces.push(Arc::new(Mutex::new(clock_config.into())));
         }
         // clock_faces.extend(Self::load_user_clockfaces()?);
         Ok(clock_faces)

@@ -18,6 +18,7 @@ pub enum ThemeColor {
     Borders,
 }
 
+#[derive(Clone)]
 pub struct ColorTheme {
     pub name: String,
     pub colors: HashMap<ThemeColor, Color>,

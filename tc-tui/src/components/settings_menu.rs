@@ -54,6 +54,11 @@ pub(crate) trait SettingsSelector {
     fn set_to_inactive(&mut self);
 }
 
+// TODO: think about how we will handle adding the options on init and if this is realy necessary
+// here then
+const CAROUSEL: &'static str = "carousel";
+// const COLOR: &'static str = "color";
+
 enum Selector {
     Carousel(CarouselSelector),
     // Color(ColorSelector),
@@ -109,12 +114,17 @@ pub(crate) struct SettingMenu {
 }
 
 impl SettingMenu {
-    const GENERAL_TAB_CONTENT: &[(&'static str, &'static [&'static str])] = &[
+    const GENERAL_TAB_CONTENT: &[(&'static str, &'static [&'static str], &'static str)] = &[
         (
             "Refresh Rate",
             &["The rate on which the screen gets refreshed"],
+            CAROUSEL,
         ),
-        ("Clock Face", &["The clock face you want to be displayed"]),
+        (
+            "Clock Face",
+            &["The clock face you want to be displayed"],
+            CAROUSEL,
+        ),
         (
             "Clock Format",
             &[
@@ -122,38 +132,53 @@ impl SettingMenu {
                 "",
                 "The options are HH:MM:SS, MM:HH:SS and HH:MM",
             ],
+            CAROUSEL,
         ),
-        ("Quote", &["The quote that is supposed to be rendered"]),
+        (
+            "Quote",
+            &["The quote that is supposed to be rendered"],
+            CAROUSEL,
+        ),
     ];
 
-    const POMODORO_TAB_CONTENT: &[(&'static str, &'static [&'static str])] = &[
-        ("Total Sessions", &["The total number of Pomodoro sessions"]),
+    const POMODORO_TAB_CONTENT: &[(&'static str, &'static [&'static str], &'static str)] = &[
+        (
+            "Total Sessions",
+            &["The total number of Pomodoro sessions"],
+            CAROUSEL,
+        ),
         (
             "Sessions Before Long Break",
             &["The number of sessions to complete before taking a long break"],
+            CAROUSEL,
         ),
         (
             "Work Duration",
             &["Duration of each focused work session (in minutes)"],
+            CAROUSEL,
         ),
         (
             "Short Break Duration",
             &["Duration of a short break between work sessions (in minutes)"],
+            CAROUSEL,
         ),
         (
             "Long Break Duration",
             &["Duration of a long break after multiple sessions (in minutes)"],
+            CAROUSEL,
         ),
     ];
 
-    const COLOR_TAB_CONTENT: &[(&'static str, &'static [&'static str])] = &[
+    const COLOR_TAB_CONTENT: &[(&'static str, &'static [&'static str], &'static str)] = &[
         (
             "Color Theme",
             &["The overall color theme used across the application"],
+            CAROUSEL,
         ),
         (
             "Foreground Color",
             &["Color used for primary text and UI elements"],
+            CAROUSEL,
         ),
         (
             "Background Color",
@@ -162,23 +187,30 @@ impl SettingMenu {
                 "",
                 "Set this to `None` to get a transparent background",
             ],
+            CAROUSEL,
         ),
         (
             "Selection Color",
             &["Color used when selecting text or items"],
+            CAROUSEL,
         ),
         (
             "Accent Color",
             &["Highlight color used for emphasis or active items"],
+            CAROUSEL,
         ),
-        ("Border Color", &["Color used for borders and outlines"]),
+        (
+            "Border Color",
+            &["Color used for borders and outlines"],
+            CAROUSEL,
+        ),
     ];
 
     pub fn new(tui_controller: Arc<TuiController>) -> SettingMenu {
         let general_tab_selectors: Vec<Selector> = Self::GENERAL_TAB_CONTENT
             .iter()
             .enumerate()
-            .map(|(idx, (title, _))| {
+            .map(|(idx, (title, _, _))| {
                 let is_active = if idx == 0 { true } else { false };
                 Selector::Carousel(CarouselSelector::new(
                     Arc::clone(&tui_controller),
@@ -190,7 +222,7 @@ impl SettingMenu {
             .collect();
         let pomodoro_tab_selectors: Vec<Selector> = Self::POMODORO_TAB_CONTENT
             .iter()
-            .map(|(title, _)| {
+            .map(|(title, _, _)| {
                 Selector::Carousel(CarouselSelector::new(
                     Arc::clone(&tui_controller),
                     title.to_string(),
@@ -201,7 +233,7 @@ impl SettingMenu {
             .collect();
         let color_tab_selectors: Vec<Selector> = Self::COLOR_TAB_CONTENT
             .iter()
-            .map(|(title, _)| {
+            .map(|(title, _, _)| {
                 Selector::Carousel(CarouselSelector::new(
                     Arc::clone(&tui_controller),
                     title.to_string(),
@@ -358,7 +390,7 @@ impl SettingMenu {
             }
         }
 
-        if let Some((_title, description)) = content.get(idx as usize) {
+        if let Some((_title, description, _selector_type)) = content.get(idx as usize) {
             let desc_text = description.join("\n");
             let desc_paragraph = Paragraph::new(desc_text)
                 .wrap(Wrap { trim: true })

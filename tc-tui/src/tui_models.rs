@@ -9,9 +9,9 @@ use ratatui::{
     crossterm::event::{self, Event, KeyCode, KeyEvent},
     style::Color,
 };
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use tc_models::{
-    clock::Clock,
+    clock::{Clock, ClockBehaviour},
     color_theme::{ColorTheme, ThemeColor},
     quote::Quote,
     selectable_item::SelectableItem,
@@ -23,10 +23,9 @@ use tc_user_config_loader::{
 };
 use tokio::{io, time::Duration};
 
-#[derive(Clone)]
 pub(crate) struct TuiAssets {
-    pub color_themes: Vec<Arc<ColorTheme>>,
-    pub clock_faces: Vec<Arc<dyn Clock>>,
+    pub color_themes: Vec<Arc<Mutex<ColorTheme>>>,
+    pub clock_faces: Vec<Arc<Mutex<Clock>>>,
     pub quotes: Vec<Arc<Quote>>,
 }
 
@@ -58,11 +57,10 @@ pub(crate) enum ApplicationState {
     Finished,
 }
 
-#[derive(Clone)]
 pub(crate) struct TuiState {
     pub application_state: ApplicationState,
-    pub color_theme: Arc<ColorTheme>,
-    pub clock_face: Arc<dyn Clock>,
+    pub color_theme: Arc<Mutex<ColorTheme>>,
+    pub clock_face: Arc<Mutex<Clock>>,
     pub quote: Option<Arc<Quote>>,
     pub pomodoro: Option<Arc<PomodoroTimer>>,
     pub refresh_rate: u64,
@@ -78,7 +76,7 @@ pub(crate) struct TuiComponents {
 impl TuiComponents {
     pub fn new(controller: Arc<TuiController>) -> TuiComponents {
         TuiComponents {
-            help_box: HelpBox::new(controller.clone()),
+            help_box: HelpBox::new(Arc::clone(&controller)),
             settings_menu: SettingMenu::new(controller),
             hero: Hero::default(),
             logo: Logo::default(),
@@ -104,19 +102,29 @@ impl TuiController {
         match action {
             // = Settings actions
             // == General settings
-            TuiAction::UpdateClockFace(new_clock_face) => {}
-            TuiAction::UpdateClockFormat(_) => {}
-            TuiAction::UpdateRefreshRate(new_refresh_rate) => {}
-            TuiAction::UpdateQuote(new_quote) => {}
+            TuiAction::UpdateClockFace(new_clock_face) => {
+                state.clock_face = Arc::clone(new_clock_face)
+            }
+            TuiAction::UpdateClockFormat(new_format) => {
+                let mut clock_lock = state.clock_face.lock().unwrap();
+                clock_lock.set_clock_format_to(*new_format);
+            }
+            TuiAction::UpdateRefreshRate(new_refresh_rate) => {
+                state.refresh_rate = *new_refresh_rate
+            }
+            TuiAction::UpdateQuote(new_quote) => state.quote = new_quote.clone(),
             // == Pomodoro settings
-            TuiAction::UpdateTotalSession(_) => {}
-            TuiAction::UpdateWorkDuration(_) => {}
-            TuiAction::UpdateLongBreakDuration(_) => {}
-            TuiAction::UpdateShortBreakDuration(_) => {}
-            TuiAction::UpdateSessionsBeforeLongBreak(_) => {}
+            TuiAction::UpdateTotalSession(new_total_sessions) => {}
+            TuiAction::UpdateWorkDuration(new_work_duration) => {}
+            TuiAction::UpdateLongBreakDuration(new_long_break_duration) => {}
+            TuiAction::UpdateShortBreakDuration(new_short_break_duration) => {}
+            TuiAction::UpdateSessionsBeforeLongBreak(new_sessions_before_long_break) => {}
             // == Color settings
-            TuiAction::UpdateColorTheme(theme) => state.color_theme = theme.clone(),
-            TuiAction::UpdateColor(variant, new_color) => {}
+            TuiAction::UpdateColorTheme(theme) => state.color_theme = Arc::clone(theme),
+            TuiAction::UpdateColor(variant, new_color) => {
+                let mut lock = state.color_theme.lock().unwrap();
+                lock.update(variant.clone(), *new_color);
+            }
         }
     }
 
@@ -124,13 +132,17 @@ impl TuiController {
         self.tui_assets
             .color_themes
             .iter()
-            .map(|color_theme| SelectableItem::Theme(Arc::clone(color_theme)))
+            .map(|color_theme| {
+                let color_lock = color_theme.lock().unwrap();
+                SelectableItem::Theme(Arc::new(color_lock.clone()))
+            })
             .collect()
     }
 
     pub fn get_color(&self, key: &ThemeColor) -> Color {
         let state = self.tui_state.read().unwrap();
-        *state.color_theme.get(key)
+        let lock = state.color_theme.lock().unwrap();
+        *lock.get(key)
     }
 
     pub fn handle_events(&self, components: &mut TuiComponents) -> io::Result<bool> {
@@ -165,7 +177,7 @@ impl TuiController {
                     ApplicationState::ShowingSettings => {
                         components
                             .settings_menu
-                            .handle_setting_keys(key_event, self.tui_state.clone());
+                            .handle_setting_keys(key_event, Arc::clone(&self.tui_state));
                     }
                     ApplicationState::ShowingHelp | ApplicationState::Finished => {}
                 }

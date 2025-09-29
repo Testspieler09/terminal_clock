@@ -25,6 +25,7 @@ pub(crate) struct CarouselSelector {
     current_selection: usize,
 }
 
+// TODO: we need some way of setting the current_selection over the tui_controller
 impl CarouselSelector {
     pub fn new(
         tui_controller: Arc<TuiController>,
@@ -67,11 +68,19 @@ impl SettingsSelector for CarouselSelector {
         match key_event.code {
             KeyCode::Char('h') | KeyCode::Left => {
                 self.next_option();
-                Some(self.options[self.current_selection].get_corrosponding_action())
+                Some(
+                    self.options[self.current_selection]
+                        .clone()
+                        .get_corrosponding_action(),
+                )
             }
             KeyCode::Char('l') | KeyCode::Right => {
                 self.prev_option();
-                Some(self.options[self.current_selection].get_corrosponding_action())
+                Some(
+                    self.options[self.current_selection]
+                        .clone()
+                        .get_corrosponding_action(),
+                )
             }
             _ => None,
         }

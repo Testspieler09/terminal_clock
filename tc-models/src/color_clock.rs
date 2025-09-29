@@ -1,5 +1,5 @@
 use crate::{
-    clock::{Clock, TimeFormat},
+    clock::{ClockBehaviour, TimeFormat},
     color_theme::{ColorTheme, ThemeColor},
     helper::{art_block, combine_ascii_art_while_applying_led},
 };
@@ -46,8 +46,11 @@ impl ColorClock {
     }
 }
 
-impl Clock for ColorClock {
-    fn draw_clockface(&self, theme: &ColorTheme) -> (Paragraph<'_>, usize, usize) {
+impl ClockBehaviour for ColorClock {
+    fn generate_clock_face_with_dimensions(
+        &self,
+        theme: &ColorTheme,
+    ) -> (Paragraph<'_>, usize, usize) {
         let time_stamp = Local::now();
         let hour_value = time_stamp.hour();
         let minute_value = time_stamp.minute();
