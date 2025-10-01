@@ -1,9 +1,12 @@
-use crate::components::{
-    help_box::HelpBox,
-    hero::{Hero, MenuLabel},
-    logo::Logo,
-    pomodoro::PomodoroTimer,
-    settings_menu::SettingMenu,
+use crate::{
+    components::{
+        help_box::HelpBox,
+        hero::{Hero, MenuLabel},
+        logo::Logo,
+        pomodoro::PomodoroTimer,
+        settings_menu::SettingMenu,
+    },
+    tui_models::application::ApplicationState,
 };
 use ratatui::{
     crossterm::event::{self, Event, KeyCode, KeyEvent},
@@ -38,25 +41,6 @@ impl TuiAssets {
         })
     }
 }
-
-#[derive(Clone)]
-pub(crate) enum ApplicationState {
-    /// The clock is running and displayed for the user
-    Running,
-
-    /// The hero menu (TerminalClock title, Settings, Help, Quit) is rendered
-    ShowingHero,
-
-    /// The help box is rendered and displayed for the user
-    ShowingHelp,
-
-    /// The settings menu is rendered and displayed for the user
-    ShowingSettings,
-
-    /// The program finished successfully
-    Finished,
-}
-
 pub(crate) struct TuiState {
     pub application_state: ApplicationState,
     pub color_theme: Arc<Mutex<ColorTheme>>,
@@ -125,6 +109,12 @@ impl TuiController {
                 let mut lock = state.color_theme.lock().unwrap();
                 lock.update(variant.clone(), *new_color);
             }
+        }
+    }
+
+    pub fn carousel_options_for(&self, title: &str) -> Vec<SelectableItem> {
+        match title {
+            _ => self.get_color_themes_as_selection(),
         }
     }
 

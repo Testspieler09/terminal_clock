@@ -1,4 +1,4 @@
-use crate::{components::settings_menu::SettingsSelector, tui_models::TuiController};
+use crate::{tui_models::selector::SettingsSelector, tui_models::tui::TuiController};
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     layout::Constraint,

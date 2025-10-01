@@ -1,4 +1,4 @@
-use crate::{components::Dimensions, helpers::generate_title, tui_models::TuiController};
+use crate::{components::Dimensions, helpers::generate_title, tui_models::tui::TuiController};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,

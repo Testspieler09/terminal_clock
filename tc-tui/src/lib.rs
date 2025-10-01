@@ -4,7 +4,10 @@ pub(crate) mod tui_models;
 pub(crate) mod views;
 
 use crate::{
-    tui_models::{ApplicationState, TuiAssets, TuiComponents, TuiController, TuiState},
+    tui_models::{
+        application::ApplicationState,
+        tui::{TuiAssets, TuiComponents, TuiController, TuiState},
+    },
     views::clock::render_clock_view,
 };
 use color_eyre::Result;

@@ -1,8 +1,11 @@
 use crate::{
     ApplicationState, TuiState,
-    components::{Dimensions, carousel_selector::CarouselSelector},
+    components::Dimensions,
     helpers::generate_title,
-    tui_models::TuiController,
+    tui_models::{
+        selector::{Selector, SelectorType, SettingsSelector},
+        tui::TuiController,
+    },
 };
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
@@ -19,9 +22,17 @@ use std::sync::{Arc, RwLock};
 use strum::{AsRefStr, EnumIter, IntoEnumIterator};
 use tc_models::{color_theme::ThemeColor, tui_action::TuiAction};
 
-enum PrimitiveOperation {
-    Increment,
-    Decrement,
+// TODO: change the title from &str to an enum that maps the string to a variant, for the
+// tuicontroller to handle it more clean
+struct TabConfig<'a> {
+    title: &'a str,
+    description: &'a [&'a str],
+    pub selector_type: SelectorType,
+}
+
+enum PrimitiveTabNavigationOperation {
+    Next,
+    Prev,
 }
 
 #[derive(EnumIter, Clone, Copy, AsRefStr)]
@@ -31,6 +42,12 @@ pub(crate) enum SettingsTab {
     Color(u16),
 }
 
+impl Default for SettingsTab {
+    fn default() -> Self {
+        SettingsTab::General(0)
+    }
+}
+
 impl PartialEq for SettingsTab {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -38,58 +55,6 @@ impl PartialEq for SettingsTab {
             (Self::Pomodoro(_), Self::Pomodoro(_)) => true,
             (Self::Color(_), Self::Color(_)) => true,
             _ => false,
-        }
-    }
-}
-
-impl Default for SettingsTab {
-    fn default() -> Self {
-        SettingsTab::General(0)
-    }
-}
-
-pub(crate) trait SettingsSelector {
-    fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction>;
-    fn set_to_active(&mut self);
-    fn set_to_inactive(&mut self);
-}
-
-// TODO: think about how we will handle adding the options on init and if this is realy necessary
-// here then
-const CAROUSEL: &'static str = "carousel";
-// const COLOR: &'static str = "color";
-
-enum Selector {
-    Carousel(CarouselSelector),
-    // Color(ColorSelector),
-    // Number(NumberSelector),
-    // Text(TextInput),
-}
-
-impl SettingsSelector for Selector {
-    fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction> {
-        match self {
-            Selector::Carousel(selector) => selector.handle_keys(key_event),
-        }
-    }
-
-    fn set_to_active(&mut self) {
-        match self {
-            Selector::Carousel(selector) => selector.set_to_active(),
-        }
-    }
-
-    fn set_to_inactive(&mut self) {
-        match self {
-            Selector::Carousel(selector) => selector.set_to_inactive(),
-        }
-    }
-}
-
-impl Widget for &Selector {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        match self {
-            Selector::Carousel(selector) => selector.render(area, buf),
         }
     }
 }
@@ -114,132 +79,129 @@ pub(crate) struct SettingMenu {
 }
 
 impl SettingMenu {
-    const GENERAL_TAB_CONTENT: &[(&'static str, &'static [&'static str], &'static str)] = &[
-        (
-            "Refresh Rate",
-            &["The rate on which the screen gets refreshed"],
-            CAROUSEL,
-        ),
-        (
-            "Clock Face",
-            &["The clock face you want to be displayed"],
-            CAROUSEL,
-        ),
-        (
-            "Clock Format",
-            &[
+    const GENERAL_TAB_CONFIG: &[TabConfig<'_>] = &[
+        TabConfig {
+            title: "Refresh Rate",
+            description: &["The rate on which the screen gets refreshed"],
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Clock Face",
+            description: &["The clock face you want to be displayed"],
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Clock Format",
+            description: &[
                 "The format the time is displayed in.",
                 "",
                 "The options are HH:MM:SS, MM:HH:SS and HH:MM",
             ],
-            CAROUSEL,
-        ),
-        (
-            "Quote",
-            &["The quote that is supposed to be rendered"],
-            CAROUSEL,
-        ),
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Quote",
+            description: &["The quote that is supposed to be rendered"],
+            selector_type: SelectorType::Carousel,
+        },
     ];
 
-    const POMODORO_TAB_CONTENT: &[(&'static str, &'static [&'static str], &'static str)] = &[
-        (
-            "Total Sessions",
-            &["The total number of Pomodoro sessions"],
-            CAROUSEL,
-        ),
-        (
-            "Sessions Before Long Break",
-            &["The number of sessions to complete before taking a long break"],
-            CAROUSEL,
-        ),
-        (
-            "Work Duration",
-            &["Duration of each focused work session (in minutes)"],
-            CAROUSEL,
-        ),
-        (
-            "Short Break Duration",
-            &["Duration of a short break between work sessions (in minutes)"],
-            CAROUSEL,
-        ),
-        (
-            "Long Break Duration",
-            &["Duration of a long break after multiple sessions (in minutes)"],
-            CAROUSEL,
-        ),
+    const POMODORO_TAB_CONFIG: &[TabConfig<'_>] = &[
+        TabConfig {
+            title: "Total Sessions",
+            description: &["The total number of Pomodoro sessions"],
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Sessions Before Long Break",
+            description: &["The number of sessions to complete before taking a long break"],
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Work Duration",
+            description: &["Duration of each focused work session (in minutes)"],
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Short Break Duration",
+            description: &["Duration of a short break between work sessions (in minutes)"],
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Long Break Duration",
+            description: &["Duration of a long break after multiple sessions (in minutes)"],
+            selector_type: SelectorType::Carousel,
+        },
     ];
 
-    const COLOR_TAB_CONTENT: &[(&'static str, &'static [&'static str], &'static str)] = &[
-        (
-            "Color Theme",
-            &["The overall color theme used across the application"],
-            CAROUSEL,
-        ),
-        (
-            "Foreground Color",
-            &["Color used for primary text and UI elements"],
-            CAROUSEL,
-        ),
-        (
-            "Background Color",
-            &[
+    const COLOR_TAB_CONFIG: &[TabConfig<'_>] = &[
+        TabConfig {
+            title: "Color Theme",
+            description: &["The overall color theme used across the application"],
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Foreground Color",
+            description: &["Color used for primary text and UI elements"],
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Background Color",
+            description: &[
                 "Background color of the application interface",
                 "",
                 "Set this to `None` to get a transparent background",
             ],
-            CAROUSEL,
-        ),
-        (
-            "Selection Color",
-            &["Color used when selecting text or items"],
-            CAROUSEL,
-        ),
-        (
-            "Accent Color",
-            &["Highlight color used for emphasis or active items"],
-            CAROUSEL,
-        ),
-        (
-            "Border Color",
-            &["Color used for borders and outlines"],
-            CAROUSEL,
-        ),
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Selection Color",
+            description: &["Color used when selecting text or items"],
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Accent Color",
+            description: &["Highlight color used for emphasis or active items"],
+            selector_type: SelectorType::Carousel,
+        },
+        TabConfig {
+            title: "Border Color",
+            description: &["Color used for borders and outlines"],
+            selector_type: SelectorType::Carousel,
+        },
     ];
 
     pub fn new(tui_controller: Arc<TuiController>) -> SettingMenu {
-        let general_tab_selectors: Vec<Selector> = Self::GENERAL_TAB_CONTENT
+        let general_tab_selectors: Vec<Selector> = Self::GENERAL_TAB_CONFIG
             .iter()
             .enumerate()
-            .map(|(idx, (title, _, _))| {
-                let is_active = if idx == 0 { true } else { false };
-                Selector::Carousel(CarouselSelector::new(
+            .map(|(idx, config)| {
+                let is_active = idx == 0;
+                config.selector_type.create_selector(
                     Arc::clone(&tui_controller),
-                    title.to_string(),
-                    tui_controller.get_color_themes_as_selection(),
+                    config.title,
                     is_active,
-                ))
+                )
             })
             .collect();
-        let pomodoro_tab_selectors: Vec<Selector> = Self::POMODORO_TAB_CONTENT
+        let pomodoro_tab_selectors: Vec<Selector> = Self::POMODORO_TAB_CONFIG
             .iter()
-            .map(|(title, _, _)| {
-                Selector::Carousel(CarouselSelector::new(
+            .map(|config| {
+                config.selector_type.create_selector(
                     Arc::clone(&tui_controller),
-                    title.to_string(),
-                    tui_controller.get_color_themes_as_selection(),
+                    config.title,
                     false,
-                ))
+                )
             })
             .collect();
-        let color_tab_selectors: Vec<Selector> = Self::COLOR_TAB_CONTENT
+        let color_tab_selectors: Vec<Selector> = Self::COLOR_TAB_CONFIG
             .iter()
-            .map(|(title, _, _)| {
-                Selector::Carousel(CarouselSelector::new(
+            .map(|config| {
+                config.selector_type.create_selector(
                     Arc::clone(&tui_controller),
-                    title.to_string(),
-                    tui_controller.get_color_themes_as_selection(),
+                    config.title,
                     false,
-                ))
+                )
             })
             .collect();
 
@@ -305,12 +267,12 @@ impl SettingMenu {
         self.reset_tab_page();
     }
 
-    fn update_option_index(&mut self, operation: PrimitiveOperation) {
+    fn update_option_index(&mut self, operation: PrimitiveTabNavigationOperation) {
         self.current_tab = match self.current_tab {
             SettingsTab::General(option_idx) => {
                 self.general_tab_selectors[option_idx as usize].set_to_inactive();
                 let new_idx =
-                    Self::update_index(option_idx, operation, Self::GENERAL_TAB_CONTENT.len());
+                    Self::update_index(option_idx, operation, Self::GENERAL_TAB_CONFIG.len());
                 self.general_tab_selectors[new_idx as usize].set_to_active();
 
                 SettingsTab::General(new_idx)
@@ -318,7 +280,7 @@ impl SettingMenu {
             SettingsTab::Pomodoro(option_idx) => {
                 self.pomodoro_tab_selectors[option_idx as usize].set_to_inactive();
                 let new_idx =
-                    Self::update_index(option_idx, operation, Self::POMODORO_TAB_CONTENT.len());
+                    Self::update_index(option_idx, operation, Self::POMODORO_TAB_CONFIG.len());
                 self.pomodoro_tab_selectors[new_idx as usize].set_to_active();
 
                 SettingsTab::Pomodoro(new_idx)
@@ -326,7 +288,7 @@ impl SettingMenu {
             SettingsTab::Color(option_idx) => {
                 self.color_tab_selectors[option_idx as usize].set_to_inactive();
                 let new_idx =
-                    Self::update_index(option_idx, operation, Self::COLOR_TAB_CONTENT.len());
+                    Self::update_index(option_idx, operation, Self::COLOR_TAB_CONFIG.len());
                 self.color_tab_selectors[new_idx as usize].set_to_active();
 
                 SettingsTab::Color(new_idx)
@@ -334,9 +296,13 @@ impl SettingMenu {
         }
     }
 
-    fn update_index(current_index: u16, operation: PrimitiveOperation, max_len: usize) -> u16 {
+    fn update_index(
+        current_index: u16,
+        operation: PrimitiveTabNavigationOperation,
+        max_len: usize,
+    ) -> u16 {
         let max_len = max_len as u16;
-        if matches!(operation, PrimitiveOperation::Increment) {
+        if matches!(operation, PrimitiveTabNavigationOperation::Next) {
             (current_index + 1) % max_len
         } else if current_index == 0 {
             max_len - 1
@@ -346,11 +312,11 @@ impl SettingMenu {
     }
 
     fn next_settings_option(&mut self) {
-        self.update_option_index(PrimitiveOperation::Increment);
+        self.update_option_index(PrimitiveTabNavigationOperation::Next);
     }
 
     fn prev_settings_option(&mut self) {
-        self.update_option_index(PrimitiveOperation::Decrement);
+        self.update_option_index(PrimitiveTabNavigationOperation::Prev);
     }
 
     pub fn set_called_from_hero(&mut self, was_called_from_hero: bool) {
@@ -366,17 +332,17 @@ impl SettingMenu {
             SettingsTab::General(selected_idx) => (
                 &self.general_tab_selectors,
                 selected_idx,
-                Self::GENERAL_TAB_CONTENT,
+                Self::GENERAL_TAB_CONFIG,
             ),
             SettingsTab::Pomodoro(selected_idx) => (
                 &self.pomodoro_tab_selectors,
                 selected_idx,
-                Self::POMODORO_TAB_CONTENT,
+                Self::POMODORO_TAB_CONFIG,
             ),
             SettingsTab::Color(selected_idx) => (
                 &self.color_tab_selectors,
                 selected_idx,
-                Self::COLOR_TAB_CONTENT,
+                Self::COLOR_TAB_CONFIG,
             ),
         };
 
@@ -390,8 +356,8 @@ impl SettingMenu {
             }
         }
 
-        if let Some((_title, description, _selector_type)) = content.get(idx as usize) {
-            let desc_text = description.join("\n");
+        if let Some(config) = content.get(idx as usize) {
+            let desc_text = config.description.join("\n");
             let desc_paragraph = Paragraph::new(desc_text)
                 .wrap(Wrap { trim: true })
                 .style(Style::default().fg(self.tui_controller.get_color(&ThemeColor::Foreground)));
