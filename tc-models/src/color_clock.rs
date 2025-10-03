@@ -6,7 +6,10 @@ use crate::{
 use chrono::{Local, Timelike};
 use ratatui::{style::Color, widgets::Paragraph};
 
+#[derive(Clone)]
 pub struct ColorClock {
+    name: String,
+
     // The static ascii art for the clock face
     hour: String,
     minutes: String,
@@ -24,6 +27,7 @@ pub struct ColorClock {
 
 impl ColorClock {
     pub fn new(
+        name: String,
         hour: String,
         minutes: String,
         seconds: String,
@@ -34,6 +38,7 @@ impl ColorClock {
         format: Option<TimeFormat>,
     ) -> Self {
         ColorClock {
+            name,
             hour,
             minutes,
             seconds,
@@ -43,6 +48,10 @@ impl ColorClock {
             accent_color,
             format,
         }
+    }
+
+    pub fn get_name(&self) -> &str {
+        self.name.as_str()
     }
 }
 

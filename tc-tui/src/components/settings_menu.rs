@@ -4,6 +4,7 @@ use crate::{
     helpers::generate_title,
     tui_models::{
         selector::{Selector, SelectorType, SettingsSelector},
+        settings::Setting,
         tui::TuiController,
     },
 };
@@ -25,7 +26,7 @@ use tc_models::{color_theme::ThemeColor, tui_action::TuiAction};
 // TODO: change the title from &str to an enum that maps the string to a variant, for the
 // tuicontroller to handle it more clean
 struct TabConfig<'a> {
-    title: &'a str,
+    setting: Setting,
     description: &'a [&'a str],
     pub selector_type: SelectorType,
 }
@@ -81,17 +82,17 @@ pub(crate) struct SettingMenu {
 impl SettingMenu {
     const GENERAL_TAB_CONFIG: &[TabConfig<'_>] = &[
         TabConfig {
-            title: "Refresh Rate",
+            setting: Setting::RefreshRate,
             description: &["The rate on which the screen gets refreshed"],
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Clock Face",
+            setting: Setting::ClockFace,
             description: &["The clock face you want to be displayed"],
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Clock Format",
+            setting: Setting::ClockFormat,
             description: &[
                 "The format the time is displayed in.",
                 "",
@@ -100,7 +101,7 @@ impl SettingMenu {
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Quote",
+            setting: Setting::Quote,
             description: &["The quote that is supposed to be rendered"],
             selector_type: SelectorType::Carousel,
         },
@@ -108,27 +109,27 @@ impl SettingMenu {
 
     const POMODORO_TAB_CONFIG: &[TabConfig<'_>] = &[
         TabConfig {
-            title: "Total Sessions",
+            setting: Setting::TotalSessions,
             description: &["The total number of Pomodoro sessions"],
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Sessions Before Long Break",
+            setting: Setting::SessionsBeforeLongBreak,
             description: &["The number of sessions to complete before taking a long break"],
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Work Duration",
+            setting: Setting::WorkDuration,
             description: &["Duration of each focused work session (in minutes)"],
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Short Break Duration",
+            setting: Setting::ShortBreakDuration,
             description: &["Duration of a short break between work sessions (in minutes)"],
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Long Break Duration",
+            setting: Setting::LongBreakDuration,
             description: &["Duration of a long break after multiple sessions (in minutes)"],
             selector_type: SelectorType::Carousel,
         },
@@ -136,17 +137,17 @@ impl SettingMenu {
 
     const COLOR_TAB_CONFIG: &[TabConfig<'_>] = &[
         TabConfig {
-            title: "Color Theme",
+            setting: Setting::ColorTheme,
             description: &["The overall color theme used across the application"],
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Foreground Color",
+            setting: Setting::ForegroundColor,
             description: &["Color used for primary text and UI elements"],
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Background Color",
+            setting: Setting::BackgroundColor,
             description: &[
                 "Background color of the application interface",
                 "",
@@ -155,17 +156,17 @@ impl SettingMenu {
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Selection Color",
+            setting: Setting::SelectionColor,
             description: &["Color used when selecting text or items"],
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Accent Color",
+            setting: Setting::AccentColor,
             description: &["Highlight color used for emphasis or active items"],
             selector_type: SelectorType::Carousel,
         },
         TabConfig {
-            title: "Border Color",
+            setting: Setting::BorderColor,
             description: &["Color used for borders and outlines"],
             selector_type: SelectorType::Carousel,
         },
@@ -179,7 +180,7 @@ impl SettingMenu {
                 let is_active = idx == 0;
                 config.selector_type.create_selector(
                     Arc::clone(&tui_controller),
-                    config.title,
+                    config.setting,
                     is_active,
                 )
             })
@@ -189,7 +190,7 @@ impl SettingMenu {
             .map(|config| {
                 config.selector_type.create_selector(
                     Arc::clone(&tui_controller),
-                    config.title,
+                    config.setting,
                     false,
                 )
             })
@@ -199,7 +200,7 @@ impl SettingMenu {
             .map(|config| {
                 config.selector_type.create_selector(
                     Arc::clone(&tui_controller),
-                    config.title,
+                    config.setting,
                     false,
                 )
             })

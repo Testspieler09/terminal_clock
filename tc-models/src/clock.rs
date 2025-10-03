@@ -1,6 +1,6 @@
 use crate::{
     analog_clock::AnalogClock, color_clock::ColorClock, color_theme::ColorTheme,
-    digital_clock::DigitalClock,
+    digital_clock::DigitalClock, selectable_item::Selectable,
 };
 use ratatui::widgets::Paragraph;
 use serde::Deserialize;
@@ -20,10 +20,21 @@ pub trait ClockBehaviour {
     fn set_clock_format_to(&mut self, fmt: TimeFormat);
 }
 
+#[derive(Clone)]
 pub enum Clock {
     Digital(DigitalClock),
     Analog(AnalogClock),
     Color(ColorClock),
+}
+
+impl Clock {
+    pub fn get_name(&self) -> &str {
+        match self {
+            Clock::Digital(clock) => clock.get_name(),
+            Clock::Analog(clock) => clock.get_name(),
+            Clock::Color(clock) => clock.get_name(),
+        }
+    }
 }
 
 impl ClockBehaviour for Clock {

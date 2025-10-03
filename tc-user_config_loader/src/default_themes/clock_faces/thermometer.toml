@@ -1,7 +1,8 @@
 clock_type = "ColorClock"
-name = "Thermometer"
 
 [config]
+name = "Thermometer"
+
 hour = """   ╭─╮ °C
 12 ┤█│
    ┤█│
@@ -44,3 +45,19 @@ seconds = """   ╭─╮ °F
    ┤█│
  5 ┤█│
    ╰─╯"""
+
+hour_coords = [
+]
+
+minute_coords = [
+
+]
+
+second_coords = []
+
+always_on_coords = []
+
+
+format = "Hms"
+
+# vim: set tabstop=2 shiftwidth=2 expandtab:

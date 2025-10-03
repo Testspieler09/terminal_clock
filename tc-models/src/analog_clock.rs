@@ -4,7 +4,10 @@ use crate::{
 };
 use ratatui::widgets::Paragraph;
 
+#[derive(Clone)]
 pub struct AnalogClock {
+    name: &'static str,
+
     // The static ascii art for the clock face
     hour_hand_frames: Vec<&'static str>,
     minute_hand_frames: Vec<&'static str>,
@@ -18,6 +21,12 @@ pub struct AnalogClock {
     seconds_center: [u32; 2],
 
     format: Option<TimeFormat>,
+}
+
+impl AnalogClock {
+    pub fn get_name(&self) -> &str {
+        self.name
+    }
 }
 
 impl ClockBehaviour for AnalogClock {

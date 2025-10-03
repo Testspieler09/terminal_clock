@@ -1,4 +1,6 @@
-use crate::{TuiController, components::carousel_selector::CarouselSelector};
+use crate::{
+    TuiController, components::carousel_selector::CarouselSelector, tui_models::settings::Setting,
+};
 use ratatui::{
     crossterm::event::KeyEvent,
     prelude::{Buffer, Rect},
@@ -52,14 +54,14 @@ impl SelectorType {
     pub fn create_selector(
         &self,
         tui_controller: Arc<TuiController>,
-        title: &str,
+        setting: Setting,
         is_active: bool,
     ) -> Selector {
         match self {
             SelectorType::Carousel => Selector::Carousel(CarouselSelector::new(
                 Arc::clone(&tui_controller),
-                title.to_string(),
-                tui_controller.carousel_options_for(title),
+                setting.as_ref().to_string(),
+                tui_controller.carousel_options_for(setting),
                 is_active,
             )),
         }

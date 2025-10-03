@@ -4,12 +4,21 @@ use crate::{
 };
 use ratatui::widgets::Paragraph;
 
+#[derive(Clone, Copy)]
 pub struct DigitalClock {
+    name: &'static str,
+
     // The static ascii art for the clock face
     numbers: [&'static str; 10],
     seperator: &'static str,
 
     format: Option<TimeFormat>,
+}
+
+impl DigitalClock {
+    pub fn get_name(&self) -> &str {
+        self.name
+    }
 }
 
 impl ClockBehaviour for DigitalClock {

@@ -26,14 +26,14 @@ pub struct ColorTheme {
 }
 
 impl ColorTheme {
+    pub fn get_name(&self) -> &str {
+        &self.name.as_str()
+    }
+
     pub fn get(&self, key: &ThemeColor) -> &Color {
         self.colors
             .get(key)
             .unwrap_or(&FALLBACK_COLOR_THEME[key.clone() as usize])
-    }
-
-    pub fn get_name(&self) -> &str {
-        &self.name.as_str()
     }
 
     pub fn update(&mut self, key: ThemeColor, new_value: Color) {

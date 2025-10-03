@@ -11,7 +11,8 @@ use tc_models::{
     color_clock::ColorClock,
     color_theme::FALLBACK_COLOR_THEME,
     digital_clock::DigitalClock,
-    helper::{TimeUnit, generate_binary_led_coords},
+    display_mode::DisplayMode,
+    helper::{TimeUnit, generate_led_coords_to_base},
 };
 
 #[derive(Deserialize)]
@@ -20,6 +21,22 @@ pub enum ClockConfig {
     ColorClock(Box<ColorClockConfig>),
     DigitalClock(Box<DigitalClockConfig>),
     AnalogClock(Box<AnalogClockConfig>),
+}
+
+impl ClockConfig {
+    pub fn set_name_if_none(&mut self, new_name: String) {
+        match self {
+            ClockConfig::AnalogClock(_clock) => {
+                todo!()
+            }
+            ClockConfig::ColorClock(clock) => {
+                clock.set_name_if_none(new_name);
+            }
+            ClockConfig::DigitalClock(_clock) => {
+                todo!()
+            }
+        };
+    }
 }
 
 impl From<ClockConfig> for Clock {
@@ -34,42 +51,59 @@ impl From<ClockConfig> for Clock {
 
 #[derive(Deserialize)]
 pub struct ColorClockConfig {
+    pub name: Option<String>,
     pub hour: String,
     pub minutes: String,
     pub seconds: String,
-    pub hour_coords: [Vec<(u8, (u32, u32))>; 2],
-    pub minute_coords: [Vec<(u8, (u32, u32))>; 2],
-    pub second_coords: [Vec<(u8, (u32, u32))>; 2],
-    pub always_on_coords: Vec<(u32, u32)>,
+    pub display_mode: DisplayMode,
+    pub hour_coords: [Vec<(u8, Vec<(u32, u32)>)>; 2],
+    pub minute_coords: [Vec<(u8, Vec<(u32, u32)>)>; 2],
+    pub second_coords: [Vec<(u8, Vec<(u32, u32)>)>; 2],
+    pub always_on_coords: Option<Vec<(u32, u32)>>,
     pub accent_color: Option<String>,
     pub format: Option<TimeFormat>,
 }
 
+impl ColorClockConfig {
+    pub fn set_name_if_none(&mut self, name: String) {
+        self.name = Some(name)
+    }
+}
+
 impl From<ColorClockConfig> for ColorClock {
     fn from(config: ColorClockConfig) -> ColorClock {
-        let hour_coords = generate_binary_led_coords(
+        let always_on_coords_slice = if let Some(always_on_coords) = config.always_on_coords {
+            always_on_coords
+        } else {
+            vec![]
+        };
+        let hour_coords = generate_led_coords_to_base(
             &config.hour_coords[0],
             &config.hour_coords[1],
-            config.always_on_coords.as_slice(),
+            always_on_coords_slice.as_slice(),
             TimeUnit::Hours,
+            config.display_mode,
         );
-        let minute_coords = generate_binary_led_coords(
+        let minute_coords = generate_led_coords_to_base(
             &config.minute_coords[0],
             &config.minute_coords[1],
-            config.always_on_coords.as_slice(),
+            always_on_coords_slice.as_slice(),
             TimeUnit::Minutes,
+            config.display_mode,
         );
-        let second_coords = generate_binary_led_coords(
+        let second_coords = generate_led_coords_to_base(
             &config.second_coords[0],
             &config.second_coords[1],
-            config.always_on_coords.as_slice(),
+            always_on_coords_slice.as_slice(),
             TimeUnit::Seconds,
+            config.display_mode,
         );
         let accent_color = config
             .accent_color
             .map(|color| Color::from_str(&color).unwrap_or(FALLBACK_COLOR_THEME[0]));
 
         ColorClock::new(
+            config.name.unwrap(),
             config.hour,
             config.minutes,
             config.seconds,
@@ -84,9 +118,16 @@ impl From<ColorClockConfig> for ColorClock {
 
 #[derive(Deserialize)]
 pub struct DigitalClockConfig {
+    // pub name: String,
     // pub numbers: [&'static str; 10],
     // pub seperator: &'static str,
 }
+
+// impl DigitalClockConfig {
+//     pub fn set_name_if_not_already_set(&mut self, name: String) {
+//         self.name = name
+//     }
+// }
 
 impl From<DigitalClockConfig> for DigitalClock {
     fn from(config: DigitalClockConfig) -> DigitalClock {
@@ -96,6 +137,8 @@ impl From<DigitalClockConfig> for DigitalClock {
 
 #[derive(Deserialize)]
 pub struct AnalogClockConfig {
+    // name: String,
+    //
     // hour_hand_frames: Vec<&'static str>,
     // minute_hand_frames: Vec<&'static str>,
     // second_hand_frames: Vec<&'static str>,
@@ -106,6 +149,12 @@ pub struct AnalogClockConfig {
     minute_center: [u32; 2],
     seconds_center: [u32; 2],
 }
+
+// impl AnalogClockConfig {
+//     pub fn set_name_if_not_already_set(&mut self, name: String) {
+//         self.name = name
+//     }
+// }
 
 impl From<AnalogClockConfig> for AnalogClock {
     fn from(config: AnalogClockConfig) -> AnalogClock {

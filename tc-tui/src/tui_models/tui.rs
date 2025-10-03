@@ -6,7 +6,7 @@ use crate::{
         pomodoro::PomodoroTimer,
         settings_menu::SettingMenu,
     },
-    tui_models::application::ApplicationState,
+    tui_models::{application::ApplicationState, settings::Setting},
 };
 use ratatui::{
     crossterm::event::{self, Event, KeyCode, KeyEvent},
@@ -98,11 +98,11 @@ impl TuiController {
             }
             TuiAction::UpdateQuote(new_quote) => state.quote = new_quote.clone(),
             // == Pomodoro settings
-            TuiAction::UpdateTotalSession(new_total_sessions) => {}
-            TuiAction::UpdateWorkDuration(new_work_duration) => {}
-            TuiAction::UpdateLongBreakDuration(new_long_break_duration) => {}
-            TuiAction::UpdateShortBreakDuration(new_short_break_duration) => {}
-            TuiAction::UpdateSessionsBeforeLongBreak(new_sessions_before_long_break) => {}
+            TuiAction::UpdateTotalSession(_new_total_sessions) => {}
+            TuiAction::UpdateWorkDuration(_new_work_duration) => {}
+            TuiAction::UpdateLongBreakDuration(_new_long_break_duration) => {}
+            TuiAction::UpdateShortBreakDuration(_new_short_break_duration) => {}
+            TuiAction::UpdateSessionsBeforeLongBreak(_new_sessions_before_long_break) => {}
             // == Color settings
             TuiAction::UpdateColorTheme(theme) => state.color_theme = Arc::clone(theme),
             TuiAction::UpdateColor(variant, new_color) => {
@@ -112,13 +112,31 @@ impl TuiController {
         }
     }
 
-    pub fn carousel_options_for(&self, title: &str) -> Vec<SelectableItem> {
-        match title {
-            _ => self.get_color_themes_as_selection(),
+    pub fn carousel_options_for(&self, setting: Setting) -> Vec<SelectableItem> {
+        match setting {
+            Setting::ClockFace => self
+                .tui_assets
+                .clock_faces
+                .iter()
+                .map(|clock_face| {
+                    let clock_lock = clock_face.lock().unwrap();
+                    SelectableItem::ClockFace(Arc::new(clock_lock.clone()))
+                })
+                .collect(),
+            Setting::ColorTheme => self
+                .tui_assets
+                .color_themes
+                .iter()
+                .map(|color_theme| {
+                    let theme_lock = color_theme.lock().unwrap();
+                    SelectableItem::Theme(Arc::new(theme_lock.clone()))
+                })
+                .collect(),
+            _ => self.dummy_fn_remove_later(),
         }
     }
 
-    pub fn get_color_themes_as_selection(&self) -> Vec<SelectableItem> {
+    pub fn dummy_fn_remove_later(&self) -> Vec<SelectableItem> {
         self.tui_assets
             .color_themes
             .iter()

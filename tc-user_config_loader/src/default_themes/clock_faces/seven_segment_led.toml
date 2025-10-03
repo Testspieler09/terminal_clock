@@ -1,7 +1,8 @@
 clock_type = "ColorClock"
-name = "7 Seven Segment"
 
 [config]
+name = "7 Seven Segment"
+
 hour = """ «<@#####@>»   «<@#####@>»
 ¡           ¡ ¡           ¡
 @           @ @           @
@@ -63,3 +64,19 @@ seperator = """
 
 
 """
+
+hour_coords = [
+]
+
+minute_coords = [
+
+]
+
+second_coords = []
+
+always_on_coords = []
+
+
+format = "Hms"
+
+# vim: set tabstop=2 shiftwidth=2 expandtab:
