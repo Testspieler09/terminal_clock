@@ -84,7 +84,7 @@ impl SettingMenu {
         TabConfig {
             setting: Setting::RefreshRate,
             description: &["The rate on which the screen gets refreshed"],
-            selector_type: SelectorType::Carousel,
+            selector_type: SelectorType::Number,
         },
         TabConfig {
             setting: Setting::ClockFace,
@@ -111,27 +111,27 @@ impl SettingMenu {
         TabConfig {
             setting: Setting::TotalSessions,
             description: &["The total number of Pomodoro sessions"],
-            selector_type: SelectorType::Carousel,
+            selector_type: SelectorType::Number,
         },
         TabConfig {
             setting: Setting::SessionsBeforeLongBreak,
             description: &["The number of sessions to complete before taking a long break"],
-            selector_type: SelectorType::Carousel,
+            selector_type: SelectorType::Number,
         },
         TabConfig {
             setting: Setting::WorkDuration,
             description: &["Duration of each focused work session (in minutes)"],
-            selector_type: SelectorType::Carousel,
+            selector_type: SelectorType::Number,
         },
         TabConfig {
             setting: Setting::ShortBreakDuration,
             description: &["Duration of a short break between work sessions (in minutes)"],
-            selector_type: SelectorType::Carousel,
+            selector_type: SelectorType::Number,
         },
         TabConfig {
             setting: Setting::LongBreakDuration,
             description: &["Duration of a long break after multiple sessions (in minutes)"],
-            selector_type: SelectorType::Carousel,
+            selector_type: SelectorType::Number,
         },
     ];
 
@@ -144,7 +144,7 @@ impl SettingMenu {
         TabConfig {
             setting: Setting::ForegroundColor,
             description: &["Color used for primary text and UI elements"],
-            selector_type: SelectorType::Carousel,
+            selector_type: SelectorType::Color,
         },
         TabConfig {
             setting: Setting::BackgroundColor,
@@ -153,22 +153,22 @@ impl SettingMenu {
                 "",
                 "Set this to `None` to get a transparent background",
             ],
-            selector_type: SelectorType::Carousel,
+            selector_type: SelectorType::Color,
         },
         TabConfig {
             setting: Setting::SelectionColor,
             description: &["Color used when selecting text or items"],
-            selector_type: SelectorType::Carousel,
+            selector_type: SelectorType::Color,
         },
         TabConfig {
             setting: Setting::AccentColor,
             description: &["Highlight color used for emphasis or active items"],
-            selector_type: SelectorType::Carousel,
+            selector_type: SelectorType::Color,
         },
         TabConfig {
             setting: Setting::BorderColor,
             description: &["Color used for borders and outlines"],
-            selector_type: SelectorType::Carousel,
+            selector_type: SelectorType::Color,
         },
     ];
 

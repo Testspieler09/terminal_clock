@@ -26,14 +26,11 @@ pub(crate) fn art_block<'a>(
 }
 
 pub(crate) fn combine_ascii_art_while_applying_led<'a>(
-    art1: &ArtBlock<'a>,
-    art2: &ArtBlock<'a>,
-    art3: &ArtBlock<'a>,
+    artworks: &[&ArtBlock<'a>],
+    clock_color: Color,
     accent_color: Color,
 ) -> (Paragraph<'a>, usize, usize) {
-    let arts = [art1, art2, art3];
-
-    let split_lines: Vec<Vec<&str>> = arts
+    let split_lines: Vec<Vec<&str>> = artworks
         .iter()
         .map(|art| art.ascii_art.lines().collect())
         .collect();
@@ -67,8 +64,8 @@ pub(crate) fn combine_ascii_art_while_applying_led<'a>(
             let graphemes: Vec<&str> = line.graphemes(true).collect();
             let padding = width.saturating_sub(graphemes.len());
 
-            let coords = &arts[art_idx].led_coords;
-            let digit = arts[art_idx].time_value as usize;
+            let coords = &artworks[art_idx].led_coords;
+            let digit = artworks[art_idx].time_value as usize;
             let active = coords.get(digit);
 
             for (char_index, grapheme) in graphemes.iter().enumerate() {
@@ -79,7 +76,7 @@ pub(crate) fn combine_ascii_art_while_applying_led<'a>(
                 let style = if is_led {
                     Style::default().fg(accent_color)
                 } else {
-                    Style::default()
+                    Style::default().fg(clock_color)
                 };
 
                 line_spans.push(Span::styled(*grapheme, style));

@@ -29,9 +29,9 @@ pub(crate) struct CarouselSelector {
 impl CarouselSelector {
     pub fn new(
         tui_controller: Arc<TuiController>,
+        is_active: bool,
         title: String,
         options: Vec<SelectableItem>,
-        is_active: bool,
     ) -> CarouselSelector {
         if options.is_empty() {
             panic!("A carousel selector should always contain values.");

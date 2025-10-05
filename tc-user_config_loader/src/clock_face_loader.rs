@@ -55,11 +55,13 @@ pub struct ColorClockConfig {
     pub hour: String,
     pub minutes: String,
     pub seconds: String,
+    pub separator: Option<String>,
     pub display_mode: DisplayMode,
     pub hour_coords: [Vec<(u8, Vec<(u32, u32)>)>; 2],
     pub minute_coords: [Vec<(u8, Vec<(u32, u32)>)>; 2],
     pub second_coords: [Vec<(u8, Vec<(u32, u32)>)>; 2],
     pub always_on_coords: Option<Vec<(u32, u32)>>,
+    pub clock_color: Option<String>,
     pub accent_color: Option<String>,
     pub format: Option<TimeFormat>,
 }
@@ -98,18 +100,23 @@ impl From<ColorClockConfig> for ColorClock {
             TimeUnit::Seconds,
             config.display_mode,
         );
+        let clock_color = config
+            .clock_color
+            .map(|color| Color::from_str(&color).unwrap_or(FALLBACK_COLOR_THEME[0]));
         let accent_color = config
             .accent_color
-            .map(|color| Color::from_str(&color).unwrap_or(FALLBACK_COLOR_THEME[0]));
+            .map(|color| Color::from_str(&color).unwrap_or(FALLBACK_COLOR_THEME[2]));
 
         ColorClock::new(
             config.name.unwrap(),
             config.hour,
             config.minutes,
             config.seconds,
+            config.separator,
             hour_coords,
             minute_coords,
             second_coords,
+            clock_color,
             accent_color,
             config.format,
         )
