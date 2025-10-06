@@ -9,3 +9,4 @@ ratatui = { workspace = true }
 unicode-segmentation = { workspace = true }
 chrono               = { workspace = true }
 serde                = { workspace = true }
+strum                = { workspace = true }

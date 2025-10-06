@@ -903,6 +903,7 @@ dependencies = [
  "chrono",
  "ratatui",
  "serde",
+ "strum 0.27.2",
  "unicode-segmentation",
 ]
 

@@ -25,6 +25,8 @@ pub(crate) trait SettingsSelector {
     fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction>;
     fn set_to_active(&mut self);
     fn set_to_inactive(&mut self);
+    // TODO: implement this to update the SettingsSelector
+    // fn set_current_selection(&mut self, selection: SelectableItem) -> Result;
 }
 
 impl SettingsSelector for Selector {

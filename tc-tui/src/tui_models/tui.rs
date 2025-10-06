@@ -13,8 +13,9 @@ use ratatui::{
     style::Color,
 };
 use std::sync::{Arc, Mutex, RwLock};
+use strum::IntoEnumIterator;
 use tc_models::{
-    clock::{Clock, ClockBehaviour},
+    clock::{Clock, ClockBehaviour, TimeFormat},
     color_theme::{ColorTheme, ThemeColor},
     quote::Quote,
     selectable_item::SelectableItem,
@@ -132,19 +133,18 @@ impl TuiController {
                     SelectableItem::Theme(Arc::new(theme_lock.clone()))
                 })
                 .collect(),
-            _ => self.dummy_fn_remove_later(),
+            Setting::ClockFormat => TimeFormat::iter()
+                .map(|fmt| SelectableItem::Format(fmt))
+                .collect(),
+            Setting::Quote => self
+                .tui_assets
+                .quotes
+                .iter()
+                .map(|quote| SelectableItem::Quote(Some(Arc::clone(quote))))
+                .chain(std::iter::once(SelectableItem::Quote(None)))
+                .collect(),
+            _ => unreachable!(),
         }
-    }
-
-    pub fn dummy_fn_remove_later(&self) -> Vec<SelectableItem> {
-        self.tui_assets
-            .color_themes
-            .iter()
-            .map(|color_theme| {
-                let color_lock = color_theme.lock().unwrap();
-                SelectableItem::Theme(Arc::new(color_lock.clone()))
-            })
-            .collect()
     }
 
     pub fn get_color(&self, key: &ThemeColor) -> Color {

@@ -6,55 +6,51 @@ use ratatui::{
     text::{Line, Span},
     widgets::Widget,
 };
-use strum::{EnumIter, EnumProperty, IntoEnumIterator};
+use strum::{EnumIter, IntoEnumIterator};
 
-#[derive(Default, EnumProperty, EnumIter, PartialEq, Eq, Clone, Copy)]
+#[derive(Default, PartialEq, Eq, Clone, Copy, EnumIter)]
 pub(crate) enum MenuLabel {
-    /// inactive
-    /// ┌─┐┌─┐┌┬┐┌┬┐┬┌┐┌┌─┐┌─┐
-    /// └─┐├┤  │  │ │││││ ┬└─┐
-    /// └─┘└─┘ ┴  ┴ ┴┘└┘└─┘└─┘
-    ///
-    /// active
-    /// ╔═╗╔═╗╔╦╗╔╦╗╦╔╗╔╔═╗╔═╗
-    /// ╚═╗╠╣  ║  ║ ║║║║║ ╦╚═╗
-    /// ╚═╝╚═╝ ╩  ╩ ╩╝╚╝╚═╝╚═╝
     #[default]
-    #[strum(props(
-        inactive = "┌─┐┌─┐┌┬┐┌┬┐┬┌┐┌┌─┐┌─┐\n└─┐├┤  │  │ │││││ ┬└─┐\n└─┘└─┘ ┴  ┴ ┴┘└┘└─┘└─┘",
-        active = "╔═╗╔═╗╔╦╗╔╦╗╦╔╗╔╔═╗╔═╗\n╚═╗╠╣  ║  ║ ║║║║║ ╦╚═╗\n╚═╝╚═╝ ╩  ╩ ╩╝╚╝╚═╝╚═╝"
-    ))]
     SETTINGS,
-
-    /// inactive
-    /// ┬ ┬┌─┐┬  ┌─┐
-    /// ├─┤├┤ │  ├─┘
-    /// ┴ ┴└─┘┴─┘┴
-    ///
-    /// active
-    /// ╦ ╦╔═╗╦  ╔═╗
-    /// ╠═╣╠╣ ║  ╠═╝
-    /// ╩ ╩╚═╝╩═╝╩
-    #[strum(props(
-        inactive = "┬ ┬┌─┐┬  ┌─┐\n├─┤├┤ │  ├─┘\n┴ ┴└─┘┴─┘┴  ",
-        active = "╦ ╦╔═╗╦  ╔═╗\n╠═╣╠╣ ║  ╠═╝\n╩ ╩╚═╝╩═╝╩  "
-    ))]
     HELP,
-
-    /// inactive
-    /// ┌─┐ ┬ ┬ ┬┌┬┐
-    /// │─┼┐│ │ │ │
-    /// └─┘└└─┘ ┴ ┴
-    ///
-    /// active
-    /// ╔═╗ ╦ ╦ ╦╔╦╗
-    /// ║═╬╗║ ║ ║ ║
-    /// ╚═╝╚╚═╝ ╩ ╩
-    #[strum(props(
-        inactive = "┌─┐ ┬ ┬ ┬┌┬┐\n│─┼┐│ │ │ │ \n└─┘└└─┘ ┴ ┴ ",
-        active = "╔═╗ ╦ ╦ ╦╔╦╗\n║═╬╗║ ║ ║ ║ \n╚═╝╚╚═╝ ╩ ╩  "
-    ))]
     QUIT,
+}
+
+impl MenuLabel {
+    pub fn get_repr_for(&self, active: bool) -> &'static str {
+        match (self, active) {
+            (MenuLabel::SETTINGS, false) => {
+                "┌─┐┌─┐┌┬┐┌┬┐┬┌┐┌┌─┐┌─┐\n\
+                 └─┐├┤  │  │ │││││ ┬└─┐\n\
+                 └─┘└─┘ ┴  ┴ ┴┘└┘└─┘└─┘"
+            }
+            (MenuLabel::SETTINGS, true) => {
+                "╔═╗╔═╗╔╦╗╔╦╗╦╔╗╔╔═╗╔═╗\n\
+                 ╚═╗╠╣  ║  ║ ║║║║║ ╦╚═╗\n\
+                 ╚═╝╚═╝ ╩  ╩ ╩╝╚╝╚═╝╚═╝"
+            }
+            (MenuLabel::HELP, false) => {
+                "┬ ┬┌─┐┬  ┌─┐\n\
+                 ├─┤├┤ │  ├─┘\n\
+                 ┴ ┴└─┘┴─┘┴  "
+            }
+            (MenuLabel::HELP, true) => {
+                "╦ ╦╔═╗╦  ╔═╗\n\
+                 ╠═╣╠╣ ║  ╠═╝\n\
+                 ╩ ╩╚═╝╩═╝╩  "
+            }
+            (MenuLabel::QUIT, false) => {
+                "┌─┐ ┬ ┬ ┬┌┬┐\n\
+                 │─┼┐│ │ │ │ \n\
+                 └─┘└└─┘ ┴ ┴ "
+            }
+            (MenuLabel::QUIT, true) => {
+                "╔═╗ ╦ ╦ ╦╔╦╗\n\
+                 ║═╬╗║ ║ ║ ║ \n\
+                 ╚═╝╚╚═╝ ╩ ╩ "
+            }
+        }
+    }
 }
 
 pub(crate) struct Hero {
@@ -65,15 +61,7 @@ pub(crate) struct Hero {
 
 impl Hero {
     fn map_label_to_ascii(label: &MenuLabel, active_label: &MenuLabel) -> Vec<Line<'static>> {
-        let ascii = label
-            .get_str(if *active_label == *label {
-                "active"
-            } else {
-                "inactive"
-            })
-            .expect(
-                "All MenuLabel enum variants should have an active and inactive representation",
-            );
+        let ascii = label.get_repr_for(*active_label == *label);
 
         ascii
             .lines()
@@ -124,8 +112,7 @@ impl Default for Hero {
                 MenuLabel::iter()
                     .map(|label| {
                         label
-                            .get_str("active")
-                            .expect("All labels should have a string representation")
+                            .get_repr_for(true)
                             .lines()
                             .filter_map(|line| Some(line.len()))
                             .max()
