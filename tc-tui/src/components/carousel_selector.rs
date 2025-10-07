@@ -5,7 +5,7 @@ use ratatui::{
     prelude::{Alignment, Buffer, Layout, Rect, Stylize},
     style::Style,
     text::{Line, Span},
-    widgets::{Paragraph, Widget, Wrap},
+    widgets::Widget,
 };
 use std::sync::Arc;
 use tc_models::{
@@ -67,7 +67,7 @@ impl SettingsSelector for CarouselSelector {
     fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction> {
         match key_event.code {
             KeyCode::Char('h') | KeyCode::Left => {
-                self.next_option();
+                self.prev_option();
                 Some(
                     self.options[self.current_selection]
                         .clone()
@@ -75,7 +75,7 @@ impl SettingsSelector for CarouselSelector {
                 )
             }
             KeyCode::Char('l') | KeyCode::Right => {
-                self.prev_option();
+                self.next_option();
                 Some(
                     self.options[self.current_selection]
                         .clone()
@@ -100,35 +100,53 @@ impl Widget for &CarouselSelector {
         let highlight_color = self.tui_controller.get_color(&ThemeColor::Selection);
         let default_color = self.tui_controller.get_color(&ThemeColor::Foreground);
 
-        let [_, bottom_row_section] =
-            Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(area);
-        let [button_left_section, _, button_right_section] = Layout::horizontal([
-            Constraint::Length(2),
-            Constraint::Fill(1),
-            Constraint::Length(2),
-        ])
-        .areas(bottom_row_section);
-
-        let title = Line::from(vec![
-            // TODO: n / N if active
-            Span::from(&self.title).style(Style::default().fg(default_color).bold()),
-        ]);
-
-        Span::from(" ←").render(button_left_section, buf);
-        let text = Line::from(self.options[self.current_selection].get_name());
-        Span::from("→ ").render(button_right_section, buf);
-
         let style = if self.is_active {
             Style::default().fg(default_color).bg(highlight_color)
         } else {
             Style::default().fg(default_color)
         };
 
-        let paragraph = Paragraph::new(vec![title, text])
-            .alignment(Alignment::Center)
-            .wrap(Wrap { trim: true })
-            .style(style);
+        let [title_section, bottom_row_section] =
+            Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(area);
+        let [button_left_section, option_section, button_right_section] = Layout::horizontal([
+            Constraint::Length(3),
+            Constraint::Fill(1),
+            Constraint::Length(3),
+        ])
+        .areas(bottom_row_section);
 
-        paragraph.render(area, buf);
+        let mut spans =
+            vec![Span::from(&self.title).style(Style::default().fg(default_color).bold())];
+
+        let option_amount = self.options.len() - 1;
+        if option_amount >= 2 {
+            spans.push(Span::from(
+                " ".to_owned()
+                    + &(self.current_selection + 1).to_string()
+                    + "/"
+                    + &(option_amount + 1).to_string(),
+            ))
+        }
+
+        // FIX: Too much text for the box leads to unreadability e.g. the quotes should have
+        // scrollable text
+
+        // Render Title
+        Line::from(spans)
+            .alignment(Alignment::Center)
+            .style(style)
+            .render(title_section, buf);
+
+        // Render Options
+        Span::from(" ← ")
+            .style(style)
+            .render(button_left_section, buf);
+        Line::from(self.options[self.current_selection].get_name())
+            .alignment(Alignment::Center)
+            .style(style)
+            .render(option_section, buf);
+        Span::from(" → ")
+            .style(style)
+            .render(button_right_section, buf);
     }
 }

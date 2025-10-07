@@ -81,6 +81,7 @@ impl Widget for &ColorSelector {
             Style::default().fg(default_color)
         };
 
+        // TODO: No need to use the Paragraph here
         let paragraph = Paragraph::new(vec![title, text])
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: true })
