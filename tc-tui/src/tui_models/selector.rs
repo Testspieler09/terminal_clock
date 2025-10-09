@@ -4,7 +4,10 @@ use crate::{
         carousel_selector::CarouselSelector, color_input_field::ColorSelector,
         number_input::NumberSelector,
     },
-    tui_models::settings::Setting,
+    tui_models::{
+        settings::Setting,
+        tui_error::{UpdateError, UpdateResult},
+    },
 };
 use ratatui::{
     crossterm::event::KeyEvent,
@@ -12,7 +15,7 @@ use ratatui::{
     widgets::Widget,
 };
 use std::sync::Arc;
-use tc_models::tui_action::TuiAction;
+use tc_models::{selectable_item::SelectableItem, tui_action::TuiAction};
 
 pub(crate) enum SelectorType {
     Carousel,
@@ -25,8 +28,7 @@ pub(crate) trait SettingsSelector {
     fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction>;
     fn set_to_active(&mut self);
     fn set_to_inactive(&mut self);
-    // TODO: implement this to update the SettingsSelector
-    // fn set_current_selection(&mut self, selection: SelectableItem) -> Result;
+    fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()>;
 }
 
 impl SettingsSelector for Selector {
@@ -53,6 +55,18 @@ impl SettingsSelector for Selector {
             Selector::Number(selector) => selector.set_to_inactive(),
         }
     }
+
+    fn update_current_selection(&mut self, selection: SelectableItem) -> Result<(), UpdateError> {
+        match self {
+            Selector::Carousel(carousel_selector) => {
+                carousel_selector.update_current_selection(selection)
+            }
+            Selector::Color(color_selector) => color_selector.update_current_selection(selection),
+            Selector::Number(number_selector) => {
+                number_selector.update_current_selection(selection)
+            }
+        }
+    }
 }
 
 impl Widget for &Selector {
@@ -76,18 +90,18 @@ impl SelectorType {
             SelectorType::Carousel => Selector::Carousel(CarouselSelector::new(
                 Arc::clone(&tui_controller),
                 is_active,
-                setting.as_ref().to_string(),
+                setting,
                 tui_controller.carousel_options_for(setting),
             )),
             SelectorType::Color => Selector::Color(ColorSelector::new(
                 Arc::clone(&tui_controller),
                 is_active,
-                setting.as_ref().to_string(),
+                setting,
             )),
             SelectorType::Number => Selector::Number(NumberSelector::new(
                 Arc::clone(&tui_controller),
                 is_active,
-                setting.as_ref().to_string(),
+                setting,
             )),
         }
     }

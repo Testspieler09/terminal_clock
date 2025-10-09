@@ -122,12 +122,14 @@ impl ColorThemeLoader {
     }
 
     pub fn load_color_themes() -> LoaderResult<Vec<Arc<Mutex<ColorTheme>>>> {
-        let mut schemes = Vec::new();
+        let mut schemes = COLOR_THEMES
+            .iter()
+            .map(|scheme| {
+                let colorscheme: ThemeConfig = toml::from_str(scheme)?;
+                Ok(Arc::new(Mutex::new(colorscheme.into())))
+            })
+            .collect::<LoaderResult<Vec<_>>>()?;
 
-        for scheme in COLOR_THEMES {
-            let colorscheme: ThemeConfig = toml::from_str(scheme)?;
-            schemes.push(Arc::new(Mutex::new(colorscheme.into())));
-        }
         if let Ok(user_theme) = Self::load_user_themes() {
             schemes.extend(user_theme);
         }

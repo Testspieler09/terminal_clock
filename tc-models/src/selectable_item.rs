@@ -39,9 +39,13 @@ impl Selectable for SelectableItem {
         match self {
             SelectableItem::Theme(new_theme) => {
                 TuiAction::UpdateColorTheme(Arc::new(Mutex::new(new_theme.as_ref().clone())))
+                // TODO: also update the linked fields here (each color theme field in the
+                // color tab)
             }
             SelectableItem::ClockFace(new_clockface) => {
                 TuiAction::UpdateClockFace(Arc::new(Mutex::new(new_clockface.as_ref().clone())))
+                // TODO: also update the linked fields here (Format field)
+                // also the custom color for the clock?!
             }
             SelectableItem::Format(new_format) => TuiAction::UpdateClockFormat(new_format),
             SelectableItem::Quote(new_quote) => TuiAction::UpdateQuote(new_quote),

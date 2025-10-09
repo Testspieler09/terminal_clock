@@ -20,7 +20,7 @@ pub struct AnalogClock {
     minute_center: [u32; 2],
     seconds_center: [u32; 2],
 
-    format: Option<TimeFormat>,
+    format: TimeFormat,
 }
 
 impl AnalogClock {
@@ -39,6 +39,10 @@ impl ClockBehaviour for AnalogClock {
     }
 
     fn set_clock_format_to(&mut self, fmt: TimeFormat) {
-        self.format = Some(fmt);
+        self.format = fmt;
+    }
+
+    fn get_clock_format(&self) -> TimeFormat {
+        self.format
     }
 }

@@ -1,4 +1,9 @@
-use crate::{tui_models::selector::SettingsSelector, tui_models::tui::TuiController};
+use crate::tui_models::{
+    selector::SettingsSelector,
+    settings::Setting,
+    tui::TuiController,
+    tui_error::{UpdateError, UpdateResult},
+};
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     layout::Constraint,
@@ -20,17 +25,16 @@ pub(crate) struct CarouselSelector {
     is_active: bool,
 
     /// Display fields
-    title: String,
+    setting: Setting,
     options: Vec<SelectableItem>,
     current_selection: usize,
 }
 
-// TODO: we need some way of setting the current_selection over the tui_controller
 impl CarouselSelector {
     pub fn new(
         tui_controller: Arc<TuiController>,
         is_active: bool,
-        title: String,
+        setting: Setting,
         options: Vec<SelectableItem>,
     ) -> CarouselSelector {
         if options.is_empty() {
@@ -40,7 +44,7 @@ impl CarouselSelector {
         CarouselSelector {
             tui_controller,
             is_active,
-            title,
+            setting,
             options,
             current_selection: 0,
         }
@@ -93,6 +97,19 @@ impl SettingsSelector for CarouselSelector {
     fn set_to_inactive(&mut self) {
         self.is_active = false;
     }
+
+    fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()> {
+        if let Some(idx) = self
+            .options
+            .iter()
+            .position(|item| *item.get_name() == *selection.get_name())
+        {
+            self.current_selection = idx;
+            Ok(())
+        } else {
+            Err(UpdateError)
+        }
+    }
 }
 
 impl Widget for &CarouselSelector {
@@ -115,8 +132,9 @@ impl Widget for &CarouselSelector {
         ])
         .areas(bottom_row_section);
 
-        let mut spans =
-            vec![Span::from(&self.title).style(Style::default().fg(default_color).bold())];
+        let mut spans = vec![
+            Span::from(self.setting.as_ref()).style(Style::default().fg(default_color).bold()),
+        ];
 
         let option_amount = self.options.len() - 1;
         if option_amount >= 2 {

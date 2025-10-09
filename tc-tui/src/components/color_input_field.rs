@@ -3,23 +3,25 @@
 // ESC -> leave no save / ask for save
 // enter -> leave with save
 
-use crate::tui_models::{selector::SettingsSelector, tui::TuiController};
+use crate::tui_models::{
+    selector::SettingsSelector, settings::Setting, tui::TuiController, tui_error::UpdateResult,
+};
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     prelude::{Alignment, Buffer, Constraint, Layout, Rect, Stylize},
     style::Style,
     text::{Line, Span},
-    widgets::{Paragraph, Widget, Wrap},
+    widgets::Widget,
 };
 use std::sync::Arc;
-use tc_models::{color_theme::ThemeColor, tui_action::TuiAction};
+use tc_models::{color_theme::ThemeColor, selectable_item::SelectableItem, tui_action::TuiAction};
 
 // TODO: add the global colorpicker component later on that gets rendered over the whole frame
 pub(crate) struct ColorSelector {
     tui_controller: Arc<TuiController>,
     is_active: bool,
 
-    title: String,
+    setting: Setting,
     current_hex_color: String,
 }
 
@@ -27,12 +29,12 @@ impl ColorSelector {
     pub fn new(
         tui_controller: Arc<TuiController>,
         is_active: bool,
-        title: String,
+        setting: Setting,
     ) -> ColorSelector {
         ColorSelector {
             tui_controller,
             is_active,
-            title,
+            setting,
             current_hex_color: "#343434".to_string(), // TODO: fetch from tui_controller
         }
     }
@@ -55,6 +57,10 @@ impl SettingsSelector for ColorSelector {
     fn set_to_inactive(&mut self) {
         self.is_active = false;
     }
+
+    fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()> {
+        todo!()
+    }
 }
 
 impl Widget for &ColorSelector {
@@ -62,31 +68,31 @@ impl Widget for &ColorSelector {
         let highlight_color = self.tui_controller.get_color(&ThemeColor::Selection);
         let default_color = self.tui_controller.get_color(&ThemeColor::Foreground);
 
-        let [_, bottom_row_section] =
-            Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(area);
-        let [_, button_right_section] =
-            Layout::horizontal([Constraint::Fill(1), Constraint::Length(2)])
-                .areas(bottom_row_section);
-
-        let title = Line::from(vec![
-            Span::from(&self.title).style(Style::default().fg(default_color).bold()),
-        ]);
-
-        let text = Line::from(self.current_hex_color.clone());
-        Span::from("⏎ ").render(button_right_section, buf);
-
         let style = if self.is_active {
             Style::default().fg(default_color).bg(highlight_color)
         } else {
             Style::default().fg(default_color)
         };
 
-        // TODO: No need to use the Paragraph here
-        let paragraph = Paragraph::new(vec![title, text])
-            .alignment(Alignment::Center)
-            .wrap(Wrap { trim: true })
-            .style(style);
+        let [title_row_section, bottom_row_section] =
+            Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(area);
+        let [_, button_right_section] =
+            Layout::horizontal([Constraint::Fill(1), Constraint::Length(2)])
+                .areas(bottom_row_section);
 
-        paragraph.render(area, buf);
+        Line::from(vec![
+            Span::from(self.setting.as_ref()).style(Style::default().fg(default_color).bold()),
+        ])
+        .alignment(Alignment::Center)
+        .style(style)
+        .render(title_row_section, buf);
+
+        Line::from(self.current_hex_color.clone())
+            .alignment(Alignment::Center)
+            .style(style)
+            .render(bottom_row_section, buf);
+        Span::from("⏎ ")
+            .style(style)
+            .render(button_right_section, buf);
     }
 }

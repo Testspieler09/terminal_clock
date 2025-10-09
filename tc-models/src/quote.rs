@@ -6,6 +6,8 @@ use ratatui::{
 };
 
 pub struct Quote {
+    // pub author: String,
+    // -> auto fmt to "text"\n\t\t - author
     pub text: String,
 
     /// None will use the default accent color of the color theme

@@ -148,9 +148,9 @@ impl Widget for &Hero {
         ])
         .split(label_layout[0]);
 
-        for (index, label) in MenuLabel::iter().enumerate() {
+        MenuLabel::iter().enumerate().for_each(|(index, label)| {
             let lines = Hero::map_label_to_ascii(&label, &self.active_label);
-            for (i, line) in lines.iter().enumerate() {
+            lines.iter().enumerate().for_each(|(i, line)| {
                 let offset = (label_layout[index]
                     .width
                     .saturating_sub(line.width() as u16))
@@ -161,7 +161,7 @@ impl Widget for &Hero {
                     &line,
                     label_layout[index].width,
                 );
-            }
-        }
+            })
+        })
     }
 }

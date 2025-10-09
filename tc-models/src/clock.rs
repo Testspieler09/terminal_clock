@@ -6,8 +6,9 @@ use ratatui::widgets::Paragraph;
 use serde::Deserialize;
 use strum::EnumIter;
 
-#[derive(Deserialize, Clone, Copy, EnumIter)]
+#[derive(Default, Deserialize, Clone, Copy, EnumIter)]
 pub enum TimeFormat {
+    #[default]
     Hms,
     Hm,
     Mhs,
@@ -29,6 +30,7 @@ pub trait ClockBehaviour {
         theme: &ColorTheme,
     ) -> (Paragraph<'_>, usize, usize);
     fn set_clock_format_to(&mut self, fmt: TimeFormat);
+    fn get_clock_format(&self) -> TimeFormat;
 }
 
 #[derive(Clone)]
@@ -71,6 +73,14 @@ impl ClockBehaviour for Clock {
             Clock::Color(clock) => {
                 clock.set_clock_format_to(fmt);
             }
+        }
+    }
+
+    fn get_clock_format(&self) -> TimeFormat {
+        match self {
+            Clock::Digital(digital_clock) => digital_clock.get_clock_format(),
+            Clock::Analog(analog_clock) => analog_clock.get_clock_format(),
+            Clock::Color(color_clock) => color_clock.get_clock_format(),
         }
     }
 }

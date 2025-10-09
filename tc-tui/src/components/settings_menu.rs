@@ -21,11 +21,12 @@ use ratatui::{
 };
 use std::sync::{Arc, RwLock};
 use strum::{AsRefStr, EnumIter, IntoEnumIterator};
-use tc_models::{color_theme::ThemeColor, tui_action::TuiAction};
+use tc_models::{
+    clock::ClockBehaviour, color_theme::ThemeColor, selectable_item::SelectableItem,
+    tui_action::TuiAction,
+};
 
-// TODO: change the title from &str to an enum that maps the string to a variant, for the
-// tuicontroller to handle it more clean
-struct TabConfig<'a> {
+struct SelectorConfig<'a> {
     setting: Setting,
     description: &'a [&'a str],
     pub selector_type: SelectorType,
@@ -80,18 +81,18 @@ pub(crate) struct SettingMenu {
 }
 
 impl SettingMenu {
-    const GENERAL_TAB_CONFIG: &[TabConfig<'_>] = &[
-        TabConfig {
+    const GENERAL_TAB_CONFIG: &[SelectorConfig<'_>] = &[
+        SelectorConfig {
             setting: Setting::RefreshRate,
             description: &["The rate on which the screen gets refreshed"],
             selector_type: SelectorType::Number,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::ClockFace,
             description: &["The clock face you want to be displayed"],
             selector_type: SelectorType::Carousel,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::ClockFormat,
             description: &[
                 "The format the time is displayed in.",
@@ -100,53 +101,53 @@ impl SettingMenu {
             ],
             selector_type: SelectorType::Carousel,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::Quote,
             description: &["The quote that is supposed to be rendered"],
             selector_type: SelectorType::Carousel,
         },
     ];
 
-    const POMODORO_TAB_CONFIG: &[TabConfig<'_>] = &[
-        TabConfig {
+    const POMODORO_TAB_CONFIG: &[SelectorConfig<'_>] = &[
+        SelectorConfig {
             setting: Setting::TotalSessions,
             description: &["The total number of Pomodoro sessions"],
             selector_type: SelectorType::Number,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::SessionsBeforeLongBreak,
             description: &["The number of sessions to complete before taking a long break"],
             selector_type: SelectorType::Number,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::WorkDuration,
             description: &["Duration of each focused work session (in minutes)"],
             selector_type: SelectorType::Number,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::ShortBreakDuration,
             description: &["Duration of a short break between work sessions (in minutes)"],
             selector_type: SelectorType::Number,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::LongBreakDuration,
             description: &["Duration of a long break after multiple sessions (in minutes)"],
             selector_type: SelectorType::Number,
         },
     ];
 
-    const COLOR_TAB_CONFIG: &[TabConfig<'_>] = &[
-        TabConfig {
+    const COLOR_TAB_CONFIG: &[SelectorConfig<'_>] = &[
+        SelectorConfig {
             setting: Setting::ColorTheme,
             description: &["The overall color theme used across the application"],
             selector_type: SelectorType::Carousel,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::ForegroundColor,
             description: &["Color used for primary text and UI elements"],
             selector_type: SelectorType::Color,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::BackgroundColor,
             description: &[
                 "Background color of the application interface",
@@ -155,17 +156,17 @@ impl SettingMenu {
             ],
             selector_type: SelectorType::Color,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::SelectionColor,
             description: &["Color used when selecting text or items"],
             selector_type: SelectorType::Color,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::AccentColor,
             description: &["Highlight color used for emphasis or active items"],
             selector_type: SelectorType::Color,
         },
-        TabConfig {
+        SelectorConfig {
             setting: Setting::BorderColor,
             description: &["Color used for borders and outlines"],
             selector_type: SelectorType::Color,
@@ -220,14 +221,13 @@ impl SettingMenu {
     }
 
     fn reset_tab_page(&mut self) {
-        for selector in self
-            .general_tab_selectors
+        self.general_tab_selectors
             .iter_mut()
             .chain(self.pomodoro_tab_selectors.iter_mut())
             .chain(self.color_tab_selectors.iter_mut())
-        {
-            selector.set_to_inactive();
-        }
+            .for_each(|selector| {
+                selector.set_to_inactive();
+            });
 
         match self.current_tab {
             SettingsTab::General(_) => self.general_tab_selectors[0].set_to_active(),
@@ -351,18 +351,18 @@ impl SettingMenu {
 
         let layout = Layout::vertical(constraints).split(lhs);
 
-        for (i, selector) in selectors.iter().enumerate() {
+        selectors.iter().enumerate().for_each(|(i, selector)| {
             if i < layout.len() {
                 selector.render(layout[i], buf);
             }
-        }
+        });
 
         if let Some(config) = content.get(idx as usize) {
             let desc_text = config.description.join("\n");
-            let desc_paragraph = Paragraph::new(desc_text)
+            Paragraph::new(desc_text)
                 .wrap(Wrap { trim: true })
-                .style(Style::default().fg(self.tui_controller.get_color(&ThemeColor::Foreground)));
-            desc_paragraph.render(rhs, buf);
+                .style(Style::default().fg(self.tui_controller.get_color(&ThemeColor::Foreground)))
+                .render(rhs, buf);
         }
     }
 
@@ -404,6 +404,19 @@ impl SettingMenu {
 
         if let Some(action) = &self.pending_action {
             self.tui_controller.process_settings_action(action);
+            match action {
+                TuiAction::UpdateClockFace(clock) => {
+                    let clock_lock = clock.lock().unwrap();
+                    let new_fmt = clock_lock.get_clock_format();
+                    let _ = self.general_tab_selectors[2]
+                        .update_current_selection(SelectableItem::Format(new_fmt));
+                }
+                TuiAction::UpdateColorTheme(color_theme) => {
+                    let _color_theme_lock = color_theme.lock().unwrap();
+                    // TODO: get all the colors and set the corrosponding selectors to them
+                }
+                _ => {}
+            }
         }
     }
 }
@@ -452,28 +465,27 @@ impl Widget for &SettingMenu {
 
         settings_block.render(area, buf);
 
-        for (i, (tab, area)) in SettingsTab::iter()
+        SettingsTab::iter()
             .zip(header_layout.into_iter())
             .enumerate()
-        {
-            let is_active = tab == self.current_tab;
-            let text = if is_active {
-                Line::from(vec![
-                    Span::from("[").style(Style::default().fg(border_color)),
-                    Span::from(tab.as_ref()),
-                    Span::from("]").style(Style::default().fg(border_color)),
-                ])
-            } else {
-                Line::from(vec![
-                    Span::from(format!("{}", i + 1)).style(Style::default().fg(border_color)),
-                    Span::from(tab.as_ref().to_owned() + " ").style(Style::default().fg(fg_color)),
-                ])
-            };
+            .for_each(|(i, (tab, area))| {
+                let is_active = tab == self.current_tab;
+                let text = if is_active {
+                    Line::from(vec![
+                        Span::from("[").style(Style::default().fg(border_color)),
+                        Span::from(tab.as_ref()),
+                        Span::from("]").style(Style::default().fg(border_color)),
+                    ])
+                } else {
+                    Line::from(vec![
+                        Span::from(format!("{}", i + 1)).style(Style::default().fg(border_color)),
+                        Span::from(tab.as_ref().to_owned() + " ")
+                            .style(Style::default().fg(fg_color)),
+                    ])
+                };
 
-            Paragraph::new(text)
-                .alignment(Alignment::Center)
-                .render(*area, buf);
-        }
+                text.alignment(Alignment::Center).render(*area, buf);
+            });
 
         let [interactive_section, description_section] =
             Layout::horizontal([Constraint::Fill(1), Constraint::Fill(2)]).areas(content_section);

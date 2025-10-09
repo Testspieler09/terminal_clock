@@ -118,7 +118,7 @@ impl From<ColorClockConfig> for ColorClock {
             second_coords,
             clock_color,
             accent_color,
-            config.format,
+            config.format.unwrap_or(TimeFormat::default()),
         )
     }
 }
@@ -172,17 +172,21 @@ impl From<AnalogClockConfig> for AnalogClock {
 pub struct ClockFaceLoader;
 
 impl ClockFaceLoader {
-    fn load_user_clockfaces() -> LoaderResult<Vec<Box<Clock>>> {
+    fn load_user_clockfaces() -> LoaderResult<Vec<Arc<Mutex<Clock>>>> {
         todo!()
     }
 
     pub fn load_clockfaces() -> LoaderResult<Vec<Arc<Mutex<Clock>>>> {
-        let mut clock_faces = Vec::new();
-        for clock_face in CLOCK_FACES {
-            let clock_config: ClockConfig = toml::from_str(clock_face)?;
-            clock_faces.push(Arc::new(Mutex::new(clock_config.into())));
-        }
+        let mut clock_faces = CLOCK_FACES
+            .iter()
+            .map(|clock_face| {
+                let clock_config: ClockConfig = toml::from_str(clock_face)?;
+                Ok(Arc::new(Mutex::new(clock_config.into())))
+            })
+            .collect::<LoaderResult<Vec<_>>>()?;
+
         // clock_faces.extend(Self::load_user_clockfaces()?);
+
         Ok(clock_faces)
     }
 }

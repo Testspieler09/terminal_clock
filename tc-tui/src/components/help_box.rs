@@ -97,26 +97,29 @@ impl Widget for &HelpBox {
                 .add_modifier(Modifier::BOLD),
         );
 
-        for (i, line) in HelpBox::HELP_BOX_CONTENT.iter().enumerate() {
-            Paragraph::new(line[0])
-                .style(Style::default().fg(fg_color))
-                .alignment(Alignment::Center)
-                .render(
-                    Rect {
-                        x: table_layout[0].x,
-                        y: table_layout[1].y + i as u16 + 1,
-                        width: table_layout[0].width,
-                        height: 1,
-                    },
-                    buf,
-                );
+        HelpBox::HELP_BOX_CONTENT
+            .iter()
+            .enumerate()
+            .for_each(|(i, line)| {
+                Paragraph::new(line[0])
+                    .style(Style::default().fg(fg_color))
+                    .alignment(Alignment::Center)
+                    .render(
+                        Rect {
+                            x: table_layout[0].x,
+                            y: table_layout[1].y + i as u16 + 1,
+                            width: table_layout[0].width,
+                            height: 1,
+                        },
+                        buf,
+                    );
 
-            buf.set_string(
-                table_layout[1].x,
-                table_layout[1].y + i as u16 + 1,
-                line[1],
-                Style::default().fg(fg_color),
-            );
-        }
+                buf.set_string(
+                    table_layout[1].x,
+                    table_layout[1].y + i as u16 + 1,
+                    line[1],
+                    Style::default().fg(fg_color),
+                );
+            })
     }
 }

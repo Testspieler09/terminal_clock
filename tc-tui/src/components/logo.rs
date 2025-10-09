@@ -5,14 +5,14 @@ use ratatui::{
     prelude::{Buffer, Constraint, Layout, Rect},
     style::{Color, Style},
     text::{Line, Span, Text},
-    widgets::{Paragraph, Widget, WidgetRef},
+    widgets::{Widget, WidgetRef},
 };
 use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) struct Logo {
     height: u16,
     width: u16,
-    paragraph: Paragraph<'static>,
+    logo_art: Text<'static>,
 }
 
 impl Logo {
@@ -26,11 +26,11 @@ impl Logo {
         env!("CARGO_PKG_VERSION")
     );
 
-    fn init() -> Paragraph<'static> {
+    fn init() -> Text<'static> {
         let mut spans_vec = Vec::new();
         let mut color_index = 0;
 
-        for line in Logo::FULL_LOGO.lines() {
+        Logo::FULL_LOGO.lines().for_each(|line| {
             let mut line_spans = Vec::new();
 
             let line_cyan = CYAN_SHADES.get(color_index).copied().unwrap_or(Color::Cyan);
@@ -70,10 +70,9 @@ impl Logo {
             }
 
             spans_vec.push(Line::from(line_spans));
-        }
+        });
 
-        let text = Text::from(spans_vec);
-        Paragraph::new(text)
+        Text::from(spans_vec)
     }
 
     pub fn render_component_with_logo<W: Widget + Dimensions>(
@@ -119,7 +118,7 @@ impl Default for Logo {
                 .map(|i| i.graphemes(true).count() + 2)
                 .max()
                 .unwrap() as u16,
-            paragraph: Self::init(),
+            logo_art: Self::init(),
         }
     }
 }
@@ -137,6 +136,6 @@ impl Dimensions for Logo {
 impl Widget for &Logo {
     fn render(self, area: Rect, buf: &mut Buffer) {
         // Render the static paragraph
-        self.paragraph.render_ref(area, buf);
+        self.logo_art.render_ref(area, buf);
     }
 }

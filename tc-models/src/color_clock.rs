@@ -24,7 +24,7 @@ pub struct ColorClock {
 
     clock_color: Option<Color>,
     accent_color: Option<Color>,
-    format: Option<TimeFormat>,
+    format: TimeFormat,
 }
 
 impl ColorClock {
@@ -39,7 +39,7 @@ impl ColorClock {
         led_coords_seconds: Vec<Vec<(u32, u32)>>,
         clock_color: Option<Color>,
         accent_color: Option<Color>,
-        format: Option<TimeFormat>,
+        format: TimeFormat,
     ) -> Self {
         ColorClock {
             name,
@@ -83,17 +83,17 @@ impl ClockBehaviour for ColorClock {
         let mut blocks: Vec<&ArtBlock> = Vec::with_capacity(5);
 
         let clock_face_components: &[&ArtBlock] = match self.format {
-            Some(TimeFormat::Hms) => &[
+            TimeFormat::Hms => &[
                 &art_block(&self.hour, &self.led_coords_hours, hour_value),
                 &art_block(&self.minutes, &self.led_coords_minutes, minute_value),
                 &art_block(&self.seconds, &self.led_coords_seconds, second_value),
             ],
-            Some(TimeFormat::Mhs) => &[
+            TimeFormat::Mhs => &[
                 &art_block(&self.minutes, &self.led_coords_minutes, minute_value),
                 &art_block(&self.hour, &self.led_coords_hours, hour_value),
                 &art_block(&self.seconds, &self.led_coords_seconds, second_value),
             ],
-            Some(TimeFormat::Hm) | None => &[
+            TimeFormat::Hm => &[
                 &art_block(&self.hour, &self.led_coords_hours, hour_value),
                 &art_block(&self.minutes, &self.led_coords_minutes, minute_value),
                 &empty_block,
@@ -104,7 +104,7 @@ impl ClockBehaviour for ColorClock {
 
         if let Some(separator) = &separator_block {
             blocks.insert(1, separator);
-            if !matches!(self.format, Some(TimeFormat::Hm)) {
+            if !matches!(self.format, TimeFormat::Hm) {
                 blocks.insert(3, separator);
             }
         }
@@ -125,6 +125,10 @@ impl ClockBehaviour for ColorClock {
     }
 
     fn set_clock_format_to(&mut self, fmt: TimeFormat) {
-        self.format = Some(fmt);
+        self.format = fmt;
+    }
+
+    fn get_clock_format(&self) -> TimeFormat {
+        self.format
     }
 }

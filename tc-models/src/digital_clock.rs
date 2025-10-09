@@ -12,7 +12,7 @@ pub struct DigitalClock {
     numbers: [&'static str; 10],
     seperator: &'static str,
 
-    format: Option<TimeFormat>,
+    format: TimeFormat,
 }
 
 impl DigitalClock {
@@ -31,6 +31,10 @@ impl ClockBehaviour for DigitalClock {
     }
 
     fn set_clock_format_to(&mut self, fmt: TimeFormat) {
-        self.format = Some(fmt);
+        self.format = fmt;
+    }
+
+    fn get_clock_format(&self) -> TimeFormat {
+        self.format
     }
 }
