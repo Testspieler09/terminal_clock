@@ -30,7 +30,6 @@ pub(crate) struct PomodoroTimer {
     config: PomodoroConfig,
     state: PomodoroState,
     last_tick: Instant,
-    is_visible: bool,
 }
 
 impl PomodoroTimer {
@@ -43,7 +42,6 @@ impl PomodoroTimer {
                 phase: TimerPhase::Work,
                 remaining_secs: work_duration * 60,
             },
-            is_visible: false,
             last_tick: Instant::now(),
         }
     }

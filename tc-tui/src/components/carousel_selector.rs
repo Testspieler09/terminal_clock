@@ -1,7 +1,9 @@
 use crate::tui_models::{
+    selectable_item::{Selectable, SelectableItem},
     selector::SettingsSelector,
     settings::Setting,
     tui::TuiController,
+    tui_action::TuiAction,
     tui_error::{UpdateError, UpdateResult},
 };
 use ratatui::{
@@ -13,11 +15,7 @@ use ratatui::{
     widgets::Widget,
 };
 use std::sync::Arc;
-use tc_models::{
-    color_theme::ThemeColor,
-    selectable_item::{Selectable, SelectableItem},
-    tui_action::TuiAction,
-};
+use tc_models::color_theme::ThemeColor;
 
 pub(crate) struct CarouselSelector {
     /// Fields needed for event handling logic

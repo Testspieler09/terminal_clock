@@ -4,6 +4,10 @@ pub(crate) mod tui_models;
 pub(crate) mod views;
 
 use crate::{
+    components::{
+        fallback_terminal_too_small::FallbackView,
+        pomodoro::{PomodoroConfig, PomodoroState, PomodoroTimer},
+    },
     tui_models::{
         application::ApplicationState,
         tui::{TuiAssets, TuiComponents, TuiController, TuiState},
@@ -57,8 +61,11 @@ impl TuiRenderer {
         }));
         drop(color_lock);
 
-        let controller = Arc::new(TuiController::new(tui_state.clone(), tui_assets.clone()));
-        let mut tui_components = TuiComponents::new(controller.clone());
+        let controller = Arc::new(TuiController::new(
+            Arc::clone(&tui_state),
+            Arc::clone(&tui_assets),
+        ));
+        let mut tui_components = TuiComponents::new(Arc::clone(&controller));
 
         loop {
             {
@@ -86,7 +93,11 @@ impl TuiRenderer {
         drop(theme_lock);
 
         match state.application_state {
-            ApplicationState::Running => render_clock_view(frame, state),
+            ApplicationState::Running => {
+                let mut fallback_view =
+                    FallbackView::new(0, 0, state.color_theme.lock().unwrap().clone());
+                render_clock_view(frame, state, &mut fallback_view);
+            }
             ApplicationState::ShowingHero => components
                 .logo
                 .render_component_with_logo(&components.hero, frame),
@@ -96,6 +107,7 @@ impl TuiRenderer {
             ApplicationState::ShowingSettings => components
                 .logo
                 .render_component_with_logo(&components.settings_menu, frame),
+            ApplicationState::TerminalTooSmall => {}
             ApplicationState::Finished => {}
         }
     }

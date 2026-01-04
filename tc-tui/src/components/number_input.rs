@@ -1,6 +1,7 @@
 // TODO: select from presets with custom value option
 use crate::tui_models::{
-    selector::SettingsSelector, settings::Setting, tui::TuiController, tui_error::UpdateResult,
+    selectable_item::SelectableItem, selector::SettingsSelector, settings::Setting,
+    tui::TuiController, tui_action::TuiAction, tui_error::UpdateResult,
 };
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
@@ -10,7 +11,7 @@ use ratatui::{
     widgets::{Paragraph, Widget, Wrap},
 };
 use std::sync::Arc;
-use tc_models::{color_theme::ThemeColor, selectable_item::SelectableItem, tui_action::TuiAction};
+use tc_models::color_theme::ThemeColor;
 
 // TODO: add the global colorpicker component later on that gets rendered over the whole frame
 pub(crate) struct NumberSelector {

@@ -5,7 +5,9 @@ use crate::{
         number_input::NumberSelector,
     },
     tui_models::{
+        selectable_item::SelectableItem,
         settings::Setting,
+        tui_action::TuiAction,
         tui_error::{UpdateError, UpdateResult},
     },
 };
@@ -15,7 +17,6 @@ use ratatui::{
     widgets::Widget,
 };
 use std::sync::Arc;
-use tc_models::{selectable_item::SelectableItem, tui_action::TuiAction};
 
 pub(crate) enum SelectorType {
     Carousel,

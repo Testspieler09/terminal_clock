@@ -120,6 +120,6 @@ impl Widget for &HelpBox {
                     line[1],
                     Style::default().fg(fg_color),
                 );
-            })
+            });
     }
 }

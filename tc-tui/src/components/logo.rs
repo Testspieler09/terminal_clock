@@ -80,6 +80,7 @@ impl Logo {
         component: W,
         frame: &mut Frame,
     ) {
+        // TODO: add the fallback logic here as well
         let area = frame.area();
         let buf = frame.buffer_mut();
 

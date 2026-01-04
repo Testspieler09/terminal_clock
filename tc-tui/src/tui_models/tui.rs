@@ -1,12 +1,16 @@
 use crate::{
     components::{
+        fallback_terminal_too_small::FallbackView,
         help_box::HelpBox,
         hero::{Hero, MenuLabel},
         logo::Logo,
         pomodoro::PomodoroTimer,
         settings_menu::SettingMenu,
     },
-    tui_models::{application::ApplicationState, settings::Setting},
+    tui_models::{
+        application::ApplicationState, selectable_item::SelectableItem, settings::Setting,
+        tui_action::TuiAction,
+    },
 };
 use ratatui::{
     crossterm::event::{self, Event, KeyCode, KeyEvent},
@@ -18,8 +22,6 @@ use tc_models::{
     clock::{Clock, ClockBehaviour, TimeFormat},
     color_theme::{ColorTheme, ThemeColor},
     quote::Quote,
-    selectable_item::SelectableItem,
-    tui_action::TuiAction,
 };
 use tc_user_config_loader::{
     LoaderResult, clock_face_loader::ClockFaceLoader, color_theme_loader::ColorThemeLoader,
@@ -187,7 +189,9 @@ impl TuiController {
                             .settings_menu
                             .handle_setting_keys(key_event, Arc::clone(&self.tui_state));
                     }
-                    ApplicationState::ShowingHelp | ApplicationState::Finished => {}
+                    ApplicationState::ShowingHelp
+                    | ApplicationState::TerminalTooSmall
+                    | ApplicationState::Finished => {}
                 }
             }
         }
@@ -226,7 +230,7 @@ impl TuiController {
                         components.settings_menu.set_called_from_hero(false);
                         true
                     }
-                    ApplicationState::Running => {
+                    ApplicationState::Running | ApplicationState::TerminalTooSmall => {
                         if matches!(key_event.code, KeyCode::Char('q')) {
                             tui_state.application_state = ApplicationState::Finished;
                             true

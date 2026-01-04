@@ -3,9 +3,11 @@ use crate::{
     components::Dimensions,
     helpers::generate_title,
     tui_models::{
+        selectable_item::SelectableItem,
         selector::{Selector, SelectorType, SettingsSelector},
         settings::Setting,
         tui::TuiController,
+        tui_action::TuiAction,
     },
 };
 use ratatui::{
@@ -21,10 +23,7 @@ use ratatui::{
 };
 use std::sync::{Arc, RwLock};
 use strum::{AsRefStr, EnumIter, IntoEnumIterator};
-use tc_models::{
-    clock::ClockBehaviour, color_theme::ThemeColor, selectable_item::SelectableItem,
-    tui_action::TuiAction,
-};
+use tc_models::{clock::ClockBehaviour, color_theme::ThemeColor};
 
 struct SelectorConfig<'a> {
     setting: Setting,
