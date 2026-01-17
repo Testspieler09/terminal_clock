@@ -1,5 +1,4 @@
 use crate::{
-    TuiController,
     components::{
         carousel_selector::CarouselSelector, color_input_field::ColorSelector,
         number_input::NumberSelector,
@@ -7,6 +6,8 @@ use crate::{
     tui_models::{
         selectable_item::SelectableItem,
         settings::Setting,
+        styled_widget::StyledWidget,
+        tui::TuiAssets,
         tui_action::TuiAction,
         tui_error::{UpdateError, UpdateResult},
     },
@@ -14,9 +15,9 @@ use crate::{
 use ratatui::{
     crossterm::event::KeyEvent,
     prelude::{Buffer, Rect},
-    widgets::Widget,
 };
-use std::sync::Arc;
+use strum::IntoEnumIterator;
+use tc_models::{clock::TimeFormat, color_theme::ColorTheme};
 
 pub(crate) enum SelectorType {
     Carousel,
@@ -70,40 +71,63 @@ impl SettingsSelector for Selector {
     }
 }
 
-impl Widget for &Selector {
-    fn render(self, area: Rect, buf: &mut Buffer) {
+impl StyledWidget for &Selector {
+    fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
         match self {
-            Selector::Carousel(selector) => selector.render(area, buf),
-            Selector::Color(selector) => selector.render(area, buf),
-            Selector::Number(selector) => selector.render(area, buf),
+            Selector::Carousel(selector) => selector.render(area, buf, color_theme),
+            Selector::Color(selector) => selector.render(area, buf, color_theme),
+            Selector::Number(selector) => selector.render(area, buf, color_theme),
         }
     }
 }
 
 impl SelectorType {
+    fn carousel_options_for(
+        &self,
+        setting: Setting,
+        tui_assets: &TuiAssets,
+    ) -> Vec<SelectableItem> {
+        match setting {
+            Setting::ClockFace => tui_assets
+                .clock_faces
+                .iter()
+                .enumerate()
+                .map(|(i, _clock_face)| SelectableItem::ClockFace(i as u16))
+                .collect(),
+            Setting::ColorTheme => tui_assets
+                .color_themes
+                .iter()
+                .enumerate()
+                .map(|(i, _color_theme)| SelectableItem::Theme(i as u16))
+                .collect(),
+            Setting::ClockFormat => TimeFormat::iter()
+                .map(|fmt| SelectableItem::Format(fmt))
+                .collect(),
+            Setting::Quote => tui_assets
+                .quotes
+                .iter()
+                .enumerate()
+                .map(|(i, quote)| SelectableItem::Quote(Some(i as u16)))
+                .chain(std::iter::once(SelectableItem::Quote(None)))
+                .collect(),
+            _ => unreachable!(),
+        }
+    }
+
     pub fn create_selector(
         &self,
-        tui_controller: Arc<TuiController>,
         setting: Setting,
+        tui_assets: &TuiAssets,
         is_active: bool,
     ) -> Selector {
         match self {
             SelectorType::Carousel => Selector::Carousel(CarouselSelector::new(
-                Arc::clone(&tui_controller),
                 is_active,
                 setting,
-                tui_controller.carousel_options_for(setting),
+                self.carousel_options_for(setting, tui_assets),
             )),
-            SelectorType::Color => Selector::Color(ColorSelector::new(
-                Arc::clone(&tui_controller),
-                is_active,
-                setting,
-            )),
-            SelectorType::Number => Selector::Number(NumberSelector::new(
-                Arc::clone(&tui_controller),
-                is_active,
-                setting,
-            )),
+            SelectorType::Color => Selector::Color(ColorSelector::new(is_active, setting)),
+            SelectorType::Number => Selector::Number(NumberSelector::new(is_active, setting)),
         }
     }
 }

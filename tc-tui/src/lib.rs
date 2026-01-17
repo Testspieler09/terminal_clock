@@ -20,7 +20,7 @@ use ratatui::{
     style::Style,
     widgets::{Block, BorderType},
 };
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::RwLock;
 use tc_models::color_theme::ThemeColor;
 
 pub struct TuiRenderer;
@@ -47,30 +47,27 @@ impl TuiRenderer {
     }
 
     async fn run(mut terminal: DefaultTerminal) -> Result<()> {
-        let tui_assets = Arc::new(TuiAssets::try_default()?);
+        let tui_assets = TuiAssets::try_default()?;
 
-        let color_lock = tui_assets.color_themes[0].lock().unwrap();
-        let tui_state = Arc::new(RwLock::new(TuiState {
+        let tui_state = RwLock::new(TuiState {
             application_state: ApplicationState::Running,
-            clock_face: tui_assets.clock_faces[0].clone(),
             // TODO: Load the config one as the first here
-            color_theme: Arc::new(Mutex::new(color_lock.clone())),
-            quote: Some(tui_assets.quotes[0].clone()),
+            clock_face_idx: 0,
+            color_theme_idx: 0,
+            quote_idx: Some(0),
             pomodoro: None,
             refresh_rate: 500,
-        }));
-        drop(color_lock);
+        });
 
-        let controller = Arc::new(TuiController::new(
-            Arc::clone(&tui_state),
-            Arc::clone(&tui_assets),
-        ));
-        let mut tui_components = TuiComponents::new(Arc::clone(&controller));
+        let controller = TuiController::new(&tui_state);
+        let mut tui_components = TuiComponents::new(&tui_assets);
 
         loop {
             {
                 let state_guard = tui_state.read().unwrap();
-                terminal.draw(|frame| Self::render(frame, &state_guard, &tui_components))?;
+                terminal.draw(|frame| {
+                    Self::render(frame, &state_guard, &tui_assets, &tui_components)
+                })?;
             }
 
             let should_exit = controller.handle_events(&mut tui_components)?;
@@ -80,34 +77,35 @@ impl TuiRenderer {
         }
     }
 
-    fn render(frame: &mut Frame, state: &TuiState, components: &TuiComponents) {
+    fn render(frame: &mut Frame, state: &TuiState, assets: &TuiAssets, components: &TuiComponents) {
         // Set the right background with a nice border
-        let theme_lock = state.color_theme.lock().unwrap();
+        let theme = assets.get_color_theme(state.color_theme_idx);
         frame.render_widget(
             Block::bordered()
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(*theme_lock.get(&ThemeColor::Borders)))
-                .style(theme_lock.default_style()),
+                .border_style(Style::default().fg(*theme.get(&ThemeColor::Borders)))
+                .style(theme.default_style()),
             frame.area(),
         );
-        drop(theme_lock);
 
         match state.application_state {
             ApplicationState::Running => {
-                let mut fallback_view =
-                    FallbackView::new(0, 0, state.color_theme.lock().unwrap().clone());
-                render_clock_view(frame, state, &mut fallback_view);
+                let mut fallback_view = FallbackView::new(0, 0, theme);
+                render_clock_view(frame, state, assets, &mut fallback_view);
             }
             ApplicationState::ShowingHero => components
                 .logo
                 .render_component_with_logo(&components.hero, frame),
-            ApplicationState::ShowingHelp => components
-                .logo
-                .render_component_with_logo(&components.help_box, frame),
-            ApplicationState::ShowingSettings => components
-                .logo
-                .render_component_with_logo(&components.settings_menu, frame),
-            ApplicationState::TerminalTooSmall => {}
+            ApplicationState::ShowingHelp => components.logo.render_styled_component_with_logo(
+                &components.help_box,
+                frame,
+                theme,
+            ),
+            ApplicationState::ShowingSettings => components.logo.render_styled_component_with_logo(
+                &components.settings_menu,
+                frame,
+                theme,
+            ),
             ApplicationState::Finished => {}
         }
     }

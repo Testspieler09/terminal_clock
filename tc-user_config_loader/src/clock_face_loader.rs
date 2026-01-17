@@ -172,16 +172,16 @@ impl From<AnalogClockConfig> for AnalogClock {
 pub struct ClockFaceLoader;
 
 impl ClockFaceLoader {
-    fn load_user_clockfaces() -> LoaderResult<Vec<Arc<Mutex<Clock>>>> {
+    fn load_user_clockfaces() -> LoaderResult<Vec<Clock>> {
         todo!()
     }
 
-    pub fn load_clockfaces() -> LoaderResult<Vec<Arc<Mutex<Clock>>>> {
+    pub fn load_clockfaces() -> LoaderResult<Vec<Clock>> {
         let mut clock_faces = CLOCK_FACES
             .iter()
             .map(|clock_face| {
                 let clock_config: ClockConfig = toml::from_str(clock_face)?;
-                Ok(Arc::new(Mutex::new(clock_config.into())))
+                Ok(clock_config.into())
             })
             .collect::<LoaderResult<Vec<_>>>()?;
 

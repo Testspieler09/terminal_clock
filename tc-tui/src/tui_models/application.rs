@@ -12,10 +12,6 @@ pub(crate) enum ApplicationState {
     /// The settings menu is rendered and displayed for the user
     ShowingSettings,
 
-    /// The terminal is too small to render the content
-    /// TODO: remove and use the render if fits helper
-    TerminalTooSmall,
-
     /// The program finished successfully
     Finished,
 }

@@ -1,4 +1,8 @@
-use crate::components::{CYAN_SHADES, Dimensions, GRAY_SHADES};
+use crate::{
+    components::{CYAN_SHADES, Dimensions, GRAY_SHADES},
+    tui_models::styled_widget::StyledWidget,
+};
+
 use ratatui::{
     Frame,
     layout::Flex,
@@ -7,6 +11,7 @@ use ratatui::{
     text::{Line, Span, Text},
     widgets::{Widget, WidgetRef},
 };
+use tc_models::color_theme::ColorTheme;
 use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) struct Logo {
@@ -107,6 +112,41 @@ impl Logo {
 
         self.render(logo_layout, buf);
         component.render(settings_layout, buf);
+    }
+
+    pub fn render_styled_component_with_logo<W: StyledWidget + Dimensions>(
+        &self,
+        component: W,
+        frame: &mut Frame,
+        color_theme: &ColorTheme,
+    ) {
+        // TODO: add the fallback logic here as well
+        let area = frame.area();
+        let buf = frame.buffer_mut();
+
+        let component_height = component.height();
+        let component_width = component.width();
+
+        let logo_height = self.height;
+        let logo_width = self.width;
+
+        let [logo_section, setting_section] = Layout::vertical([
+            Constraint::Length(logo_height),
+            Constraint::Length(component_height),
+        ])
+        .margin((area.height - (logo_height + component_height)) / 2)
+        .areas(area);
+
+        let [logo_layout] = Layout::horizontal([Constraint::Length(logo_width)])
+            .flex(Flex::Center)
+            .areas(logo_section);
+
+        let [settings_layout] = Layout::horizontal([Constraint::Length(component_width)])
+            .flex(Flex::Center)
+            .areas(setting_section);
+
+        self.render(logo_layout, buf);
+        component.render(settings_layout, buf, color_theme);
     }
 }
 

@@ -1,28 +1,17 @@
 use crate::{
     components::{
-        fallback_terminal_too_small::FallbackView,
         help_box::HelpBox,
         hero::{Hero, MenuLabel},
         logo::Logo,
         pomodoro::PomodoroTimer,
         settings_menu::SettingMenu,
     },
-    tui_models::{
-        application::ApplicationState, selectable_item::SelectableItem, settings::Setting,
-        tui_action::TuiAction,
-    },
+    tui_models::application::ApplicationState,
 };
-use ratatui::{
-    crossterm::event::{self, Event, KeyCode, KeyEvent},
-    style::Color,
-};
-use std::sync::{Arc, Mutex, RwLock};
-use strum::IntoEnumIterator;
-use tc_models::{
-    clock::{Clock, ClockBehaviour, TimeFormat},
-    color_theme::{ColorTheme, ThemeColor},
-    quote::Quote,
-};
+
+use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
+use std::sync::RwLock;
+use tc_models::{clock::Clock, color_theme::ColorTheme, quote::Quote};
 use tc_user_config_loader::{
     LoaderResult, clock_face_loader::ClockFaceLoader, color_theme_loader::ColorThemeLoader,
     quote_loader::QuoteLoader,
@@ -30,9 +19,9 @@ use tc_user_config_loader::{
 use tokio::{io, time::Duration};
 
 pub(crate) struct TuiAssets {
-    pub color_themes: Vec<Arc<Mutex<ColorTheme>>>,
-    pub clock_faces: Vec<Arc<Mutex<Clock>>>,
-    pub quotes: Vec<Arc<Quote>>,
+    pub color_themes: Vec<ColorTheme>,
+    pub clock_faces: Vec<Clock>,
+    pub quotes: Vec<Quote>,
 }
 
 impl TuiAssets {
@@ -43,13 +32,27 @@ impl TuiAssets {
             quotes: QuoteLoader::load_quotes()?,
         })
     }
+
+    pub fn get_clock(&self, clock_idx: u16) -> &Clock {
+        &self
+            .clock_faces
+            .get(clock_idx as usize)
+            .expect("The clock_idx should never be out of range")
+    }
+
+    pub fn get_color_theme(&self, color_theme_idx: u16) -> &ColorTheme {
+        &self
+            .color_themes
+            .get(color_theme_idx as usize)
+            .expect("The color_theme_idx should never be out of range")
+    }
 }
 pub(crate) struct TuiState {
     pub application_state: ApplicationState,
-    pub color_theme: Arc<Mutex<ColorTheme>>,
-    pub clock_face: Arc<Mutex<Clock>>,
-    pub quote: Option<Arc<Quote>>,
-    pub pomodoro: Option<Arc<PomodoroTimer>>,
+    pub color_theme_idx: u16,
+    pub clock_face_idx: u16,
+    pub quote_idx: Option<u16>,
+    pub pomodoro: Option<PomodoroTimer>,
     pub refresh_rate: u64,
 }
 
@@ -61,101 +64,85 @@ pub(crate) struct TuiComponents {
 }
 
 impl TuiComponents {
-    pub fn new(controller: Arc<TuiController>) -> TuiComponents {
+    pub fn new(tui_assets: &TuiAssets) -> TuiComponents {
         TuiComponents {
-            help_box: HelpBox::new(Arc::clone(&controller)),
-            settings_menu: SettingMenu::new(controller),
+            help_box: HelpBox::new(),
+            settings_menu: SettingMenu::new(tui_assets),
             hero: Hero::default(),
             logo: Logo::default(),
         }
     }
 }
 
-pub(crate) struct TuiController {
-    tui_state: Arc<RwLock<TuiState>>,
-    tui_assets: Arc<TuiAssets>,
+pub(crate) struct TuiController<'a> {
+    tui_state: &'a RwLock<TuiState>,
 }
 
-impl TuiController {
-    pub fn new(tui_state: Arc<RwLock<TuiState>>, tui_assets: Arc<TuiAssets>) -> Self {
-        TuiController {
-            tui_state,
-            tui_assets,
-        }
+impl<'a> TuiController<'a> {
+    pub fn new(tui_state: &'a RwLock<TuiState>) -> Self {
+        TuiController { tui_state }
     }
 
-    pub fn process_settings_action(&self, action: &TuiAction) {
-        let mut state = self.tui_state.write().unwrap();
-        match action {
-            // = Settings actions
-            // == General settings
-            TuiAction::UpdateClockFace(new_clock_face) => {
-                state.clock_face = Arc::clone(new_clock_face)
-            }
-            TuiAction::UpdateClockFormat(new_format) => {
-                let mut clock_lock = state.clock_face.lock().unwrap();
-                clock_lock.set_clock_format_to(*new_format);
-            }
-            TuiAction::UpdateRefreshRate(new_refresh_rate) => {
-                state.refresh_rate = *new_refresh_rate
-            }
-            TuiAction::UpdateQuote(new_quote) => state.quote = new_quote.clone(),
-            // == Pomodoro settings
-            TuiAction::UpdateTotalSession(_new_total_sessions) => {}
-            TuiAction::UpdateWorkDuration(_new_work_duration) => {}
-            TuiAction::UpdateLongBreakDuration(_new_long_break_duration) => {}
-            TuiAction::UpdateShortBreakDuration(_new_short_break_duration) => {}
-            TuiAction::UpdateSessionsBeforeLongBreak(_new_sessions_before_long_break) => {}
-            // == Color settings
-            TuiAction::UpdateColorTheme(theme) => state.color_theme = Arc::clone(theme),
-            TuiAction::UpdateColor(variant, new_color) => {
-                let mut lock = state.color_theme.lock().unwrap();
-                lock.update(variant.clone(), *new_color);
-            }
-        }
-    }
+    // pub fn process_settings_action(&mut self, action: &'a TuiAction) {
+    //     let mut state = self.tui_state.write().unwrap();
+    //     match action {
+    //         // = Settings actions
+    //         // == General settings
+    //         TuiAction::UpdateClockFace(new_clock_face_idx) => {
+    //             state.clock_face_idx = *new_clock_face_idx
+    //         }
+    //         TuiAction::UpdateClockFormat(new_format) => {
+    //             self.tui_assets.clock_faces[state.clock_face_idx as usize]
+    //                 .set_clock_format_to(*new_format);
+    //         }
+    //         TuiAction::UpdateRefreshRate(new_refresh_rate) => {
+    //             state.refresh_rate = *new_refresh_rate
+    //         }
+    //         TuiAction::UpdateQuote(new_quote) => state.quote_idx = *new_quote,
+    //         // == Pomodoro settings
+    //         TuiAction::UpdateTotalSession(_new_total_sessions) => {}
+    //         TuiAction::UpdateWorkDuration(_new_work_duration) => {}
+    //         TuiAction::UpdateLongBreakDuration(_new_long_break_duration) => {}
+    //         TuiAction::UpdateShortBreakDuration(_new_short_break_duration) => {}
+    //         TuiAction::UpdateSessionsBeforeLongBreak(_new_sessions_before_long_break) => {}
+    //         // == Color settings
+    //         TuiAction::UpdateColorTheme(theme) => state.color_theme_idx = *theme,
+    //         TuiAction::UpdateColor(variant, new_color) => {
+    //             self.tui_assets.color_themes[state.color_theme_idx as usize]
+    //                 .update(variant.clone(), *new_color);
+    //         }
+    //     }
+    // }
+    //
+    // pub fn carousel_options_for(&self, setting: Setting) -> Vec<SelectableItem> {
+    //     match setting {
+    //         Setting::ClockFace => self
+    //             .tui_assets
+    //             .clock_faces
+    //             .iter()
+    //             .map(|clock_face| SelectableItem::ClockFace(clock_face))
+    //             .collect(),
+    //         Setting::ColorTheme => self
+    //             .tui_assets
+    //             .color_themes
+    //             .iter()
+    //             .map(|color_theme| SelectableItem::Theme(color_theme))
+    //             .collect(),
+    //         Setting::ClockFormat => TimeFormat::iter()
+    //             .map(|fmt| SelectableItem::Format(fmt))
+    //             .collect(),
+    //         Setting::Quote => self
+    //             .tui_assets
+    //             .quotes
+    //             .iter()
+    //             .map(|quote| SelectableItem::Quote(Some(quote)))
+    //             .chain(std::iter::once(SelectableItem::Quote(None)))
+    //             .collect(),
+    //         _ => unreachable!(),
+    //     }
+    // }
 
-    pub fn carousel_options_for(&self, setting: Setting) -> Vec<SelectableItem> {
-        match setting {
-            Setting::ClockFace => self
-                .tui_assets
-                .clock_faces
-                .iter()
-                .map(|clock_face| {
-                    let clock_lock = clock_face.lock().unwrap();
-                    SelectableItem::ClockFace(Arc::new(clock_lock.clone()))
-                })
-                .collect(),
-            Setting::ColorTheme => self
-                .tui_assets
-                .color_themes
-                .iter()
-                .map(|color_theme| {
-                    let theme_lock = color_theme.lock().unwrap();
-                    SelectableItem::Theme(Arc::new(theme_lock.clone()))
-                })
-                .collect(),
-            Setting::ClockFormat => TimeFormat::iter()
-                .map(|fmt| SelectableItem::Format(fmt))
-                .collect(),
-            Setting::Quote => self
-                .tui_assets
-                .quotes
-                .iter()
-                .map(|quote| SelectableItem::Quote(Some(Arc::clone(quote))))
-                .chain(std::iter::once(SelectableItem::Quote(None)))
-                .collect(),
-            _ => unreachable!(),
-        }
-    }
-
-    pub fn get_color(&self, key: &ThemeColor) -> Color {
-        let state = self.tui_state.read().unwrap();
-        let lock = state.color_theme.lock().unwrap();
-        *lock.get(key)
-    }
-
-    pub fn handle_events(&self, components: &mut TuiComponents) -> io::Result<bool> {
+    pub fn handle_events(&self, components: &'a mut TuiComponents) -> io::Result<bool> {
         let app_state;
         let refresh_rate;
         {
@@ -187,11 +174,9 @@ impl TuiController {
                     ApplicationState::ShowingSettings => {
                         components
                             .settings_menu
-                            .handle_setting_keys(key_event, Arc::clone(&self.tui_state));
+                            .handle_setting_keys(key_event, self.tui_state);
                     }
-                    ApplicationState::ShowingHelp
-                    | ApplicationState::TerminalTooSmall
-                    | ApplicationState::Finished => {}
+                    ApplicationState::ShowingHelp | ApplicationState::Finished => {}
                 }
             }
         }
@@ -230,7 +215,7 @@ impl TuiController {
                         components.settings_menu.set_called_from_hero(false);
                         true
                     }
-                    ApplicationState::Running | ApplicationState::TerminalTooSmall => {
+                    ApplicationState::Running => {
                         if matches!(key_event.code, KeyCode::Char('q')) {
                             tui_state.application_state = ApplicationState::Finished;
                             true

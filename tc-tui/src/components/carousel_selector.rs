@@ -2,7 +2,7 @@ use crate::tui_models::{
     selectable_item::{Selectable, SelectableItem},
     selector::SettingsSelector,
     settings::Setting,
-    tui::TuiController,
+    styled_widget::StyledWidget,
     tui_action::TuiAction,
     tui_error::{UpdateError, UpdateResult},
 };
@@ -14,12 +14,10 @@ use ratatui::{
     text::{Line, Span},
     widgets::Widget,
 };
-use std::sync::Arc;
-use tc_models::color_theme::ThemeColor;
+use tc_models::color_theme::{ColorTheme, ThemeColor};
 
 pub(crate) struct CarouselSelector {
     /// Fields needed for event handling logic
-    tui_controller: Arc<TuiController>,
     is_active: bool,
 
     /// Display fields
@@ -30,7 +28,6 @@ pub(crate) struct CarouselSelector {
 
 impl CarouselSelector {
     pub fn new(
-        tui_controller: Arc<TuiController>,
         is_active: bool,
         setting: Setting,
         options: Vec<SelectableItem>,
@@ -40,7 +37,6 @@ impl CarouselSelector {
         }
 
         CarouselSelector {
-            tui_controller,
             is_active,
             setting,
             options,
@@ -70,19 +66,11 @@ impl SettingsSelector for CarouselSelector {
         match key_event.code {
             KeyCode::Char('h') | KeyCode::Left => {
                 self.prev_option();
-                Some(
-                    self.options[self.current_selection]
-                        .clone()
-                        .get_corrosponding_action(),
-                )
+                Some(self.options[self.current_selection].get_corrosponding_action())
             }
             KeyCode::Char('l') | KeyCode::Right => {
                 self.next_option();
-                Some(
-                    self.options[self.current_selection]
-                        .clone()
-                        .get_corrosponding_action(),
-                )
+                Some(self.options[self.current_selection].get_corrosponding_action())
             }
             _ => None,
         }
@@ -110,10 +98,10 @@ impl SettingsSelector for CarouselSelector {
     }
 }
 
-impl Widget for &CarouselSelector {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let highlight_color = self.tui_controller.get_color(&ThemeColor::Selection);
-        let default_color = self.tui_controller.get_color(&ThemeColor::Foreground);
+impl StyledWidget for &CarouselSelector {
+    fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
+        let highlight_color = *color_theme.get(&ThemeColor::Selection);
+        let default_color = *color_theme.get(&ThemeColor::Foreground);
 
         let style = if self.is_active {
             Style::default().fg(default_color).bg(highlight_color)

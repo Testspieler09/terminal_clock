@@ -3,10 +3,10 @@ use crate::{
     components::Dimensions,
     helpers::generate_title,
     tui_models::{
-        selectable_item::SelectableItem,
         selector::{Selector, SelectorType, SettingsSelector},
         settings::Setting,
-        tui::TuiController,
+        styled_widget::StyledWidget,
+        tui::TuiAssets,
         tui_action::TuiAction,
     },
 };
@@ -21,9 +21,9 @@ use ratatui::{
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Paragraph, Widget, Wrap},
 };
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 use strum::{AsRefStr, EnumIter, IntoEnumIterator};
-use tc_models::{clock::ClockBehaviour, color_theme::ThemeColor};
+use tc_models::color_theme::{ColorTheme, ThemeColor};
 
 struct SelectorConfig<'a> {
     setting: Setting,
@@ -72,7 +72,6 @@ pub(crate) struct SettingMenu {
     called_from_hero: bool,
 
     /// Fields for applying the action based on the changed option
-    tui_controller: Arc<TuiController>,
     pending_action: Option<TuiAction>,
 
     height: u16,
@@ -80,7 +79,7 @@ pub(crate) struct SettingMenu {
 }
 
 impl SettingMenu {
-    const GENERAL_TAB_CONFIG: &[SelectorConfig<'_>] = &[
+    const GENERAL_TAB_CONFIG: &'static [SelectorConfig<'static>] = &[
         SelectorConfig {
             setting: Setting::RefreshRate,
             description: &["The rate on which the screen gets refreshed"],
@@ -107,7 +106,7 @@ impl SettingMenu {
         },
     ];
 
-    const POMODORO_TAB_CONFIG: &[SelectorConfig<'_>] = &[
+    const POMODORO_TAB_CONFIG: &'static [SelectorConfig<'static>] = &[
         SelectorConfig {
             setting: Setting::TotalSessions,
             description: &["The total number of Pomodoro sessions"],
@@ -135,7 +134,7 @@ impl SettingMenu {
         },
     ];
 
-    const COLOR_TAB_CONFIG: &[SelectorConfig<'_>] = &[
+    const COLOR_TAB_CONFIG: &'static [SelectorConfig<'static>] = &[
         SelectorConfig {
             setting: Setting::ColorTheme,
             description: &["The overall color theme used across the application"],
@@ -172,37 +171,31 @@ impl SettingMenu {
         },
     ];
 
-    pub fn new(tui_controller: Arc<TuiController>) -> SettingMenu {
+    pub fn new(tui_assets: &TuiAssets) -> SettingMenu {
         let general_tab_selectors: Vec<Selector> = Self::GENERAL_TAB_CONFIG
             .iter()
             .enumerate()
             .map(|(idx, config)| {
                 let is_active = idx == 0;
-                config.selector_type.create_selector(
-                    Arc::clone(&tui_controller),
-                    config.setting,
-                    is_active,
-                )
+                config
+                    .selector_type
+                    .create_selector(config.setting, tui_assets, is_active)
             })
             .collect();
         let pomodoro_tab_selectors: Vec<Selector> = Self::POMODORO_TAB_CONFIG
             .iter()
             .map(|config| {
-                config.selector_type.create_selector(
-                    Arc::clone(&tui_controller),
-                    config.setting,
-                    false,
-                )
+                config
+                    .selector_type
+                    .create_selector(config.setting, tui_assets, false)
             })
             .collect();
         let color_tab_selectors: Vec<Selector> = Self::COLOR_TAB_CONFIG
             .iter()
             .map(|config| {
-                config.selector_type.create_selector(
-                    Arc::clone(&tui_controller),
-                    config.setting,
-                    false,
-                )
+                config
+                    .selector_type
+                    .create_selector(config.setting, tui_assets, false)
             })
             .collect();
 
@@ -212,7 +205,6 @@ impl SettingMenu {
             pomodoro_tab_selectors,
             color_tab_selectors,
             called_from_hero: false,
-            tui_controller,
             pending_action: None,
             height: 40u16,
             width: 75u16,
@@ -224,7 +216,7 @@ impl SettingMenu {
             .iter_mut()
             .chain(self.pomodoro_tab_selectors.iter_mut())
             .chain(self.color_tab_selectors.iter_mut())
-            .for_each(|selector| {
+            .for_each(|selector: &mut Selector| {
                 selector.set_to_inactive();
             });
 
@@ -327,7 +319,7 @@ impl SettingMenu {
         self.called_from_hero
     }
 
-    fn render_tab(&self, lhs: Rect, rhs: Rect, buf: &mut Buffer) {
+    fn render_tab(&self, lhs: Rect, rhs: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
         let (selectors, idx, content) = match self.current_tab {
             SettingsTab::General(selected_idx) => (
                 &self.general_tab_selectors,
@@ -350,22 +342,25 @@ impl SettingMenu {
 
         let layout = Layout::vertical(constraints).split(lhs);
 
-        selectors.iter().enumerate().for_each(|(i, selector)| {
-            if i < layout.len() {
-                selector.render(layout[i], buf);
-            }
-        });
+        selectors
+            .iter()
+            .enumerate()
+            .for_each(|(i, selector): (usize, &Selector)| {
+                if i < layout.len() {
+                    selector.render(layout[i], buf, color_theme);
+                }
+            });
 
         if let Some(config) = content.get(idx as usize) {
             let desc_text = config.description.join("\n");
             Paragraph::new(desc_text)
                 .wrap(Wrap { trim: true })
-                .style(Style::default().fg(self.tui_controller.get_color(&ThemeColor::Foreground)))
+                .style(Style::default().fg(*color_theme.get(&ThemeColor::Foreground)))
                 .render(rhs, buf);
         }
     }
 
-    pub fn handle_setting_keys(&mut self, key_event: KeyEvent, tui_state: Arc<RwLock<TuiState>>) {
+    pub fn handle_setting_keys(&mut self, key_event: KeyEvent, tui_state: &RwLock<TuiState>) {
         self.pending_action = None;
 
         match key_event.code {
@@ -401,22 +396,9 @@ impl SettingMenu {
             }
         }
 
-        if let Some(action) = &self.pending_action {
-            self.tui_controller.process_settings_action(action);
-            match action {
-                TuiAction::UpdateClockFace(clock) => {
-                    let clock_lock = clock.lock().unwrap();
-                    let new_fmt = clock_lock.get_clock_format();
-                    let _ = self.general_tab_selectors[2]
-                        .update_current_selection(SelectableItem::Format(new_fmt));
-                }
-                TuiAction::UpdateColorTheme(color_theme) => {
-                    let _color_theme_lock = color_theme.lock().unwrap();
-                    // TODO: get all the colors and set the corrosponding selectors to them
-                }
-                _ => {}
-            }
-        }
+        // if let Some(action) = &self.pending_action {
+        //     self.tui_state.process_settings_action(action);
+        // }
     }
 }
 
@@ -430,11 +412,11 @@ impl Dimensions for &SettingMenu {
     }
 }
 
-impl Widget for &SettingMenu {
-    fn render(self, area: Rect, buf: &mut Buffer) {
+impl StyledWidget for &SettingMenu {
+    fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
         // Color Settings for this widget
-        let fg_color = self.tui_controller.get_color(&ThemeColor::Foreground);
-        let border_color = self.tui_controller.get_color(&ThemeColor::Borders);
+        let fg_color = *color_theme.get(&ThemeColor::Foreground);
+        let border_color = *color_theme.get(&ThemeColor::Borders);
 
         let settings_block = Block::bordered()
             .title(generate_title("tab➔".to_string(), fg_color))
@@ -515,6 +497,11 @@ impl Widget for &SettingMenu {
         interactive_settings_block.render(interactive_section, buf);
         description_block.render(description_section, buf);
 
-        self.render_tab(inner_interactive_block, inner_description_block, buf);
+        self.render_tab(
+            inner_interactive_block,
+            inner_description_block,
+            buf,
+            color_theme,
+        );
     }
 }

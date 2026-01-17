@@ -1,4 +1,7 @@
-use crate::{components::Dimensions, helpers::generate_title, tui_models::tui::TuiController};
+use crate::{
+    components::Dimensions, helpers::generate_title, tui_models::styled_widget::StyledWidget,
+};
+
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -6,15 +9,13 @@ use ratatui::{
     style::{Modifier, Style},
     widgets::{Block, BorderType, Paragraph, Widget},
 };
-use std::sync::Arc;
-use tc_models::color_theme::ThemeColor;
+use tc_models::color_theme::{ColorTheme, ThemeColor};
 
 // FIX: this will never change -> static should not be computed every time it is rendered
 pub(crate) struct HelpBox {
     height: u16,
     width: u16,
     called_from_hero: bool,
-    tui_controller: Arc<TuiController>,
 }
 
 impl HelpBox {
@@ -24,7 +25,7 @@ impl HelpBox {
         ["ESC", "Toggles main menu"],
     ];
 
-    pub fn new(tui_controller: Arc<TuiController>) -> Self {
+    pub fn new() -> Self {
         HelpBox {
             height: HelpBox::HELP_BOX_CONTENT.len() as u16 + 3, // Border (2) + Tableheader (1)
             width: HelpBox::HELP_BOX_CONTENT
@@ -33,7 +34,6 @@ impl HelpBox {
                 .max()
                 .unwrap() as u16,
             called_from_hero: false,
-            tui_controller,
         }
     }
 
@@ -56,12 +56,12 @@ impl Dimensions for &HelpBox {
     }
 }
 
-impl Widget for &HelpBox {
-    fn render(self, area: Rect, buf: &mut Buffer) {
+impl StyledWidget for &HelpBox {
+    fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
         // Color Settings for this widget
-        let fg_color = self.tui_controller.get_color(&ThemeColor::Foreground);
-        let border_color = self.tui_controller.get_color(&ThemeColor::Borders);
-        let highlight_color = self.tui_controller.get_color(&ThemeColor::Accent);
+        let fg_color = *color_theme.get(&ThemeColor::Foreground);
+        let border_color = *color_theme.get(&ThemeColor::Borders);
+        let highlight_color = *color_theme.get(&ThemeColor::Accent);
 
         let block = Block::bordered()
             .title(generate_title("help".to_string(), fg_color))

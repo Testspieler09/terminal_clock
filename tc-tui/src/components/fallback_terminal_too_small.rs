@@ -6,14 +6,14 @@ use ratatui::{
 };
 use tc_models::color_theme::{ColorTheme, ThemeColor};
 
-pub(crate) struct FallbackView {
+pub(crate) struct FallbackView<'a> {
     needed_width: u16,
     needed_height: u16,
-    color_theme: ColorTheme,
+    color_theme: &'a ColorTheme,
 }
 
-impl FallbackView {
-    pub fn new(needed_width: u16, needed_height: u16, color_theme: ColorTheme) -> Self {
+impl<'a> FallbackView<'a> {
+    pub fn new(needed_width: u16, needed_height: u16, color_theme: &'a ColorTheme) -> Self {
         FallbackView {
             needed_width,
             needed_height,
@@ -31,7 +31,7 @@ impl FallbackView {
     }
 }
 
-impl Widget for &mut FallbackView {
+impl Widget for &mut FallbackView<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let fg_color = *self.color_theme.get(&ThemeColor::Foreground);
         let highlight_color = *self.color_theme.get(&ThemeColor::Accent);
