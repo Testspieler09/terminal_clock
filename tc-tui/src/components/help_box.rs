@@ -57,6 +57,8 @@ impl Dimensions for &HelpBox {
 }
 
 impl StyledWidget for &HelpBox {
+    type Context<'a> = &'a ColorTheme;
+
     fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
         // Color Settings for this widget
         let fg_color = *color_theme.get(&ThemeColor::Foreground);

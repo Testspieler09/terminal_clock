@@ -1,4 +1,7 @@
-use crate::helpers::{centered_bold_label, centered_size_line};
+use crate::{
+    helpers::{centered_bold_label, centered_size_line},
+    tui_models::styled_widget::StyledWidget,
+};
 use ratatui::{
     layout::{Constraint, Flex, Layout},
     prelude::{Buffer, Rect},
@@ -6,18 +9,16 @@ use ratatui::{
 };
 use tc_models::color_theme::{ColorTheme, ThemeColor};
 
-pub(crate) struct FallbackView<'a> {
+pub(crate) struct FallbackView {
     needed_width: u16,
     needed_height: u16,
-    color_theme: &'a ColorTheme,
 }
 
-impl<'a> FallbackView<'a> {
-    pub fn new(needed_width: u16, needed_height: u16, color_theme: &'a ColorTheme) -> Self {
+impl FallbackView {
+    pub fn new(needed_width: u16, needed_height: u16) -> Self {
         FallbackView {
             needed_width,
             needed_height,
-            color_theme,
         }
     }
 
@@ -31,10 +32,12 @@ impl<'a> FallbackView<'a> {
     }
 }
 
-impl Widget for &mut FallbackView<'_> {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let fg_color = *self.color_theme.get(&ThemeColor::Foreground);
-        let highlight_color = *self.color_theme.get(&ThemeColor::Accent);
+impl StyledWidget for &mut FallbackView {
+    type Context<'a> = &'a ColorTheme;
+
+    fn render(self, area: Rect, buf: &mut Buffer, color_theme: Self::Context<'_>) {
+        let fg_color = *color_theme.get(&ThemeColor::Foreground);
+        let highlight_color = *color_theme.get(&ThemeColor::Accent);
 
         let [
             actual_label,

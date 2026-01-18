@@ -1,10 +1,4 @@
-use ratatui::{
-    buffer::Buffer,
-    layout::Rect,
-    style::{Color, Modifier, Style},
-    text::Span,
-    widgets::{Paragraph, Widget},
-};
+use ratatui::style::Color;
 
 pub struct Quote {
     pub author: Option<String>,
@@ -61,26 +55,4 @@ impl Quote {
     //         ))
     //     }
     // }
-}
-
-impl Widget for &Quote {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let final_text = self.final_quote_string();
-
-        if let Some(color) = self.accent_color {
-            Paragraph::new(Span::styled(
-                final_text,
-                Style::default().fg(color).add_modifier(Modifier::BOLD),
-            ))
-            .render(area, buf);
-        } else {
-            Paragraph::new(Span::styled(
-                final_text,
-                Style::default()
-                    // .fg(*theme.get(&ThemeColor::Accent))
-                    .add_modifier(Modifier::BOLD),
-            ))
-            .render(area, buf);
-        }
-    }
 }

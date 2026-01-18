@@ -5,7 +5,7 @@
 
 use crate::tui_models::{
     selectable_item::SelectableItem, selector::SettingsSelector, settings::Setting,
-    styled_widget::StyledWidget, tui_action::TuiAction, tui_error::UpdateResult,
+    styled_widget::StyledWidget, tui::TuiAssets, tui_action::TuiAction, tui_error::UpdateResult,
 };
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
@@ -52,12 +52,18 @@ impl SettingsSelector for ColorSelector {
         self.is_active = false;
     }
 
-    fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()> {
+    fn update_current_selection(
+        &mut self,
+        selection: SelectableItem,
+        tui_assets: &TuiAssets,
+    ) -> UpdateResult<()> {
         todo!()
     }
 }
 
 impl StyledWidget for &ColorSelector {
+    type Context<'a> = &'a ColorTheme;
+
     fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
         let highlight_color = *color_theme.get(&ThemeColor::Selection);
         let default_color = *color_theme.get(&ThemeColor::Foreground);

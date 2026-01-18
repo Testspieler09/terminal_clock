@@ -118,7 +118,7 @@ impl Logo {
         &self,
         component: W,
         frame: &mut Frame,
-        color_theme: &ColorTheme,
+        ctx: <W as StyledWidget>::Context<'_>,
     ) {
         // TODO: add the fallback logic here as well
         let area = frame.area();
@@ -146,7 +146,7 @@ impl Logo {
             .areas(setting_section);
 
         self.render(logo_layout, buf);
-        component.render(settings_layout, buf, color_theme);
+        component.render(settings_layout, buf, ctx);
     }
 }
 

@@ -1,12 +1,12 @@
 use crate::{
     ApplicationState, TuiState,
-    components::Dimensions,
+    components::{Dimensions, carousel_selector::SettingsMenuCtx},
     helpers::generate_title,
     tui_models::{
         selector::{Selector, SelectorType, SettingsSelector},
         settings::Setting,
         styled_widget::StyledWidget,
-        tui::TuiAssets,
+        tui::{TuiAssets, TuiController},
         tui_action::TuiAction,
     },
 };
@@ -23,7 +23,7 @@ use ratatui::{
 };
 use std::sync::RwLock;
 use strum::{AsRefStr, EnumIter, IntoEnumIterator};
-use tc_models::color_theme::{ColorTheme, ThemeColor};
+use tc_models::color_theme::ThemeColor;
 
 struct SelectorConfig<'a> {
     setting: Setting,
@@ -319,7 +319,7 @@ impl SettingMenu {
         self.called_from_hero
     }
 
-    fn render_tab(&self, lhs: Rect, rhs: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
+    fn render_tab(&self, lhs: Rect, rhs: Rect, buf: &mut Buffer, ctx: &SettingsMenuCtx) {
         let (selectors, idx, content) = match self.current_tab {
             SettingsTab::General(selected_idx) => (
                 &self.general_tab_selectors,
@@ -347,7 +347,7 @@ impl SettingMenu {
             .enumerate()
             .for_each(|(i, selector): (usize, &Selector)| {
                 if i < layout.len() {
-                    selector.render(layout[i], buf, color_theme);
+                    selector.render(layout[i], buf, ctx);
                 }
             });
 
@@ -355,12 +355,17 @@ impl SettingMenu {
             let desc_text = config.description.join("\n");
             Paragraph::new(desc_text)
                 .wrap(Wrap { trim: true })
-                .style(Style::default().fg(*color_theme.get(&ThemeColor::Foreground)))
+                .style(Style::default().fg(*ctx.color_theme.get(&ThemeColor::Foreground)))
                 .render(rhs, buf);
         }
     }
 
-    pub fn handle_setting_keys(&mut self, key_event: KeyEvent, tui_state: &RwLock<TuiState>) {
+    pub fn handle_setting_keys(
+        &mut self,
+        key_event: KeyEvent,
+        tui_state: &RwLock<TuiState>,
+        tui_controller: &TuiController,
+    ) {
         self.pending_action = None;
 
         match key_event.code {
@@ -396,9 +401,9 @@ impl SettingMenu {
             }
         }
 
-        // if let Some(action) = &self.pending_action {
-        //     self.tui_state.process_settings_action(action);
-        // }
+        if let Some(action) = &self.pending_action {
+            tui_controller.process_settings_action(action);
+        }
     }
 }
 
@@ -413,10 +418,12 @@ impl Dimensions for &SettingMenu {
 }
 
 impl StyledWidget for &SettingMenu {
-    fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
+    type Context<'a> = &'a SettingsMenuCtx<'a>;
+
+    fn render(self, area: Rect, buf: &mut Buffer, ctx: Self::Context<'_>) {
         // Color Settings for this widget
-        let fg_color = *color_theme.get(&ThemeColor::Foreground);
-        let border_color = *color_theme.get(&ThemeColor::Borders);
+        let fg_color = *ctx.color_theme.get(&ThemeColor::Foreground);
+        let border_color = *ctx.color_theme.get(&ThemeColor::Borders);
 
         let settings_block = Block::bordered()
             .title(generate_title("tab➔".to_string(), fg_color))
@@ -497,11 +504,6 @@ impl StyledWidget for &SettingMenu {
         interactive_settings_block.render(interactive_section, buf);
         description_block.render(description_section, buf);
 
-        self.render_tab(
-            inner_interactive_block,
-            inner_description_block,
-            buf,
-            color_theme,
-        );
+        self.render_tab(inner_interactive_block, inner_description_block, buf, ctx);
     }
 }

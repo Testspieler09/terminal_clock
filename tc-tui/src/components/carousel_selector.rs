@@ -3,6 +3,7 @@ use crate::tui_models::{
     selector::SettingsSelector,
     settings::Setting,
     styled_widget::StyledWidget,
+    tui::TuiAssets,
     tui_action::TuiAction,
     tui_error::{UpdateError, UpdateResult},
 };
@@ -84,11 +85,15 @@ impl SettingsSelector for CarouselSelector {
         self.is_active = false;
     }
 
-    fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()> {
+    fn update_current_selection(
+        &mut self,
+        selection: SelectableItem,
+        tui_assets: &TuiAssets,
+    ) -> UpdateResult<()> {
         if let Some(idx) = self
             .options
             .iter()
-            .position(|item| *item.get_name() == *selection.get_name())
+            .position(|item| *item.get_name(tui_assets) == *selection.get_name(tui_assets))
         {
             self.current_selection = idx;
             Ok(())
@@ -98,10 +103,26 @@ impl SettingsSelector for CarouselSelector {
     }
 }
 
+pub(crate) struct SettingsMenuCtx<'a> {
+    pub color_theme: &'a ColorTheme,
+    tui_assets: &'a TuiAssets,
+}
+
+impl<'a> SettingsMenuCtx<'a> {
+    pub fn new(color_theme: &'a ColorTheme, tui_assets: &'a TuiAssets) -> Self {
+        SettingsMenuCtx {
+            color_theme,
+            tui_assets,
+        }
+    }
+}
+
 impl StyledWidget for &CarouselSelector {
-    fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
-        let highlight_color = *color_theme.get(&ThemeColor::Selection);
-        let default_color = *color_theme.get(&ThemeColor::Foreground);
+    type Context<'a> = &'a SettingsMenuCtx<'a>;
+
+    fn render(self, area: Rect, buf: &mut Buffer, ctx: Self::Context<'_>) {
+        let highlight_color = *ctx.color_theme.get(&ThemeColor::Selection);
+        let default_color = *ctx.color_theme.get(&ThemeColor::Foreground);
 
         let style = if self.is_active {
             Style::default().fg(default_color).bg(highlight_color)
@@ -145,7 +166,7 @@ impl StyledWidget for &CarouselSelector {
         Span::from(" ← ")
             .style(style)
             .render(button_left_section, buf);
-        Line::from(self.options[self.current_selection].get_name())
+        Line::from(self.options[self.current_selection].get_name(ctx.tui_assets))
             .alignment(Alignment::Center)
             .style(style)
             .render(option_section, buf);

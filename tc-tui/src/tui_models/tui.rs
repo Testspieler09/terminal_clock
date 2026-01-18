@@ -6,7 +6,7 @@ use crate::{
         pomodoro::PomodoroTimer,
         settings_menu::SettingMenu,
     },
-    tui_models::application::ApplicationState,
+    tui_models::{application::ApplicationState, tui_action::TuiAction},
 };
 
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
@@ -46,6 +46,19 @@ impl TuiAssets {
             .get(color_theme_idx as usize)
             .expect("The color_theme_idx should never be out of range")
     }
+
+    pub fn get_quote(&self, quote_idx: Option<u16>) -> Option<&Quote> {
+        if let Some(idx) = quote_idx {
+            Some(
+                &self
+                    .quotes
+                    .get(idx as usize)
+                    .expect("The quote_idx should never be out of range"),
+            )
+        } else {
+            None
+        }
+    }
 }
 pub(crate) struct TuiState {
     pub application_state: ApplicationState,
@@ -83,36 +96,36 @@ impl<'a> TuiController<'a> {
         TuiController { tui_state }
     }
 
-    // pub fn process_settings_action(&mut self, action: &'a TuiAction) {
-    //     let mut state = self.tui_state.write().unwrap();
-    //     match action {
-    //         // = Settings actions
-    //         // == General settings
-    //         TuiAction::UpdateClockFace(new_clock_face_idx) => {
-    //             state.clock_face_idx = *new_clock_face_idx
-    //         }
-    //         TuiAction::UpdateClockFormat(new_format) => {
-    //             self.tui_assets.clock_faces[state.clock_face_idx as usize]
-    //                 .set_clock_format_to(*new_format);
-    //         }
-    //         TuiAction::UpdateRefreshRate(new_refresh_rate) => {
-    //             state.refresh_rate = *new_refresh_rate
-    //         }
-    //         TuiAction::UpdateQuote(new_quote) => state.quote_idx = *new_quote,
-    //         // == Pomodoro settings
-    //         TuiAction::UpdateTotalSession(_new_total_sessions) => {}
-    //         TuiAction::UpdateWorkDuration(_new_work_duration) => {}
-    //         TuiAction::UpdateLongBreakDuration(_new_long_break_duration) => {}
-    //         TuiAction::UpdateShortBreakDuration(_new_short_break_duration) => {}
-    //         TuiAction::UpdateSessionsBeforeLongBreak(_new_sessions_before_long_break) => {}
-    //         // == Color settings
-    //         TuiAction::UpdateColorTheme(theme) => state.color_theme_idx = *theme,
-    //         TuiAction::UpdateColor(variant, new_color) => {
-    //             self.tui_assets.color_themes[state.color_theme_idx as usize]
-    //                 .update(variant.clone(), *new_color);
-    //         }
-    //     }
-    // }
+    pub fn process_settings_action(&self, action: &'a TuiAction) {
+        let mut state = self.tui_state.write().unwrap();
+        match action {
+            // = Settings actions
+            // == General settings
+            TuiAction::UpdateClockFace(new_clock_face_idx) => {
+                state.clock_face_idx = *new_clock_face_idx
+            }
+            TuiAction::UpdateClockFormat(new_format) => {
+                // self.tui_assets.clock_faces[state.clock_face_idx as usize]
+                //     .set_clock_format_to(*new_format);
+            }
+            TuiAction::UpdateRefreshRate(new_refresh_rate) => {
+                state.refresh_rate = *new_refresh_rate
+            }
+            TuiAction::UpdateQuote(new_quote) => state.quote_idx = *new_quote,
+            // == Pomodoro settings
+            TuiAction::UpdateTotalSession(_new_total_sessions) => {}
+            TuiAction::UpdateWorkDuration(_new_work_duration) => {}
+            TuiAction::UpdateLongBreakDuration(_new_long_break_duration) => {}
+            TuiAction::UpdateShortBreakDuration(_new_short_break_duration) => {}
+            TuiAction::UpdateSessionsBeforeLongBreak(_new_sessions_before_long_break) => {}
+            // == Color settings
+            TuiAction::UpdateColorTheme(theme) => state.color_theme_idx = *theme,
+            TuiAction::UpdateColor(variant, new_color) => {
+                // self.tui_assets.color_themes[state.color_theme_idx as usize]
+                //     .update(variant.clone(), *new_color);
+            }
+        }
+    }
     //
     // pub fn carousel_options_for(&self, setting: Setting) -> Vec<SelectableItem> {
     //     match setting {
@@ -172,9 +185,11 @@ impl<'a> TuiController<'a> {
                     ApplicationState::Running => self.handle_normal_keys(key_event, components),
                     ApplicationState::ShowingHero => self.handle_hero_keys(key_event, components),
                     ApplicationState::ShowingSettings => {
-                        components
-                            .settings_menu
-                            .handle_setting_keys(key_event, self.tui_state);
+                        components.settings_menu.handle_setting_keys(
+                            key_event,
+                            self.tui_state,
+                            self,
+                        );
                     }
                     ApplicationState::ShowingHelp | ApplicationState::Finished => {}
                 }

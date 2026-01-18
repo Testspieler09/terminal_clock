@@ -1,6 +1,7 @@
 use crate::{
     components::{
-        carousel_selector::CarouselSelector, color_input_field::ColorSelector,
+        carousel_selector::{CarouselSelector, SettingsMenuCtx},
+        color_input_field::ColorSelector,
         number_input::NumberSelector,
     },
     tui_models::{
@@ -30,7 +31,11 @@ pub(crate) trait SettingsSelector {
     fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction>;
     fn set_to_active(&mut self);
     fn set_to_inactive(&mut self);
-    fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()>;
+    fn update_current_selection(
+        &mut self,
+        selection: SelectableItem,
+        tui_assets: &TuiAssets,
+    ) -> UpdateResult<()>;
 }
 
 impl SettingsSelector for Selector {
@@ -58,25 +63,33 @@ impl SettingsSelector for Selector {
         }
     }
 
-    fn update_current_selection(&mut self, selection: SelectableItem) -> Result<(), UpdateError> {
+    fn update_current_selection(
+        &mut self,
+        selection: SelectableItem,
+        tui_assets: &TuiAssets,
+    ) -> Result<(), UpdateError> {
         match self {
             Selector::Carousel(carousel_selector) => {
-                carousel_selector.update_current_selection(selection)
+                carousel_selector.update_current_selection(selection, tui_assets)
             }
-            Selector::Color(color_selector) => color_selector.update_current_selection(selection),
+            Selector::Color(color_selector) => {
+                color_selector.update_current_selection(selection, tui_assets)
+            }
             Selector::Number(number_selector) => {
-                number_selector.update_current_selection(selection)
+                number_selector.update_current_selection(selection, tui_assets)
             }
         }
     }
 }
 
 impl StyledWidget for &Selector {
-    fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
+    type Context<'a> = &'a SettingsMenuCtx<'a>;
+
+    fn render(self, area: Rect, buf: &mut Buffer, ctx: Self::Context<'_>) {
         match self {
-            Selector::Carousel(selector) => selector.render(area, buf, color_theme),
-            Selector::Color(selector) => selector.render(area, buf, color_theme),
-            Selector::Number(selector) => selector.render(area, buf, color_theme),
+            Selector::Carousel(selector) => selector.render(area, buf, ctx),
+            Selector::Color(selector) => selector.render(area, buf, ctx.color_theme),
+            Selector::Number(selector) => selector.render(area, buf, ctx.color_theme),
         }
     }
 }

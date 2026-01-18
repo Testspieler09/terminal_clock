@@ -7,7 +7,7 @@ use ratatui::{
     widgets::{Paragraph, Widget},
 };
 
-use crate::components::Dimensions;
+use crate::{components::Dimensions, tui_models::styled_widget::StyledWidget};
 
 pub(crate) fn center_widget(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
     let [mut centered_area] = Layout::horizontal([horizontal])
@@ -63,7 +63,7 @@ pub(crate) fn centered_size_line(width: u16, height: u16, highlight: Color) -> P
     .alignment(Alignment::Center)
 }
 
-pub(crate) fn widget_fits_frame<W: Widget + Dimensions>(
+pub(crate) fn widget_fits_frame<W: StyledWidget + Dimensions>(
     frame: &Frame,
     widget: W,
     area: Rect,

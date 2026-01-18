@@ -1,8 +1,8 @@
-use crate::tui_models::tui_action::TuiAction;
+use crate::tui_models::{tui::TuiAssets, tui_action::TuiAction};
 use tc_models::clock::TimeFormat;
 
 pub trait Selectable {
-    fn get_name(&self) -> &str;
+    fn get_name(&self, tui_assets: &TuiAssets) -> String;
     fn get_corrosponding_action(&self) -> TuiAction;
 }
 
@@ -14,17 +14,21 @@ pub enum SelectableItem {
 }
 
 impl Selectable for SelectableItem {
-    fn get_name(&self) -> &str {
-        // TODO: get the thing via the controller or assets by index
+    fn get_name(&self, tui_assets: &TuiAssets) -> String {
         match self {
-            SelectableItem::Theme(theme_idx) => "Theme name",
-            SelectableItem::ClockFace(clock_idx) => "Clock name",
-            SelectableItem::Format(fmt) => fmt.get_str_repr(),
+            SelectableItem::Theme(theme_idx) => tui_assets
+                .get_color_theme(*theme_idx)
+                .get_name()
+                .to_string(),
+            SelectableItem::ClockFace(clock_idx) => {
+                tui_assets.get_clock(*clock_idx).get_name().to_string()
+            }
+            SelectableItem::Format(fmt) => fmt.get_str_repr().to_string(),
             SelectableItem::Quote(quote_idx) => {
-                if let Some(idx) = quote_idx {
-                    "Quote name"
+                if let Some(quote) = tui_assets.get_quote(*quote_idx) {
+                    quote.text.clone()
                 } else {
-                    "None"
+                    "None".to_string()
                 }
             }
         }

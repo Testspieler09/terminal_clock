@@ -5,6 +5,7 @@ pub(crate) mod views;
 
 use crate::{
     components::{
+        carousel_selector::SettingsMenuCtx,
         fallback_terminal_too_small::FallbackView,
         pomodoro::{PomodoroConfig, PomodoroState, PomodoroTimer},
     },
@@ -90,7 +91,7 @@ impl TuiRenderer {
 
         match state.application_state {
             ApplicationState::Running => {
-                let mut fallback_view = FallbackView::new(0, 0, theme);
+                let mut fallback_view = FallbackView::new(0, 0);
                 render_clock_view(frame, state, assets, &mut fallback_view);
             }
             ApplicationState::ShowingHero => components
@@ -104,7 +105,7 @@ impl TuiRenderer {
             ApplicationState::ShowingSettings => components.logo.render_styled_component_with_logo(
                 &components.settings_menu,
                 frame,
-                theme,
+                &SettingsMenuCtx::new(theme, assets),
             ),
             ApplicationState::Finished => {}
         }
