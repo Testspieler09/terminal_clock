@@ -1,0 +1,40 @@
+name: Rust CI (Check, Fmt, Clippy, Tests)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    # Caching accelerates the following runs
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+
+    - name: Install Nightly Toolchain
+      uses: dtolnay/rust-toolchain@nightly
+      with:
+        components: rustfmt #, clippy
+
+    - name: Format check
+      if: "!contains(github.event.pull_request.labels.*.name, 'skip-fmt')"
+      run: cargo +nightly fmt --check
+
+    - name: Clippy (Lints & Warnings)
+      if: "!contains(github.event.pull_request.labels.*.name, 'skip-clippy')"
+      run: cargo clippy -- -D warnings
+
+    - name: Build
+      run: cargo build --verbose
+
+    - name: Run tests
+      if: "!contains(github.event.pull_request.labels.*.name, 'skip-tests')"
+      run: cargo test --verbose
