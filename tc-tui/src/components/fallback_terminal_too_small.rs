@@ -62,34 +62,5 @@ impl StyledWidget for &mut FallbackView {
         centered_bold_label("Currently needed space:", fg_color).render(needed_label, buf);
         centered_size_line(self.needed_width, self.needed_height, highlight_color)
             .render(needed_size_line, buf);
-        // Paragraph::new("Terminal size too small:")
-        //     .style(Style::default().fg(fg_color))
-        //     .add_modifier(Modifier::BOLD)
-        //     .alignment(Alignment::Center)
-        //     .render(actual_label, buf);
-        // Paragraph::new(Line::from(vec![
-        //     Span::from("Width = "),
-        //     Span::styled(format!("{}", area.width), highlight_style),
-        //     Span::from("  Height = "),
-        //     Span::styled(format!("{}", area.height), highlight_style),
-        // ]))
-        // .add_modifier(Modifier::BOLD)
-        // .alignment(Alignment::Center)
-        // .render(actual_size_line, buf);
-        //
-        // Paragraph::new("Currently needed space:")
-        //     .style(Style::default().fg(fg_color))
-        //     .add_modifier(Modifier::BOLD)
-        //     .alignment(Alignment::Center)
-        //     .render(needed_label, buf);
-        // Paragraph::new(Line::from(vec![
-        //     Span::from("Width = "),
-        //     Span::styled(format!("{}", self.needed_width), highlight_style),
-        //     Span::from("  Height = "),
-        //     Span::styled(format!("{}", self.needed_height), highlight_style),
-        // ]))
-        // .add_modifier(Modifier::BOLD)
-        // .alignment(Alignment::Center)
-        // .render(needed_size_line, buf);
     }
 }
