@@ -4,7 +4,6 @@ use serde::Deserialize;
 use std::{
     collections::{HashMap, HashSet},
     str::FromStr,
-    sync::{Arc, Mutex},
 };
 use tc_models::color_theme::{ColorTheme, FALLBACK_COLOR_THEME, ThemeColor};
 

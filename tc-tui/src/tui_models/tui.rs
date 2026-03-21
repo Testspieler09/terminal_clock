@@ -1,3 +1,4 @@
+use crate::tui_models::clock::ClockState;
 use crate::{
     components::{
         help_box::HelpBox,
@@ -60,10 +61,11 @@ impl TuiAssets {
         }
     }
 }
+
 pub(crate) struct TuiState {
     pub application_state: ApplicationState,
     pub color_theme_idx: u16,
-    pub clock_face_idx: u16,
+    pub clock_state: ClockState,
     pub quote_idx: Option<u16>,
     pub pomodoro: Option<PomodoroTimer>,
     pub refresh_rate: u64,
@@ -102,11 +104,10 @@ impl<'a> TuiController<'a> {
             // = Settings actions
             // == General settings
             TuiAction::UpdateClockFace(new_clock_face_idx) => {
-                state.clock_face_idx = *new_clock_face_idx
+                state.clock_state.clock_face_idx = *new_clock_face_idx
             }
             TuiAction::UpdateClockFormat(new_format) => {
-                // self.tui_assets.clock_faces[state.clock_face_idx as usize]
-                //     .set_clock_format_to(*new_format);
+                state.clock_state.clock_time_fmt = *new_format
             }
             TuiAction::UpdateRefreshRate(new_refresh_rate) => {
                 state.refresh_rate = *new_refresh_rate

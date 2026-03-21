@@ -1,10 +1,7 @@
 use crate::{LoaderResult, default_themes::CLOCK_FACES};
 use ratatui::style::Color;
 use serde::Deserialize;
-use std::{
-    str::FromStr,
-    sync::{Arc, Mutex},
-};
+use std::str::FromStr;
 use tc_models::{
     analog_clock::AnalogClock,
     clock::{Clock, TimeFormat},
@@ -63,6 +60,7 @@ pub struct ColorClockConfig {
     pub always_on_coords: Option<Vec<(u32, u32)>>,
     pub clock_color: Option<String>,
     pub accent_color: Option<String>,
+    // FIX: the format field is currently not in use (i think)
     pub format: Option<TimeFormat>,
 }
 
@@ -118,7 +116,6 @@ impl From<ColorClockConfig> for ColorClock {
             second_coords,
             clock_color,
             accent_color,
-            config.format.unwrap_or(TimeFormat::default()),
         )
     }
 }

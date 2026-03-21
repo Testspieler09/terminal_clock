@@ -27,7 +27,7 @@ pub struct ColorTheme {
 
 impl ColorTheme {
     pub fn get_name(&self) -> &str {
-        &self.name.as_str()
+        self.name.as_str()
     }
 
     pub fn get(&self, key: &ThemeColor) -> &Color {

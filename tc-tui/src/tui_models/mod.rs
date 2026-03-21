@@ -1,4 +1,5 @@
 pub(crate) mod application;
+pub(crate) mod clock;
 pub(crate) mod selectable_item;
 pub(crate) mod selector;
 pub(crate) mod settings;

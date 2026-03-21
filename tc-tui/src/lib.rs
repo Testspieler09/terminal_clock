@@ -3,6 +3,7 @@ pub(crate) mod helpers;
 pub(crate) mod tui_models;
 pub(crate) mod views;
 
+use crate::tui_models::clock::ClockState;
 use crate::{
     components::{
         carousel_selector::SettingsMenuCtx,
@@ -22,6 +23,7 @@ use ratatui::{
     widgets::{Block, BorderType},
 };
 use std::sync::RwLock;
+use tc_models::clock::TimeFormat;
 use tc_models::color_theme::ThemeColor;
 
 pub struct TuiRenderer;
@@ -53,7 +55,10 @@ impl TuiRenderer {
         let tui_state = RwLock::new(TuiState {
             application_state: ApplicationState::Running,
             // TODO: Load the config one as the first here
-            clock_face_idx: 0,
+            clock_state: ClockState {
+                clock_face_idx: 0,
+                clock_time_fmt: TimeFormat::Hm,
+            },
             color_theme_idx: 0,
             quote_idx: Some(0),
             pomodoro: None,

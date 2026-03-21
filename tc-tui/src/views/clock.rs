@@ -17,10 +17,11 @@ pub(crate) fn render_clock_view(
 ) {
     let frame_area = frame.area();
 
-    let clock = tui_assets.get_clock(config.clock_face_idx);
+    let clock = tui_assets.get_clock(config.clock_state.clock_face_idx);
     let color_theme = tui_assets.get_color_theme(config.color_theme_idx);
 
-    let (clock_widget, clock_w, clock_h) = clock.generate_clock_face_with_dimensions(color_theme);
+    let (clock_widget, clock_w, clock_h) =
+        clock.generate_clock_face_with_dimensions(color_theme, config.clock_state.clock_time_fmt);
     let clock_area = center_widget(
         frame_area,
         Constraint::Length(clock_w as u16),
