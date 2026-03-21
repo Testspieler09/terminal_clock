@@ -1,8 +1,9 @@
+use ratatui::widgets::Paragraph;
+
 use crate::{
     clock::{ClockBehaviour, TimeFormat},
     color_theme::ColorTheme,
 };
-use ratatui::widgets::Paragraph;
 
 #[derive(Clone)]
 pub struct AnalogClock {
@@ -19,8 +20,6 @@ pub struct AnalogClock {
     hour_center: [u32; 2],
     minute_center: [u32; 2],
     seconds_center: [u32; 2],
-
-    format: TimeFormat,
 }
 
 impl AnalogClock {
@@ -34,15 +33,8 @@ impl ClockBehaviour for AnalogClock {
     fn generate_clock_face_with_dimensions(
         &self,
         theme: &ColorTheme,
+        clock_fmt: TimeFormat,
     ) -> (Paragraph<'_>, usize, usize) {
         todo!()
-    }
-
-    fn set_clock_format_to(&mut self, fmt: TimeFormat) {
-        self.format = fmt;
-    }
-
-    fn get_clock_format(&self) -> TimeFormat {
-        self.format
     }
 }

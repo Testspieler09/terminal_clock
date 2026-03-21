@@ -1,10 +1,11 @@
+use ratatui::widgets::Paragraph;
+use serde::Deserialize;
+use strum::EnumIter;
+
 use crate::{
     analog_clock::AnalogClock, color_clock::ColorClock, color_theme::ColorTheme,
     digital_clock::DigitalClock,
 };
-use ratatui::widgets::Paragraph;
-use serde::Deserialize;
-use strum::EnumIter;
 
 #[derive(Default, Deserialize, Clone, Copy, EnumIter)]
 pub enum TimeFormat {
@@ -28,9 +29,8 @@ pub trait ClockBehaviour {
     fn generate_clock_face_with_dimensions(
         &self,
         theme: &ColorTheme,
+        clock_fmt: TimeFormat,
     ) -> (Paragraph<'_>, usize, usize);
-    fn set_clock_format_to(&mut self, fmt: TimeFormat);
-    fn get_clock_format(&self) -> TimeFormat;
 }
 
 #[derive(Clone)]
@@ -54,33 +54,12 @@ impl ClockBehaviour for Clock {
     fn generate_clock_face_with_dimensions(
         &self,
         theme: &ColorTheme,
+        clock_fmt: TimeFormat,
     ) -> (Paragraph<'_>, usize, usize) {
         match self {
-            Clock::Digital(clock) => clock.generate_clock_face_with_dimensions(theme),
-            Clock::Analog(clock) => clock.generate_clock_face_with_dimensions(theme),
-            Clock::Color(clock) => clock.generate_clock_face_with_dimensions(theme),
-        }
-    }
-
-    fn set_clock_format_to(&mut self, fmt: TimeFormat) {
-        match self {
-            Clock::Digital(clock) => {
-                clock.set_clock_format_to(fmt);
-            }
-            Clock::Analog(clock) => {
-                clock.set_clock_format_to(fmt);
-            }
-            Clock::Color(clock) => {
-                clock.set_clock_format_to(fmt);
-            }
-        }
-    }
-
-    fn get_clock_format(&self) -> TimeFormat {
-        match self {
-            Clock::Digital(digital_clock) => digital_clock.get_clock_format(),
-            Clock::Analog(analog_clock) => analog_clock.get_clock_format(),
-            Clock::Color(color_clock) => color_clock.get_clock_format(),
+            Clock::Digital(clock) => clock.generate_clock_face_with_dimensions(theme, clock_fmt),
+            Clock::Analog(clock) => clock.generate_clock_face_with_dimensions(theme, clock_fmt),
+            Clock::Color(clock) => clock.generate_clock_face_with_dimensions(theme, clock_fmt),
         }
     }
 }

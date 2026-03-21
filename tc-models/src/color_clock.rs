@@ -1,10 +1,11 @@
+use chrono::{Local, Timelike};
+use ratatui::{style::Color, widgets::Paragraph};
+
 use crate::{
     clock::{ClockBehaviour, TimeFormat},
     color_theme::{ColorTheme, ThemeColor},
     helper::{ArtBlock, art_block, combine_ascii_art_while_applying_led},
 };
-use chrono::{Local, Timelike};
-use ratatui::{style::Color, widgets::Paragraph};
 
 #[derive(Clone)]
 pub struct ColorClock {
@@ -24,10 +25,10 @@ pub struct ColorClock {
 
     clock_color: Option<Color>,
     accent_color: Option<Color>,
-    format: TimeFormat,
 }
 
 impl ColorClock {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         name: String,
         hour: String,
@@ -39,7 +40,6 @@ impl ColorClock {
         led_coords_seconds: Vec<Vec<(u32, u32)>>,
         clock_color: Option<Color>,
         accent_color: Option<Color>,
-        format: TimeFormat,
     ) -> Self {
         ColorClock {
             name,
@@ -52,7 +52,6 @@ impl ColorClock {
             led_coords_seconds,
             clock_color,
             accent_color,
-            format,
         }
     }
 
@@ -65,6 +64,7 @@ impl ClockBehaviour for ColorClock {
     fn generate_clock_face_with_dimensions(
         &self,
         theme: &ColorTheme,
+        clock_fmt: TimeFormat,
     ) -> (Paragraph<'_>, usize, usize) {
         let time_stamp = Local::now();
         let hour_value = time_stamp.hour();
@@ -74,15 +74,14 @@ impl ClockBehaviour for ColorClock {
         static EMPTY_COORDS: &Vec<Vec<(u32, u32)>> = &Vec::new();
         let empty_block = art_block("", EMPTY_COORDS, 0);
 
-        let separator_block = if let Some(sep) = &self.separator {
-            Some(art_block(sep, EMPTY_COORDS, 0))
-        } else {
-            None
-        };
+        let separator_block = self
+            .separator
+            .as_ref()
+            .map(|sep| art_block(sep, EMPTY_COORDS, 0));
 
         let mut blocks: Vec<&ArtBlock> = Vec::with_capacity(5);
 
-        let clock_face_components: &[&ArtBlock] = match self.format {
+        let clock_face_components: &[&ArtBlock] = match clock_fmt {
             TimeFormat::Hms => &[
                 &art_block(&self.hour, &self.led_coords_hours, hour_value),
                 &art_block(&self.minutes, &self.led_coords_minutes, minute_value),
@@ -104,7 +103,7 @@ impl ClockBehaviour for ColorClock {
 
         if let Some(separator) = &separator_block {
             blocks.insert(1, separator);
-            if !matches!(self.format, TimeFormat::Hm) {
+            if !matches!(clock_fmt, TimeFormat::Hm) {
                 blocks.insert(3, separator);
             }
         }
@@ -122,13 +121,5 @@ impl ClockBehaviour for ColorClock {
         };
 
         combine_ascii_art_while_applying_led(&blocks, clock_color, accent_color)
-    }
-
-    fn set_clock_format_to(&mut self, fmt: TimeFormat) {
-        self.format = fmt;
-    }
-
-    fn get_clock_format(&self) -> TimeFormat {
-        self.format
     }
 }

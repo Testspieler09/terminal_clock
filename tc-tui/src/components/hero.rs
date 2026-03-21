@@ -1,4 +1,3 @@
-use crate::components::{CYAN_SHADES, Dimensions, GRAY_SHADES};
 use ratatui::{
     layout::Flex,
     prelude::{Buffer, Constraint, Layout, Rect},
@@ -7,6 +6,8 @@ use ratatui::{
     widgets::Widget,
 };
 use strum::{EnumIter, IntoEnumIterator};
+
+use crate::components::{CYAN_SHADES, Dimensions, GRAY_SHADES};
 
 #[derive(Default, PartialEq, Eq, Clone, Copy, EnumIter)]
 pub(crate) enum MenuLabel {

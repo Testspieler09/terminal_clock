@@ -1,7 +1,4 @@
 // TODO: select from presets with custom value option
-use crate::tui_models::{
-    selector::SettingsSelector, settings::Setting, tui::TuiController, tui_error::UpdateResult,
-};
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     prelude::{Alignment, Buffer, Constraint, Layout, Rect, Stylize},
@@ -9,12 +6,15 @@ use ratatui::{
     text::{Line, Span},
     widgets::{Paragraph, Widget, Wrap},
 };
-use std::sync::Arc;
-use tc_models::{color_theme::ThemeColor, selectable_item::SelectableItem, tui_action::TuiAction};
+use tc_models::color_theme::{ColorTheme, ThemeColor};
+
+use crate::tui_models::{
+    selectable_item::SelectableItem, selector::SettingsSelector, settings::Setting,
+    styled_widget::StyledWidget, tui::TuiAssets, tui_action::TuiAction, tui_error::UpdateResult,
+};
 
 // TODO: add the global colorpicker component later on that gets rendered over the whole frame
 pub(crate) struct NumberSelector {
-    tui_controller: Arc<TuiController>,
     is_active: bool,
 
     setting: Setting,
@@ -22,13 +22,8 @@ pub(crate) struct NumberSelector {
 }
 
 impl NumberSelector {
-    pub fn new(
-        tui_controller: Arc<TuiController>,
-        is_active: bool,
-        setting: Setting,
-    ) -> NumberSelector {
+    pub fn new(is_active: bool, setting: Setting) -> NumberSelector {
         NumberSelector {
-            tui_controller,
             is_active,
             setting,
             current_selected_number: 0, // TODO: fetch from tui_controller
@@ -54,15 +49,21 @@ impl SettingsSelector for NumberSelector {
         self.is_active = false;
     }
 
-    fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()> {
+    fn update_current_selection(
+        &mut self,
+        selection: SelectableItem,
+        tui_assets: &TuiAssets,
+    ) -> UpdateResult<()> {
         todo!()
     }
 }
 
-impl Widget for &NumberSelector {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let highlight_color = self.tui_controller.get_color(&ThemeColor::Selection);
-        let default_color = self.tui_controller.get_color(&ThemeColor::Foreground);
+impl StyledWidget for &NumberSelector {
+    type Context<'a> = &'a ColorTheme;
+
+    fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
+        let highlight_color = *color_theme.get(&ThemeColor::Selection);
+        let default_color = *color_theme.get(&ThemeColor::Foreground);
 
         let [_, bottom_row_section] =
             Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(area);

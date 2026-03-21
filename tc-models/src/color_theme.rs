@@ -1,5 +1,6 @@
-use ratatui::style::{Color, Style, palette::tailwind};
 use std::collections::{HashMap, HashSet};
+
+use ratatui::style::{Color, Style, palette::tailwind};
 
 pub const FALLBACK_COLOR_THEME: [Color; 5] = [
     tailwind::SLATE.c300,  // SchemeColor::Forground
@@ -27,7 +28,7 @@ pub struct ColorTheme {
 
 impl ColorTheme {
     pub fn get_name(&self) -> &str {
-        &self.name.as_str()
+        self.name.as_str()
     }
 
     pub fn get(&self, key: &ThemeColor) -> &Color {

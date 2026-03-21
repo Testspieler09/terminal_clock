@@ -1,10 +1,7 @@
-use crate::{LoaderResult, default_themes::CLOCK_FACES};
+use std::str::FromStr;
+
 use ratatui::style::Color;
 use serde::Deserialize;
-use std::{
-    str::FromStr,
-    sync::{Arc, Mutex},
-};
 use tc_models::{
     analog_clock::AnalogClock,
     clock::{Clock, TimeFormat},
@@ -14,6 +11,8 @@ use tc_models::{
     display_mode::DisplayMode,
     helper::{TimeUnit, generate_led_coords_to_base},
 };
+
+use crate::{LoaderResult, default_themes::CLOCK_FACES};
 
 #[derive(Deserialize)]
 #[serde(tag = "clock_type", content = "config")]
@@ -63,6 +62,7 @@ pub struct ColorClockConfig {
     pub always_on_coords: Option<Vec<(u32, u32)>>,
     pub clock_color: Option<String>,
     pub accent_color: Option<String>,
+    // FIX: the format field is currently not in use (i think)
     pub format: Option<TimeFormat>,
 }
 
@@ -118,7 +118,6 @@ impl From<ColorClockConfig> for ColorClock {
             second_coords,
             clock_color,
             accent_color,
-            config.format.unwrap_or(TimeFormat::default()),
         )
     }
 }
@@ -172,16 +171,16 @@ impl From<AnalogClockConfig> for AnalogClock {
 pub struct ClockFaceLoader;
 
 impl ClockFaceLoader {
-    fn load_user_clockfaces() -> LoaderResult<Vec<Arc<Mutex<Clock>>>> {
+    fn load_user_clockfaces() -> LoaderResult<Vec<Clock>> {
         todo!()
     }
 
-    pub fn load_clockfaces() -> LoaderResult<Vec<Arc<Mutex<Clock>>>> {
+    pub fn load_clockfaces() -> LoaderResult<Vec<Clock>> {
         let mut clock_faces = CLOCK_FACES
             .iter()
             .map(|clock_face| {
                 let clock_config: ClockConfig = toml::from_str(clock_face)?;
-                Ok(Arc::new(Mutex::new(clock_config.into())))
+                Ok(clock_config.into())
             })
             .collect::<LoaderResult<Vec<_>>>()?;
 

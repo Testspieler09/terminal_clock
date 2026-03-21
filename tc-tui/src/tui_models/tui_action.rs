@@ -1,17 +1,12 @@
-use crate::{
-    clock::{Clock, TimeFormat},
-    color_theme::{ColorTheme, ThemeColor},
-    quote::Quote,
-};
 use ratatui::style::Color;
-use std::sync::{Arc, Mutex};
+use tc_models::{clock::TimeFormat, color_theme::ThemeColor};
 
 pub enum TuiAction {
     /// General actions
     UpdateRefreshRate(u64),
-    UpdateClockFace(Arc<Mutex<Clock>>),
+    UpdateClockFace(u16),
     UpdateClockFormat(TimeFormat),
-    UpdateQuote(Option<Arc<Quote>>),
+    UpdateQuote(Option<u16>),
 
     /// Pomodoro actions
     UpdateTotalSession(u32),
@@ -21,6 +16,6 @@ pub enum TuiAction {
     UpdateLongBreakDuration(u64),
 
     /// Color actions
-    UpdateColorTheme(Arc<Mutex<ColorTheme>>),
+    UpdateColorTheme(u16),
     UpdateColor(ThemeColor, Color),
 }

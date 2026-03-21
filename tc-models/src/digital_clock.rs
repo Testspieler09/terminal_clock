@@ -1,8 +1,9 @@
+use ratatui::widgets::Paragraph;
+
 use crate::{
     clock::{ClockBehaviour, TimeFormat},
     color_theme::ColorTheme,
 };
-use ratatui::widgets::Paragraph;
 
 #[derive(Clone, Copy)]
 pub struct DigitalClock {
@@ -11,8 +12,6 @@ pub struct DigitalClock {
     // The static ascii art for the clock face
     numbers: [&'static str; 10],
     seperator: &'static str,
-
-    format: TimeFormat,
 }
 
 impl DigitalClock {
@@ -26,15 +25,8 @@ impl ClockBehaviour for DigitalClock {
     fn generate_clock_face_with_dimensions(
         &self,
         theme: &ColorTheme,
+        clock_fmt: TimeFormat,
     ) -> (Paragraph<'_>, usize, usize) {
         todo!();
-    }
-
-    fn set_clock_format_to(&mut self, fmt: TimeFormat) {
-        self.format = fmt;
-    }
-
-    fn get_clock_format(&self) -> TimeFormat {
-        self.format
     }
 }

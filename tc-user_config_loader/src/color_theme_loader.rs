@@ -1,12 +1,13 @@
-use crate::{LoaderResult, default_themes::COLOR_THEMES, get_user_config_path};
-use ratatui::style::Color;
-use serde::Deserialize;
 use std::{
     collections::{HashMap, HashSet},
     str::FromStr,
-    sync::{Arc, Mutex},
 };
+
+use ratatui::style::Color;
+use serde::Deserialize;
 use tc_models::color_theme::{ColorTheme, FALLBACK_COLOR_THEME, ThemeColor};
+
+use crate::{LoaderResult, default_themes::COLOR_THEMES, get_user_config_path};
 
 #[derive(Deserialize)]
 pub(crate) struct ThemeConfig {
@@ -80,7 +81,7 @@ impl From<ThemeConfig> for ColorTheme {
 pub struct ColorThemeLoader;
 
 impl ColorThemeLoader {
-    fn load_user_themes() -> LoaderResult<Vec<Arc<Mutex<ColorTheme>>>> {
+    fn load_user_themes() -> LoaderResult<Vec<ColorTheme>> {
         let folder_path = get_user_config_path()?.join("themes");
 
         let toml_count = std::fs::read_dir(&folder_path)?
@@ -115,18 +116,18 @@ impl ColorThemeLoader {
                 parsed_theme.name = filename.map(|s| s.to_string());
             }
 
-            themes.push(Arc::new(Mutex::new(parsed_theme.into())));
+            themes.push(parsed_theme.into());
         }
 
         Ok(themes)
     }
 
-    pub fn load_color_themes() -> LoaderResult<Vec<Arc<Mutex<ColorTheme>>>> {
+    pub fn load_color_themes() -> LoaderResult<Vec<ColorTheme>> {
         let mut schemes = COLOR_THEMES
             .iter()
             .map(|scheme| {
                 let colorscheme: ThemeConfig = toml::from_str(scheme)?;
-                Ok(Arc::new(Mutex::new(colorscheme.into())))
+                Ok(colorscheme.into())
             })
             .collect::<LoaderResult<Vec<_>>>()?;
 
