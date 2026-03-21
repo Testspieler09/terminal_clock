@@ -3,7 +3,16 @@ pub(crate) mod helpers;
 pub(crate) mod tui_models;
 pub(crate) mod views;
 
-use crate::tui_models::clock::ClockState;
+use std::sync::RwLock;
+
+use color_eyre::Result;
+use ratatui::{
+    DefaultTerminal, Frame,
+    style::Style,
+    widgets::{Block, BorderType},
+};
+use tc_models::{clock::TimeFormat, color_theme::ThemeColor};
+
 use crate::{
     components::{
         carousel_selector::SettingsMenuCtx,
@@ -12,19 +21,11 @@ use crate::{
     },
     tui_models::{
         application::ApplicationState,
+        clock::ClockState,
         tui::{TuiAssets, TuiComponents, TuiController, TuiState},
     },
     views::clock::render_clock_view,
 };
-use color_eyre::Result;
-use ratatui::{
-    DefaultTerminal, Frame,
-    style::Style,
-    widgets::{Block, BorderType},
-};
-use std::sync::RwLock;
-use tc_models::clock::TimeFormat;
-use tc_models::color_theme::ThemeColor;
 
 pub struct TuiRenderer;
 

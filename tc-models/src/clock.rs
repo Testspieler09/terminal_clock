@@ -1,10 +1,11 @@
+use ratatui::widgets::Paragraph;
+use serde::Deserialize;
+use strum::EnumIter;
+
 use crate::{
     analog_clock::AnalogClock, color_clock::ColorClock, color_theme::ColorTheme,
     digital_clock::DigitalClock,
 };
-use ratatui::widgets::Paragraph;
-use serde::Deserialize;
-use strum::EnumIter;
 
 #[derive(Default, Deserialize, Clone, Copy, EnumIter)]
 pub enum TimeFormat {

@@ -1,8 +1,3 @@
-use crate::{
-    components::{CYAN_SHADES, Dimensions, GRAY_SHADES},
-    tui_models::styled_widget::StyledWidget,
-};
-
 use ratatui::{
     Frame,
     layout::Flex,
@@ -13,6 +8,11 @@ use ratatui::{
 };
 use tc_models::color_theme::ColorTheme;
 use unicode_segmentation::UnicodeSegmentation;
+
+use crate::{
+    components::{CYAN_SHADES, Dimensions, GRAY_SHADES},
+    tui_models::styled_widget::StyledWidget,
+};
 
 pub(crate) struct Logo {
     height: u16,

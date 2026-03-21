@@ -1,13 +1,14 @@
-use crate::{
-    helpers::{centered_bold_label, centered_size_line},
-    tui_models::styled_widget::StyledWidget,
-};
 use ratatui::{
     layout::{Constraint, Flex, Layout},
     prelude::{Buffer, Rect},
     widgets::Widget,
 };
 use tc_models::color_theme::{ColorTheme, ThemeColor};
+
+use crate::{
+    helpers::{centered_bold_label, centered_size_line},
+    tui_models::styled_widget::StyledWidget,
+};
 
 pub(crate) struct FallbackView {
     needed_width: u16,

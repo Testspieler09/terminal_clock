@@ -3,8 +3,8 @@ repo = "local"
 
   [[repos.hooks]]
   id = "cargo-fmt"
-  name = "cargo +nightly fmt"
-  entry = "cargo fmt -- --check"
+  name = "cargo fmt check"
+  entry = "cargo +nightly fmt -- --check"
   language = "system"
   pass_filenames = false
 

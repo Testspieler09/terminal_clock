@@ -1,4 +1,3 @@
-use crate::{components::Dimensions, tui_models::styled_widget::StyledWidget};
 use ratatui::{
     prelude::{Buffer, Rect, Widget},
     style::{Modifier, Style},
@@ -10,6 +9,8 @@ use tc_models::{
     quote::Quote,
 };
 use unicode_segmentation::UnicodeSegmentation;
+
+use crate::{components::Dimensions, tui_models::styled_widget::StyledWidget};
 
 impl Dimensions for &Quote {
     fn width(&self) -> u16 {

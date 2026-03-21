@@ -1,3 +1,10 @@
+use ratatui::{
+    crossterm::event::KeyEvent,
+    prelude::{Buffer, Rect},
+};
+use strum::IntoEnumIterator;
+use tc_models::{clock::TimeFormat, color_theme::ColorTheme};
+
 use crate::{
     components::{
         carousel_selector::{CarouselSelector, SettingsMenuCtx},
@@ -13,12 +20,6 @@ use crate::{
         tui_error::{UpdateError, UpdateResult},
     },
 };
-use ratatui::{
-    crossterm::event::KeyEvent,
-    prelude::{Buffer, Rect},
-};
-use strum::IntoEnumIterator;
-use tc_models::{clock::TimeFormat, color_theme::ColorTheme};
 
 pub(crate) enum SelectorType {
     Carousel,

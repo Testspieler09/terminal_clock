@@ -1,3 +1,19 @@
+use std::sync::RwLock;
+
+use ratatui::{
+    crossterm::event::{KeyCode, KeyEvent},
+    prelude::{Alignment, Buffer, Constraint, Layout, Rect},
+    style::Style,
+    symbols::{
+        border::{ROUNDED, Set},
+        line::NORMAL,
+    },
+    text::{Line, Span},
+    widgets::{Block, BorderType, Borders, Paragraph, Widget, Wrap},
+};
+use strum::{AsRefStr, EnumIter, IntoEnumIterator};
+use tc_models::color_theme::ThemeColor;
+
 use crate::{
     ApplicationState, TuiState,
     components::{Dimensions, carousel_selector::SettingsMenuCtx},
@@ -10,20 +26,6 @@ use crate::{
         tui_action::TuiAction,
     },
 };
-use ratatui::{
-    crossterm::event::{KeyCode, KeyEvent},
-    prelude::{Alignment, Buffer, Constraint, Layout, Rect},
-    style::Style,
-    symbols::{
-        border::{ROUNDED, Set},
-        line::NORMAL,
-    },
-    text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Paragraph, Widget, Wrap},
-};
-use std::sync::RwLock;
-use strum::{AsRefStr, EnumIter, IntoEnumIterator};
-use tc_models::color_theme::ThemeColor;
 
 struct SelectorConfig<'a> {
     setting: Setting,

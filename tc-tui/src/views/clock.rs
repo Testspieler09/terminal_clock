@@ -1,3 +1,6 @@
+use ratatui::{Frame, prelude::Constraint};
+use tc_models::clock::ClockBehaviour;
+
 use crate::{
     TuiState,
     components::{Dimensions, fallback_terminal_too_small::FallbackView},
@@ -6,8 +9,6 @@ use crate::{
     },
     tui_models::{styled_widget::StyledWidget, tui::TuiAssets},
 };
-use ratatui::{Frame, prelude::Constraint};
-use tc_models::clock::ClockBehaviour;
 
 pub(crate) fn render_clock_view(
     frame: &mut Frame,

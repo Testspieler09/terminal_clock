@@ -1,10 +1,11 @@
+use chrono::{Local, Timelike};
+use ratatui::{style::Color, widgets::Paragraph};
+
 use crate::{
     clock::{ClockBehaviour, TimeFormat},
     color_theme::{ColorTheme, ThemeColor},
     helper::{ArtBlock, art_block, combine_ascii_art_while_applying_led},
 };
-use chrono::{Local, Timelike};
-use ratatui::{style::Color, widgets::Paragraph};
 
 #[derive(Clone)]
 pub struct ColorClock {

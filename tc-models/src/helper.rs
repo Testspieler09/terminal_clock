@@ -1,4 +1,3 @@
-use crate::display_mode::DisplayMode;
 use ratatui::{
     layout::Alignment,
     style::{Color, Style},
@@ -6,6 +5,8 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
 };
 use unicode_segmentation::UnicodeSegmentation;
+
+use crate::display_mode::DisplayMode;
 
 pub(crate) struct ArtBlock<'a> {
     pub ascii_art: &'a str,

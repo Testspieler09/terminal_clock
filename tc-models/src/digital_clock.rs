@@ -1,8 +1,9 @@
+use ratatui::widgets::Paragraph;
+
 use crate::{
     clock::{ClockBehaviour, TimeFormat},
     color_theme::ColorTheme,
 };
-use ratatui::widgets::Paragraph;
 
 #[derive(Clone, Copy)]
 pub struct DigitalClock {

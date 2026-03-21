@@ -1,4 +1,13 @@
-use crate::tui_models::clock::ClockState;
+use std::sync::RwLock;
+
+use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
+use tc_models::{clock::Clock, color_theme::ColorTheme, quote::Quote};
+use tc_user_config_loader::{
+    LoaderResult, clock_face_loader::ClockFaceLoader, color_theme_loader::ColorThemeLoader,
+    quote_loader::QuoteLoader,
+};
+use tokio::{io, time::Duration};
+
 use crate::{
     components::{
         help_box::HelpBox,
@@ -7,17 +16,8 @@ use crate::{
         pomodoro::PomodoroTimer,
         settings_menu::SettingMenu,
     },
-    tui_models::{application::ApplicationState, tui_action::TuiAction},
+    tui_models::{application::ApplicationState, clock::ClockState, tui_action::TuiAction},
 };
-
-use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
-use std::sync::RwLock;
-use tc_models::{clock::Clock, color_theme::ColorTheme, quote::Quote};
-use tc_user_config_loader::{
-    LoaderResult, clock_face_loader::ClockFaceLoader, color_theme_loader::ColorThemeLoader,
-    quote_loader::QuoteLoader,
-};
-use tokio::{io, time::Duration};
 
 pub(crate) struct TuiAssets {
     pub color_themes: Vec<ColorTheme>,

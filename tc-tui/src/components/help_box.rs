@@ -1,7 +1,3 @@
-use crate::{
-    components::Dimensions, helpers::generate_title, tui_models::styled_widget::StyledWidget,
-};
-
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -10,6 +6,10 @@ use ratatui::{
     widgets::{Block, BorderType, Paragraph, Widget},
 };
 use tc_models::color_theme::{ColorTheme, ThemeColor};
+
+use crate::{
+    components::Dimensions, helpers::generate_title, tui_models::styled_widget::StyledWidget,
+};
 
 // FIX: this will never change -> static should not be computed every time it is rendered
 pub(crate) struct HelpBox {

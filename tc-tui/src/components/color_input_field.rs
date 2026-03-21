@@ -3,10 +3,6 @@
 // ESC -> leave no save / ask for save
 // enter -> leave with save
 
-use crate::tui_models::{
-    selectable_item::SelectableItem, selector::SettingsSelector, settings::Setting,
-    styled_widget::StyledWidget, tui::TuiAssets, tui_action::TuiAction, tui_error::UpdateResult,
-};
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     prelude::{Alignment, Buffer, Constraint, Layout, Rect, Stylize},
@@ -15,6 +11,11 @@ use ratatui::{
     widgets::Widget,
 };
 use tc_models::color_theme::{ColorTheme, ThemeColor};
+
+use crate::tui_models::{
+    selectable_item::SelectableItem, selector::SettingsSelector, settings::Setting,
+    styled_widget::StyledWidget, tui::TuiAssets, tui_action::TuiAction, tui_error::UpdateResult,
+};
 
 // TODO: add the global colorpicker component later on that gets rendered over the whole frame
 pub(crate) struct ColorSelector {

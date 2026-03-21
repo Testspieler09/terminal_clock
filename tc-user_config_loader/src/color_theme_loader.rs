@@ -1,11 +1,13 @@
-use crate::{LoaderResult, default_themes::COLOR_THEMES, get_user_config_path};
-use ratatui::style::Color;
-use serde::Deserialize;
 use std::{
     collections::{HashMap, HashSet},
     str::FromStr,
 };
+
+use ratatui::style::Color;
+use serde::Deserialize;
 use tc_models::color_theme::{ColorTheme, FALLBACK_COLOR_THEME, ThemeColor};
+
+use crate::{LoaderResult, default_themes::COLOR_THEMES, get_user_config_path};
 
 #[derive(Deserialize)]
 pub(crate) struct ThemeConfig {

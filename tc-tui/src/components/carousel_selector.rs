@@ -1,12 +1,3 @@
-use crate::tui_models::{
-    selectable_item::{Selectable, SelectableItem},
-    selector::SettingsSelector,
-    settings::Setting,
-    styled_widget::StyledWidget,
-    tui::TuiAssets,
-    tui_action::TuiAction,
-    tui_error::{UpdateError, UpdateResult},
-};
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     layout::Constraint,
@@ -16,6 +7,16 @@ use ratatui::{
     widgets::Widget,
 };
 use tc_models::color_theme::{ColorTheme, ThemeColor};
+
+use crate::tui_models::{
+    selectable_item::{Selectable, SelectableItem},
+    selector::SettingsSelector,
+    settings::Setting,
+    styled_widget::StyledWidget,
+    tui::TuiAssets,
+    tui_action::TuiAction,
+    tui_error::{UpdateError, UpdateResult},
+};
 
 pub(crate) struct CarouselSelector {
     /// Fields needed for event handling logic

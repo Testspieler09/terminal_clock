@@ -1,5 +1,6 @@
-use crate::tui_models::{tui::TuiAssets, tui_action::TuiAction};
 use tc_models::clock::TimeFormat;
+
+use crate::tui_models::{tui::TuiAssets, tui_action::TuiAction};
 
 pub trait Selectable {
     fn get_name(&self, tui_assets: &TuiAssets) -> String;

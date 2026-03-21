@@ -1,7 +1,7 @@
-use crate::{LoaderResult, default_themes::CLOCK_FACES};
+use std::str::FromStr;
+
 use ratatui::style::Color;
 use serde::Deserialize;
-use std::str::FromStr;
 use tc_models::{
     analog_clock::AnalogClock,
     clock::{Clock, TimeFormat},
@@ -11,6 +11,8 @@ use tc_models::{
     display_mode::DisplayMode,
     helper::{TimeUnit, generate_led_coords_to_base},
 };
+
+use crate::{LoaderResult, default_themes::CLOCK_FACES};
 
 #[derive(Deserialize)]
 #[serde(tag = "clock_type", content = "config")]

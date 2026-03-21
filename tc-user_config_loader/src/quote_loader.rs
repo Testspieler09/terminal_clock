@@ -1,6 +1,7 @@
-use crate::{LoaderResult, default_themes::default_quotes::init_default_quotes};
 use serde::Deserialize;
 use tc_models::quote::Quote;
+
+use crate::{LoaderResult, default_themes::default_quotes::init_default_quotes};
 
 #[derive(Deserialize)]
 pub struct QuoteConfig {
