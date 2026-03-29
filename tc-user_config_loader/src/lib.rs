@@ -46,6 +46,7 @@ pub(crate) fn get_user_config_path() -> LoaderResult<PathBuf> {
         Ok(PathBuf::from(appdata).join("terminal_clock"))
     }
 
+    // NOTE: on MacOS .config is not the default
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     {
         let home = std::env::var("HOME").map_err(|e| AssetsLoadError::ConfigPath(e.to_string()))?;

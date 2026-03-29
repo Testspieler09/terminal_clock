@@ -10,6 +10,7 @@ use tokio::{io, time::Duration};
 
 use crate::{
     components::{
+        fallback_terminal_too_small::FallbackView,
         help_box::HelpBox,
         hero::{Hero, MenuLabel},
         logo::Logo,

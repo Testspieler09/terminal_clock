@@ -1,9 +1,8 @@
-use ratatui::{
-    style::{Color, Style, Stylize},
-    text::{Line, Span},
-    widgets::Paragraph,
-};
+use ratatui::prelude::{Buffer, Rect};
+use tc_models::color_theme::ColorTheme;
 use tokio::time::{Duration, Instant};
+
+use crate::tui_models::styled_widget::StyledWidget;
 
 pub(crate) enum TimerPhase {
     Work,
@@ -80,36 +79,15 @@ impl PomodoroTimer {
                     self.state.remaining_secs = self.config.work_duration * 60;
                 }
             }
-            TimerPhase::Finished => {
-                // nothing to do
-            }
+            TimerPhase::Finished => {}
         }
     }
+}
 
-    /// Render a ratatui Paragraph to display the timer
-    pub fn render(&self) -> Paragraph<'_> {
-        let (label, color) = match self.state.phase {
-            TimerPhase::Work => ("Work", Color::Green),
-            TimerPhase::ShortBreak => ("Short Break", Color::Blue),
-            TimerPhase::LongBreak => ("Long Break", Color::Magenta),
-            TimerPhase::Finished => ("Done!", Color::Yellow),
-        };
+impl StyledWidget for PomodoroTimer {
+    type Context<'a> = &'a ColorTheme;
 
-        let minutes = self.state.remaining_secs / 60;
-        let seconds = self.state.remaining_secs % 60;
-
-        let time_str = format!("{minutes:02}:{seconds:02}");
-        let session_str = format!(
-            "Session {}/{}",
-            self.state.session, self.config.total_sessions
-        );
-
-        let spans = vec![
-            Line::from(Span::styled(label, Style::default().fg(color).bold())),
-            Line::from(Span::raw(time_str)),
-            Line::from(Span::raw(session_str)),
-        ];
-
-        Paragraph::new(spans)
+    fn render(self, area: Rect, buf: &mut Buffer, ctx: Self::Context<'_>) {
+        todo!()
     }
 }

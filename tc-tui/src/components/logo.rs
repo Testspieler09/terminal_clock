@@ -6,11 +6,11 @@ use ratatui::{
     text::{Line, Span, Text},
     widgets::{Widget, WidgetRef},
 };
-use tc_models::color_theme::ColorTheme;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
-    components::{CYAN_SHADES, Dimensions, GRAY_SHADES},
+    components::{CYAN_SHADES, Dimensions, GRAY_SHADES, fallback_terminal_too_small::FallbackView},
+    helpers::unstable_widget_fits_frame,
     tui_models::styled_widget::StyledWidget,
 };
 
@@ -84,16 +84,28 @@ impl Logo {
         &self,
         component: W,
         frame: &mut Frame,
+        fallback: &mut FallbackView,
     ) {
-        // TODO: add the fallback logic here as well
         let area = frame.area();
-        let buf = frame.buffer_mut();
 
         let component_height = component.height();
         let component_width = component.width();
 
         let logo_height = self.height;
         let logo_width = self.width;
+
+        let (w, h) = (component_width + logo_width, component_height + logo_height);
+
+        let needs_fallback = unstable_widget_fits_frame(frame, (w, h), area);
+
+        let buf = frame.buffer_mut();
+
+        if needs_fallback {
+            fallback.update_dimensions(Some(w), Some(h));
+            // TODO: make the colortheme work
+            // fallback.render(area, buf /* Colortheme */);
+            return;
+        }
 
         let [logo_section, setting_section] = Layout::vertical([
             Constraint::Length(logo_height),
@@ -119,16 +131,28 @@ impl Logo {
         component: W,
         frame: &mut Frame,
         ctx: <W as StyledWidget>::Context<'_>,
+        fallback: &mut FallbackView,
     ) {
-        // TODO: add the fallback logic here as well
         let area = frame.area();
-        let buf = frame.buffer_mut();
 
         let component_height = component.height();
         let component_width = component.width();
 
         let logo_height = self.height;
         let logo_width = self.width;
+
+        let (w, h) = (component_width + logo_width, component_height + logo_height);
+
+        let needs_fallback = unstable_widget_fits_frame(frame, (w, h), area);
+
+        let buf = frame.buffer_mut();
+
+        if needs_fallback {
+            fallback.update_dimensions(Some(w), Some(h));
+            // TODO: make the colortheme work
+            // fallback.render(area, buf /* Colortheme */);
+            return;
+        }
 
         let [logo_section, setting_section] = Layout::vertical([
             Constraint::Length(logo_height),

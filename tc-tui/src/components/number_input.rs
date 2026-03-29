@@ -4,7 +4,7 @@ use ratatui::{
     prelude::{Alignment, Buffer, Constraint, Layout, Rect, Stylize},
     style::Style,
     text::{Line, Span},
-    widgets::{Paragraph, Widget, Wrap},
+    widgets::Widget,
 };
 use tc_models::color_theme::{ColorTheme, ThemeColor};
 
@@ -67,16 +67,18 @@ impl StyledWidget for &NumberSelector {
 
         let [_, bottom_row_section] =
             Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(area);
-        let [_, button_right_section] =
-            Layout::horizontal([Constraint::Fill(1), Constraint::Length(2)])
-                .areas(bottom_row_section);
+        let [left_section, text_middle_section, button_right_section] = Layout::horizontal([
+            Constraint::Length(3),
+            Constraint::Fill(1),
+            Constraint::Length(3),
+        ])
+        .areas(bottom_row_section);
 
         let title = Line::from(vec![
             Span::from(self.setting.as_ref()).style(Style::default().fg(default_color).bold()),
         ]);
 
         let text = Line::from(self.current_selected_number.to_string());
-        Span::from("⏎ ").render(button_right_section, buf);
 
         let style = if self.is_active {
             Style::default().fg(default_color).bg(highlight_color)
@@ -84,12 +86,18 @@ impl StyledWidget for &NumberSelector {
             Style::default().fg(default_color)
         };
 
-        // TODO: No need to use the Paragraph here
-        let paragraph = Paragraph::new(vec![title, text])
+        Line::from(title)
             .alignment(Alignment::Center)
-            .wrap(Wrap { trim: true })
-            .style(style);
+            .style(style)
+            .render(area, buf);
 
-        paragraph.render(area, buf);
+        Span::from("   ").style(style).render(left_section, buf);
+        Line::from(text)
+            .alignment(Alignment::Center)
+            .style(style)
+            .render(text_middle_section, buf);
+        Span::from(" ⏎ ")
+            .style(style)
+            .render(button_right_section, buf);
     }
 }

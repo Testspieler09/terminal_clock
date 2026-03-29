@@ -77,9 +77,12 @@ impl StyledWidget for &ColorSelector {
 
         let [title_row_section, bottom_row_section] =
             Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(area);
-        let [_, button_right_section] =
-            Layout::horizontal([Constraint::Fill(1), Constraint::Length(2)])
-                .areas(bottom_row_section);
+        let [left_section, text_middle_section, button_right_section] = Layout::horizontal([
+            Constraint::Length(3),
+            Constraint::Fill(1),
+            Constraint::Length(3),
+        ])
+        .areas(bottom_row_section);
 
         Line::from(vec![
             Span::from(self.setting.as_ref()).style(Style::default().fg(default_color).bold()),
@@ -88,11 +91,12 @@ impl StyledWidget for &ColorSelector {
         .style(style)
         .render(title_row_section, buf);
 
+        Span::from("   ").style(style).render(left_section, buf);
         Line::from(self.current_hex_color.clone())
             .alignment(Alignment::Center)
             .style(style)
-            .render(bottom_row_section, buf);
-        Span::from("⏎ ")
+            .render(text_middle_section, buf);
+        Span::from(" ⏎ ")
             .style(style)
             .render(button_right_section, buf);
     }

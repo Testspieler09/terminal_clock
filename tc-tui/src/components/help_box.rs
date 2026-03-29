@@ -11,7 +11,6 @@ use crate::{
     components::Dimensions, helpers::generate_title, tui_models::styled_widget::StyledWidget,
 };
 
-// FIX: this will never change -> static should not be computed every time it is rendered
 pub(crate) struct HelpBox {
     height: u16,
     width: u16,

@@ -58,7 +58,7 @@ impl TuiRenderer {
             // TODO: Load the config one as the first here
             clock_state: ClockState {
                 clock_face_idx: 0,
-                clock_time_fmt: TimeFormat::Hm,
+                clock_time_fmt: TimeFormat::Hms,
             },
             color_theme_idx: 0,
             quote_idx: Some(0),
@@ -95,23 +95,28 @@ impl TuiRenderer {
             frame.area(),
         );
 
+        // TODO: we should not create this every tick. Add to global state or similar
+        let mut fallback_view = FallbackView::new(0, 0);
         match state.application_state {
             ApplicationState::Running => {
-                let mut fallback_view = FallbackView::new(0, 0);
                 render_clock_view(frame, state, assets, &mut fallback_view);
             }
-            ApplicationState::ShowingHero => components
-                .logo
-                .render_component_with_logo(&components.hero, frame),
+            ApplicationState::ShowingHero => components.logo.render_component_with_logo(
+                &components.hero,
+                frame,
+                &mut fallback_view,
+            ),
             ApplicationState::ShowingHelp => components.logo.render_styled_component_with_logo(
                 &components.help_box,
                 frame,
                 theme,
+                &mut fallback_view,
             ),
             ApplicationState::ShowingSettings => components.logo.render_styled_component_with_logo(
                 &components.settings_menu,
                 frame,
                 &SettingsMenuCtx::new(theme, assets),
+                &mut fallback_view,
             ),
             ApplicationState::Finished => {}
         }

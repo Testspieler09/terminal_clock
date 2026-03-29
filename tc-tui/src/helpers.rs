@@ -77,6 +77,8 @@ pub(crate) fn widget_fits_frame<W: StyledWidget + Dimensions>(
         || area.y + area.height > frame_area.height
 }
 
+/// This helper is marked unstable, as width and height are not derived from the widget but passed
+/// explizitly.
 pub(crate) fn unstable_widget_fits_frame(
     frame: &Frame,
     widget_dimensions: (u16, u16), // (width, height)

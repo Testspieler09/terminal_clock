@@ -77,7 +77,7 @@ impl From<ColorClockConfig> for ColorClock {
         let always_on_coords_slice = if let Some(always_on_coords) = config.always_on_coords {
             always_on_coords
         } else {
-            vec![]
+            Vec::with_capacity(0)
         };
         let hour_coords = generate_led_coords_to_base(
             &config.hour_coords[0],
@@ -184,7 +184,9 @@ impl ClockFaceLoader {
             })
             .collect::<LoaderResult<Vec<_>>>()?;
 
-        // clock_faces.extend(Self::load_user_clockfaces()?);
+        // if let Ok(user_clockfaces) = Self::load_user_clockfaces() {
+        //  clock_faces.extend(user_clockfaces);
+        // }
 
         Ok(clock_faces)
     }
