@@ -12,7 +12,7 @@ struct Args {
 
     /// The quote that is displayed under the clock
     #[arg(short, long)]
-    quote: Option<String>,
+    quote_text: Option<String>,
 
     /// The path to the terminal clock config
     #[arg(short, long)]
@@ -25,7 +25,6 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // TODO: integrate the args
     let _args = Args::parse();
     color_eyre::install()?;
     TuiRenderer::execute_renderer().await
