@@ -49,7 +49,7 @@ separator = """
 
 """
 
-display_mode = "decimal"
+render_mode = "digits"
 
 hour_coords = [
   [
