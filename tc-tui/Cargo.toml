@@ -1,7 +1,9 @@
 [package]
 name    = "tc-tui"
-version = "0.0.0"
-edition = "2024"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [dependencies]
 tc-user_config_loader = { path = "../tc-user_config_loader/" }

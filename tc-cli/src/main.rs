@@ -4,7 +4,19 @@ use tc_tui::TuiRenderer;
 
 /// A simple but fancy looking customizable terminal clock
 #[derive(Parser)]
-#[command(name = "Tc", version, about, long_about = None)]
+#[command(name = "Tc", version, long_about = None)]
+#[command(about=concat!(
+    "\n\n",
+    "████████╗ ██████╗\n",
+    "╚══██╔══╝██╔════╝\n",
+    "   ██║   ██║\n",
+    "   ██║   ██║\n",
+    "   ██║   ╚██████╗\n",
+    "   ╚═╝    ╚═════╝ v",
+    env!("CARGO_PKG_VERSION"),
+    "\n\n",
+    "A simple but fancy looking customizable terminal clock",
+))]
 struct Args {
     /// The refresh rate in milliseconds
     #[arg(short, long, default_value_t = 500)]

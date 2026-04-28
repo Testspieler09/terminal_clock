@@ -1,6 +1,9 @@
 [package]
 name = "tc"
-edition = "2024"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [dependencies]
 tc-tui     = { path = "../tc-tui/" }
