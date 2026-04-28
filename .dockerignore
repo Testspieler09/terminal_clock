@@ -1,0 +1,9 @@
+LICENSE
+target
+.git
+.github
+.gitignore
+*.txt
+README.md
+prek.toml
+rust-toolchain.toml
