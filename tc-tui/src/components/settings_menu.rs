@@ -173,7 +173,7 @@ impl SettingMenu {
         },
     ];
 
-    pub fn new(tui_assets: &TuiAssets) -> SettingMenu {
+    pub fn new(tui_assets: &'static TuiAssets) -> SettingMenu {
         let general_tab_selectors: Vec<Selector> = Self::GENERAL_TAB_CONFIG
             .iter()
             .enumerate()

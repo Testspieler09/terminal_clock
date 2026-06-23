@@ -3,7 +3,7 @@ pub(crate) mod helpers;
 pub(crate) mod tui_models;
 pub(crate) mod views;
 
-use std::sync::RwLock;
+use std::sync::{LazyLock, RwLock};
 
 use color_eyre::Result;
 use ratatui::{
@@ -51,7 +51,8 @@ impl TuiRenderer {
     }
 
     async fn run(mut terminal: DefaultTerminal) -> Result<()> {
-        let tui_assets = TuiAssets::try_default()?;
+        static TUI_ASSETS: LazyLock<TuiAssets> =
+            LazyLock::new(|| TuiAssets::try_default().expect("failed to initialize TUI assets"));
 
         let tui_state = RwLock::new(TuiState {
             application_state: ApplicationState::Running,
@@ -67,13 +68,13 @@ impl TuiRenderer {
         });
 
         let controller = TuiController::new(&tui_state);
-        let mut tui_components = TuiComponents::new(&tui_assets);
+        let mut tui_components = TuiComponents::new(&TUI_ASSETS);
 
         loop {
             {
                 let state_guard = tui_state.read().unwrap();
                 terminal.draw(|frame| {
-                    Self::render(frame, &state_guard, &tui_assets, &tui_components)
+                    Self::render(frame, &state_guard, &TUI_ASSETS, &tui_components)
                 })?;
             }
 
@@ -95,28 +96,22 @@ impl TuiRenderer {
             frame.area(),
         );
 
-        // TODO: we should not create this every tick. Add to global state or similar
-        let mut fallback_view = FallbackView::new(0, 0);
         match state.application_state {
             ApplicationState::Running => {
-                render_clock_view(frame, state, assets, &mut fallback_view);
+                render_clock_view(frame, state, assets);
             }
-            ApplicationState::ShowingHero => components.logo.render_component_with_logo(
-                &components.hero,
-                frame,
-                &mut fallback_view,
-            ),
+            ApplicationState::ShowingHero => components
+                .logo
+                .render_component_with_logo(&components.hero, frame),
             ApplicationState::ShowingHelp => components.logo.render_styled_component_with_logo(
                 &components.help_box,
                 frame,
                 theme,
-                &mut fallback_view,
             ),
             ApplicationState::ShowingSettings => components.logo.render_styled_component_with_logo(
                 &components.settings_menu,
                 frame,
                 &SettingsMenuCtx::new(theme, assets),
-                &mut fallback_view,
             ),
             ApplicationState::Finished => {}
         }

@@ -9,7 +9,7 @@ use ratatui::{
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
-    components::{CYAN_SHADES, Dimensions, GRAY_SHADES, fallback_terminal_too_small::FallbackView},
+    components::{CYAN_SHADES, Dimensions, GRAY_SHADES},
     helpers::unstable_widget_fits_frame,
     tui_models::styled_widget::StyledWidget,
 };
@@ -84,7 +84,6 @@ impl Logo {
         &self,
         component: W,
         frame: &mut Frame,
-        fallback: &mut FallbackView,
     ) {
         let area = frame.area();
 
@@ -101,9 +100,9 @@ impl Logo {
         let buf = frame.buffer_mut();
 
         if needs_fallback {
-            fallback.update_dimensions(Some(w), Some(h));
             // TODO: make the colortheme work
-            // fallback.render(area, buf /* Colortheme */);
+            // let fallback_ctx = FallbackContext::new(/* Colortheme, */ w, h);
+            // fallback.render(area, buf, fallback_ctx);
             return;
         }
 
@@ -131,7 +130,6 @@ impl Logo {
         component: W,
         frame: &mut Frame,
         ctx: <W as StyledWidget>::Context<'_>,
-        fallback: &mut FallbackView,
     ) {
         let area = frame.area();
 
@@ -148,9 +146,9 @@ impl Logo {
         let buf = frame.buffer_mut();
 
         if needs_fallback {
-            fallback.update_dimensions(Some(w), Some(h));
             // TODO: make the colortheme work
-            // fallback.render(area, buf /* Colortheme */);
+            // let fallback_ctx = FallbackContext::new(/* Colortheme, */ w, h);
+            // fallback.render(area, buf, fallback_ctx);
             return;
         }
 

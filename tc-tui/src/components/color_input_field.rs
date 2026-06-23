@@ -53,11 +53,7 @@ impl SettingsSelector for ColorSelector {
         self.is_active = false;
     }
 
-    fn update_current_selection(
-        &mut self,
-        selection: SelectableItem,
-        tui_assets: &TuiAssets,
-    ) -> UpdateResult<()> {
+    fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()> {
         todo!()
     }
 }
