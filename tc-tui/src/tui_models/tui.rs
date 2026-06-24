@@ -10,7 +10,6 @@ use tokio::{io, time::Duration};
 
 use crate::{
     components::{
-        fallback_terminal_too_small::FallbackView,
         help_box::HelpBox,
         hero::{Hero, MenuLabel},
         logo::Logo,
@@ -80,7 +79,7 @@ pub(crate) struct TuiComponents {
 }
 
 impl TuiComponents {
-    pub fn new(tui_assets: &TuiAssets) -> TuiComponents {
+    pub fn new(tui_assets: &'static TuiAssets) -> TuiComponents {
         TuiComponents {
             help_box: HelpBox::new(),
             settings_menu: SettingMenu::new(tui_assets),

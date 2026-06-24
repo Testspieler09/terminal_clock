@@ -46,7 +46,7 @@ seconds = """   ╭─╮ °F
  5 ┤█│
    ╰─╯"""
 
-display_mode = "gauge" # this will change the stuff that we need to pass in the config
+render_mode = "stack" # this will change the stuff that we need to pass in the config
 clock_hour_amount = 12 # default 24 and these will be the only options
 
 hour_coords = [

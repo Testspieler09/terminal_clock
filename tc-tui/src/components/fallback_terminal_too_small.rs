@@ -10,35 +10,30 @@ use crate::{
     tui_models::styled_widget::StyledWidget,
 };
 
-pub(crate) struct FallbackView {
+pub(crate) struct FallbackContext<'a> {
+    color_theme: &'a ColorTheme,
     needed_width: u16,
     needed_height: u16,
 }
 
-impl FallbackView {
-    pub fn new(needed_width: u16, needed_height: u16) -> Self {
-        FallbackView {
+impl<'a> FallbackContext<'a> {
+    pub(crate) fn new(color_theme: &'a ColorTheme, needed_width: u16, needed_height: u16) -> Self {
+        Self {
+            color_theme,
             needed_width,
             needed_height,
         }
     }
-
-    pub fn update_dimensions(&mut self, new_width: Option<u16>, new_height: Option<u16>) {
-        if let Some(width) = new_width {
-            self.needed_width = width;
-        }
-        if let Some(height) = new_height {
-            self.needed_height = height;
-        }
-    }
 }
 
-impl StyledWidget for &mut FallbackView {
-    type Context<'a> = &'a ColorTheme;
+pub(crate) struct FallbackView;
 
-    fn render(self, area: Rect, buf: &mut Buffer, color_theme: Self::Context<'_>) {
-        let fg_color = *color_theme.get(&ThemeColor::Foreground);
-        let highlight_color = *color_theme.get(&ThemeColor::Accent);
+impl StyledWidget for &mut FallbackView {
+    type Context<'a> = FallbackContext<'a>;
+
+    fn render(self, area: Rect, buf: &mut Buffer, ctx: Self::Context<'_>) {
+        let fg_color = *ctx.color_theme.get(&ThemeColor::Foreground);
+        let highlight_color = *ctx.color_theme.get(&ThemeColor::Accent);
 
         let [
             actual_label,
@@ -60,7 +55,7 @@ impl StyledWidget for &mut FallbackView {
         centered_size_line(area.width, area.height, highlight_color).render(actual_size_line, buf);
 
         centered_bold_label("Currently needed space:", fg_color).render(needed_label, buf);
-        centered_size_line(self.needed_width, self.needed_height, highlight_color)
+        centered_size_line(ctx.needed_width, ctx.needed_height, highlight_color)
             .render(needed_size_line, buf);
     }
 }

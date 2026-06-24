@@ -3,19 +3,17 @@ use tc_models::clock::ClockBehaviour;
 
 use crate::{
     TuiState,
-    components::{Dimensions, fallback_terminal_too_small::FallbackView},
+    components::{
+        Dimensions,
+        fallback_terminal_too_small::{FallbackContext, FallbackView},
+    },
     helpers::{
         center_widget, center_widget_horizontally, unstable_widget_fits_frame, widget_fits_frame,
     },
     tui_models::{styled_widget::StyledWidget, tui::TuiAssets},
 };
 
-pub(crate) fn render_clock_view(
-    frame: &mut Frame,
-    config: &TuiState,
-    tui_assets: &TuiAssets,
-    fallback_view: &mut FallbackView,
-) {
+pub(crate) fn render_clock_view(frame: &mut Frame, config: &TuiState, tui_assets: &TuiAssets) {
     let frame_area = frame.area();
 
     let clock = tui_assets.get_clock(config.clock_state.clock_face_idx);
@@ -58,8 +56,11 @@ pub(crate) fn render_clock_view(
             (clock_w as u16, clock_h as u16)
         };
 
-        fallback_view.update_dimensions(Some(w), Some(h));
-        fallback_view.render(frame_area, frame.buffer_mut(), color_theme);
+        let mut fallback_view = FallbackView;
+        let fallback_ctx = FallbackContext::new(color_theme, w, h);
+
+        fallback_view.render(frame_area, frame.buffer_mut(), fallback_ctx);
+
         return;
     }
 

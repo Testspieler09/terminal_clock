@@ -63,8 +63,8 @@ impl CarouselSelector {
     }
 }
 
-impl SettingsSelector for CarouselSelector {
-    fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction> {
+impl CarouselSelector {
+    pub(crate) fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction> {
         match key_event.code {
             KeyCode::Char('h') | KeyCode::Left => {
                 self.prev_option();
@@ -78,15 +78,15 @@ impl SettingsSelector for CarouselSelector {
         }
     }
 
-    fn set_to_active(&mut self) {
+    pub(crate) fn set_to_active(&mut self) {
         self.is_active = true;
     }
 
-    fn set_to_inactive(&mut self) {
+    pub(crate) fn set_to_inactive(&mut self) {
         self.is_active = false;
     }
 
-    fn update_current_selection(
+    pub(crate) fn update_current_selection(
         &mut self,
         selection: SelectableItem,
         tui_assets: &TuiAssets,

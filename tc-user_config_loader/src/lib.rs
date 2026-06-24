@@ -1,5 +1,6 @@
 pub mod clock_face_loader;
 pub mod color_theme_loader;
+pub(crate) mod configs;
 pub(crate) mod default_themes;
 pub mod quote_loader;
 

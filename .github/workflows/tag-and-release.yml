@@ -1,0 +1,158 @@
+name: Release Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "Cargo.toml"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to rebuild Docker image for (e.g. 1.2.3)"
+        required: false
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.vars.outputs.changed }}
+      version: ${{ steps.vars.outputs.current }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract Versions (root only)
+        id: vars
+        run: |
+          CUR=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)
+          PREV=$(git show HEAD~1:Cargo.toml | sed -n 's/^version = "\(.*\)"/\1/p' | head -n 1 || echo "")
+
+          echo "current=$CUR" >> $GITHUB_OUTPUT
+
+          if [ "$CUR" != "$PREV" ] && [[ "$CUR" != *-* ]]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Release detected: $CUR"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Skipping"
+          fi
+
+  tag:
+    needs: detect
+    if: needs.detect.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Tag
+        id: tag
+        run: |
+          TAG="v${{ needs.detect.outputs.version }}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag exists, skipping"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+  build-release:
+    needs: tag
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: terminal_clock
+            asset_name: terminal_clock-linux-x86_64.tar.gz
+          - os: windows-latest
+            artifact_name: terminal_clock.exe
+            asset_name: terminal_clock-windows-x86_64.zip
+          - os: macos-latest
+            artifact_name: terminal_clock
+            asset_name: terminal_clock-macos-x86_64.tar.gz
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build
+        run: cargo build --release --locked
+
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd target/release
+          tar czf ../../${{ matrix.asset_name }} ${{ matrix.artifact_name }}
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd target/release
+          Compress-Archive -Path ${{ matrix.artifact_name }} -DestinationPath ..\..\${{ matrix.asset_name }}
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.tag.outputs.tag }}
+          files: ${{ matrix.asset_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    needs: [detect, tag]
+    if: |
+      needs.detect.outputs.changed == 'true' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${{ needs.detect.outputs.version }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ steps.ver.outputs.version }}

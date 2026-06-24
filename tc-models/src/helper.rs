@@ -4,9 +4,10 @@ use ratatui::{
     text::{Line, Span, Text},
     widgets::{Block, Borders, Paragraph},
 };
+use serde::Deserialize;
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::display_mode::DisplayMode;
+use crate::render_mode::RenderMode;
 
 pub(crate) struct ArtBlock<'a> {
     pub ascii_art: &'a str,
@@ -102,6 +103,7 @@ pub(crate) fn combine_ascii_art_while_applying_led<'a>(
 }
 
 // Helpers for external and internal use
+#[derive(Debug, Deserialize, PartialEq)]
 pub enum TimeUnit {
     Seconds,
     Minutes,
@@ -113,7 +115,7 @@ pub fn generate_led_coords_to_base(
     units_bits: &[(u8, Vec<(u32, u32)>)],
     always_on: &[(u32, u32)],
     unit: TimeUnit,
-    display_mode: DisplayMode,
+    render_mode: RenderMode,
 ) -> Vec<Vec<(u32, u32)>> {
     let max_value = match unit {
         TimeUnit::Minutes | TimeUnit::Seconds => 60,
@@ -130,9 +132,9 @@ pub fn generate_led_coords_to_base(
         coords.extend_from_slice(always_on);
 
         for &(bit, ref positions) in tens_bits {
-            let matches = match display_mode {
-                DisplayMode::Binary => (tens & bit) != 0,
-                DisplayMode::Decimal => tens == bit,
+            let matches = match render_mode {
+                RenderMode::Bits => (tens & bit) != 0,
+                RenderMode::Digits => tens == bit,
             };
 
             if matches {
@@ -141,9 +143,9 @@ pub fn generate_led_coords_to_base(
         }
 
         for &(bit, ref positions) in units_bits {
-            let matches = match display_mode {
-                DisplayMode::Binary => (units & bit) != 0,
-                DisplayMode::Decimal => units == bit,
+            let matches = match render_mode {
+                RenderMode::Bits => (units & bit) != 0,
+                RenderMode::Digits => units == bit,
             };
 
             if matches {
