@@ -4,7 +4,7 @@ use ratatui::{
     prelude::{Alignment, Stylize},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Paragraph, Widget},
+    widgets::Paragraph,
 };
 
 use crate::{components::Dimensions, tui_models::styled_widget::StyledWidget};
@@ -81,13 +81,12 @@ pub(crate) fn widget_fits_frame<W: StyledWidget + Dimensions>(
 /// explizitly.
 pub(crate) fn unstable_widget_fits_frame(
     frame: &Frame,
-    widget_dimensions: (u16, u16), // (width, height)
+    (width, height): (u16, u16),
     area: Rect,
 ) -> bool {
     let frame_area = frame.area();
 
-    let widget_does_not_fit_area =
-        widget_dimensions.0 > area.width || widget_dimensions.1 > area.height;
+    let widget_does_not_fit_area = width > area.width || height > area.height;
 
     widget_does_not_fit_area
         || area.x + area.width > frame_area.width

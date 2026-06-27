@@ -16,7 +16,6 @@ use tc_models::{clock::TimeFormat, color_theme::ThemeColor};
 use crate::{
     components::{
         carousel_selector::SettingsMenuCtx,
-        fallback_terminal_too_small::FallbackView,
         pomodoro::{PomodoroConfig, PomodoroState, PomodoroTimer},
     },
     tui_models::{
