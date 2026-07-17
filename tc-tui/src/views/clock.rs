@@ -1,3 +1,4 @@
+use chrono::Local;
 use ratatui::{Frame, prelude::Constraint};
 use tc_models::clock::ClockBehaviour;
 
@@ -19,8 +20,12 @@ pub(crate) fn render_clock_view(frame: &mut Frame, config: &TuiState, tui_assets
     let clock = tui_assets.get_clock(config.clock_state.clock_face_idx);
     let color_theme = tui_assets.get_color_theme(config.color_theme_idx);
 
-    let (clock_widget, clock_w, clock_h) =
-        clock.generate_clock_face_with_dimensions(color_theme, config.clock_state.clock_time_fmt);
+    let now = Local::now();
+    let (clock_widget, clock_w, clock_h) = clock.generate_clock_face_with_dimensions(
+        color_theme,
+        config.clock_state.clock_time_fmt,
+        now,
+    );
     let clock_area = center_widget(
         frame_area,
         Constraint::Length(clock_w as u16),

@@ -1,4 +1,4 @@
-use chrono::{Local, Timelike};
+use chrono::{DateTime, Local, Timelike};
 use ratatui::{style::Color, widgets::Paragraph};
 
 use crate::{
@@ -65,11 +65,11 @@ impl ClockBehaviour for ColorClock {
         &self,
         theme: &ColorTheme,
         clock_fmt: TimeFormat,
+        now: DateTime<Local>,
     ) -> (Paragraph<'_>, usize, usize) {
-        let time_stamp = Local::now();
-        let hour_value = time_stamp.hour();
-        let minute_value = time_stamp.minute();
-        let second_value = time_stamp.second();
+        let hour_value = now.hour();
+        let minute_value = now.minute();
+        let second_value = now.second();
 
         static EMPTY_COORDS: &Vec<Vec<(u32, u32)>> = &Vec::new();
         let empty_block = art_block("", EMPTY_COORDS, 0);

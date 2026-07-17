@@ -1,5 +1,3 @@
-use std::sync::RwLock;
-
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     prelude::{Alignment, Buffer, Constraint, Layout, Rect},
@@ -22,7 +20,7 @@ use crate::{
         selector::{Selector, SelectorType, SettingsSelector},
         settings::Setting,
         styled_widget::StyledWidget,
-        tui::{TuiAssets, TuiController},
+        tui::TuiAssets,
         tui_action::TuiAction,
     },
 };
@@ -173,7 +171,7 @@ impl SettingMenu {
         },
     ];
 
-    pub fn new(tui_assets: &'static TuiAssets) -> SettingMenu {
+    pub fn new(tui_assets: &TuiAssets) -> SettingMenu {
         let general_tab_selectors: Vec<Selector> = Self::GENERAL_TAB_CONFIG
             .iter()
             .enumerate()
@@ -313,6 +311,16 @@ impl SettingMenu {
         self.update_option_index(PrimitiveTabNavigationOperation::Prev);
     }
 
+    pub fn tick(&mut self, tui_assets: &TuiAssets) {
+        match self.current_tab {
+            SettingsTab::General(idx) => self.general_tab_selectors[idx as usize].tick(tui_assets),
+            SettingsTab::Pomodoro(idx) => {
+                self.pomodoro_tab_selectors[idx as usize].tick(tui_assets)
+            }
+            SettingsTab::Color(idx) => self.color_tab_selectors[idx as usize].tick(tui_assets),
+        }
+    }
+
     pub fn set_called_from_hero(&mut self, was_called_from_hero: bool) {
         self.called_from_hero = was_called_from_hero;
     }
@@ -365,9 +373,8 @@ impl SettingMenu {
     pub fn handle_setting_keys(
         &mut self,
         key_event: KeyEvent,
-        tui_state: &RwLock<TuiState>,
-        tui_controller: &TuiController,
-    ) {
+        tui_state: &mut TuiState,
+    ) -> Option<TuiAction> {
         self.pending_action = None;
 
         match key_event.code {
@@ -379,8 +386,6 @@ impl SettingMenu {
             KeyCode::Char('2') => self.display_tab(SettingsTab::Pomodoro(0)),
             KeyCode::Char('3') => self.display_tab(SettingsTab::Color(0)),
             KeyCode::Char('s') => {
-                let mut tui_state = tui_state.write().unwrap();
-
                 if self.was_called_from_hero() {
                     tui_state.application_state = ApplicationState::ShowingHero;
                 } else {
@@ -403,9 +408,7 @@ impl SettingMenu {
             }
         }
 
-        if let Some(action) = &self.pending_action {
-            tui_controller.process_settings_action(action);
-        }
+        self.pending_action
     }
 }
 

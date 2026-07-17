@@ -5,11 +5,20 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[features]
+debug-views = []
+
+[[bin]]
+name = "debug-view"
+path = "src/bin/debug_view.rs"
+required-features = ["debug-views"]
+
 [dependencies]
 tc-user_config_loader = { path = "../tc-user_config_loader/" }
 tc-models             = { path = "../tc-models/" }
 
 # External dependencies
+clap                  = { workspace = true }
 ratatui               = { workspace = true }
 color-eyre            = { workspace = true }
 unicode-segmentation  = { workspace = true }

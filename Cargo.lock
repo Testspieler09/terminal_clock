@@ -912,6 +912,7 @@ name = "tc-tui"
 version = "0.0.0-alpha.1"
 dependencies = [
  "chrono",
+ "clap",
  "color-eyre",
  "ratatui",
  "strum 0.27.2",
@@ -926,6 +927,7 @@ name = "tc-user_config_loader"
 version = "0.0.0-alpha.1"
 dependencies = [
  "chrono",
+ "clap",
  "ratatui",
  "serde",
  "tc-models",

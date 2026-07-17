@@ -1,3 +1,4 @@
+use chrono::{DateTime, Local};
 use ratatui::widgets::Paragraph;
 
 use crate::{
@@ -21,11 +22,12 @@ impl DigitalClock {
 }
 
 impl ClockBehaviour for DigitalClock {
-    // TODO: add a default implementaton of the func here
+    // TODO: add a default implementation of the func here
     fn generate_clock_face_with_dimensions(
         &self,
         theme: &ColorTheme,
         clock_fmt: TimeFormat,
+        now: DateTime<Local>,
     ) -> (Paragraph<'_>, usize, usize) {
         todo!();
     }

@@ -10,7 +10,7 @@ pub const FALLBACK_COLOR_THEME: [Color; 5] = [
     tailwind::PURPLE.c500, // SchemeColor::Borders
 ];
 
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum ThemeColor {
     Foreground,
     Background,
@@ -34,7 +34,7 @@ impl ColorTheme {
     pub fn get(&self, key: &ThemeColor) -> &Color {
         self.colors
             .get(key)
-            .unwrap_or(&FALLBACK_COLOR_THEME[key.clone() as usize])
+            .unwrap_or(&FALLBACK_COLOR_THEME[*key as usize])
     }
 
     pub fn update(&mut self, key: ThemeColor, new_value: Color) {

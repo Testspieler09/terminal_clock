@@ -5,10 +5,15 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[[bin]]
+name = "check-config"
+path = "src/bin/check_config.rs"
+
 [dependencies]
 tc-models            = { path = "../tc-models/" }
 
 # External dependencies
+clap                 = { workspace = true }
 ratatui              = { workspace = true }
 chrono               = { workspace = true }
 toml                 = { workspace = true }

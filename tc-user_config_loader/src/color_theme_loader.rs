@@ -10,7 +10,7 @@ use tc_models::color_theme::{ColorTheme, FALLBACK_COLOR_THEME, ThemeColor};
 use crate::{LoaderResult, default_themes::COLOR_THEMES, get_user_config_path};
 
 #[derive(Deserialize)]
-pub(crate) struct ThemeConfig {
+pub struct ThemeConfig {
     pub name: Option<String>,
     pub foreground: Option<String>,
     pub background: Option<String>,

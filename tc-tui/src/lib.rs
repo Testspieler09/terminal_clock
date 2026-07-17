@@ -3,8 +3,11 @@ pub(crate) mod helpers;
 pub(crate) mod tui_models;
 pub(crate) mod views;
 
-use std::sync::{LazyLock, RwLock};
+#[cfg(feature = "debug-views")]
+pub mod debug_views;
+use std::sync::LazyLock;
 
+use chrono::Local;
 use color_eyre::Result;
 use ratatui::{
     DefaultTerminal, Frame,
@@ -12,7 +15,11 @@ use ratatui::{
     widgets::{Block, BorderType},
 };
 use tc_models::{clock::TimeFormat, color_theme::ThemeColor};
+#[cfg(feature = "debug-views")]
+pub use tui_models::tui::TuiAssets;
 
+#[cfg(not(feature = "debug-views"))]
+use crate::tui_models::tui::TuiAssets;
 use crate::{
     components::{
         carousel_selector::SettingsMenuCtx,
@@ -21,9 +28,10 @@ use crate::{
     tui_models::{
         application::ApplicationState,
         clock::ClockState,
-        tui::{TuiAssets, TuiComponents, TuiController, TuiState},
+        controller,
+        tui::{TuiComponents, TuiState},
     },
-    views::clock::render_clock_view,
+    views::{clock::render_clock_view, fireworks},
 };
 
 pub struct TuiRenderer;
@@ -53,7 +61,7 @@ impl TuiRenderer {
         static TUI_ASSETS: LazyLock<TuiAssets> =
             LazyLock::new(|| TuiAssets::try_default().expect("failed to initialize TUI assets"));
 
-        let tui_state = RwLock::new(TuiState {
+        let mut tui_state = TuiState {
             application_state: ApplicationState::Running,
             // TODO: Load the config one as the first here
             clock_state: ClockState {
@@ -64,20 +72,26 @@ impl TuiRenderer {
             quote_idx: Some(0),
             pomodoro: None,
             refresh_rate: 500,
-        });
+        };
 
-        let controller = TuiController::new(&tui_state);
+        if fireworks::is_new_years(Local::now()) {
+            fireworks::run_fireworks(&mut terminal, &TUI_ASSETS, &tui_state)?;
+        }
+
         let mut tui_components = TuiComponents::new(&TUI_ASSETS);
 
         loop {
-            {
-                let state_guard = tui_state.read().unwrap();
-                terminal.draw(|frame| {
-                    Self::render(frame, &state_guard, &TUI_ASSETS, &tui_components)
-                })?;
+            terminal.draw(|frame| Self::render(frame, &tui_state, &TUI_ASSETS, &tui_components))?;
+
+            let should_exit = controller::handle_events(&mut tui_state, &mut tui_components)?;
+
+            if matches!(
+                tui_state.application_state,
+                ApplicationState::ShowingSettings
+            ) {
+                tui_components.settings_menu.tick(&TUI_ASSETS);
             }
 
-            let should_exit = controller.handle_events(&mut tui_components)?;
             if should_exit {
                 break Ok(());
             }

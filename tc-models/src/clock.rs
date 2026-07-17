@@ -1,3 +1,4 @@
+use chrono::{DateTime, Local};
 use ratatui::widgets::Paragraph;
 use serde::Deserialize;
 use strum::EnumIter;
@@ -30,6 +31,7 @@ pub trait ClockBehaviour {
         &self,
         theme: &ColorTheme,
         clock_fmt: TimeFormat,
+        now: DateTime<Local>,
     ) -> (Paragraph<'_>, usize, usize);
 }
 
@@ -55,11 +57,16 @@ impl ClockBehaviour for Clock {
         &self,
         theme: &ColorTheme,
         clock_fmt: TimeFormat,
+        now: DateTime<Local>,
     ) -> (Paragraph<'_>, usize, usize) {
         match self {
-            Clock::Digital(clock) => clock.generate_clock_face_with_dimensions(theme, clock_fmt),
-            Clock::Analog(clock) => clock.generate_clock_face_with_dimensions(theme, clock_fmt),
-            Clock::Color(clock) => clock.generate_clock_face_with_dimensions(theme, clock_fmt),
+            Clock::Digital(clock) => {
+                clock.generate_clock_face_with_dimensions(theme, clock_fmt, now)
+            }
+            Clock::Analog(clock) => {
+                clock.generate_clock_face_with_dimensions(theme, clock_fmt, now)
+            }
+            Clock::Color(clock) => clock.generate_clock_face_with_dimensions(theme, clock_fmt, now),
         }
     }
 }

@@ -3,6 +3,7 @@ use ratatui::style::Color;
 pub(super) mod carousel_selector;
 pub(super) mod color_input_field;
 pub(super) mod fallback_terminal_too_small;
+pub(crate) mod fireworks;
 pub(super) mod help_box;
 pub(super) mod hero;
 pub(super) mod logo;

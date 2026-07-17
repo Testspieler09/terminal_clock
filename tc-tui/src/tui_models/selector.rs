@@ -32,13 +32,25 @@ pub(crate) trait SettingsSelector {
     fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction>;
     fn set_to_active(&mut self);
     fn set_to_inactive(&mut self);
-    fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()>;
+    fn update_current_selection(
+        &mut self,
+        selection: SelectableItem,
+        assets: &TuiAssets,
+    ) -> UpdateResult<()>;
+}
+
+impl Selector {
+    pub(crate) fn tick(&mut self, assets: &TuiAssets) {
+        if let Selector::Carousel(selector) = self {
+            selector.tick(assets);
+        }
+    }
 }
 
 impl SettingsSelector for Selector {
     fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction> {
         match self {
-            Selector::Carousel(selector, _tui_assets) => selector.handle_keys(key_event),
+            Selector::Carousel(selector) => selector.handle_keys(key_event),
             Selector::Color(selector) => selector.handle_keys(key_event),
             Selector::Number(selector) => selector.handle_keys(key_event),
         }
@@ -46,7 +58,7 @@ impl SettingsSelector for Selector {
 
     fn set_to_active(&mut self) {
         match self {
-            Selector::Carousel(selector, _tui_assets) => selector.set_to_active(),
+            Selector::Carousel(selector) => selector.set_to_active(),
             Selector::Color(selector) => selector.set_to_active(),
             Selector::Number(selector) => selector.set_to_active(),
         }
@@ -54,20 +66,26 @@ impl SettingsSelector for Selector {
 
     fn set_to_inactive(&mut self) {
         match self {
-            Selector::Carousel(selector, _tui_assets) => selector.set_to_inactive(),
+            Selector::Carousel(selector) => selector.set_to_inactive(),
             Selector::Color(selector) => selector.set_to_inactive(),
             Selector::Number(selector) => selector.set_to_inactive(),
         }
     }
 
-    fn update_current_selection(&mut self, selection: SelectableItem) -> Result<(), UpdateError> {
+    fn update_current_selection(
+        &mut self,
+        selection: SelectableItem,
+        assets: &TuiAssets,
+    ) -> Result<(), UpdateError> {
         match self {
-            Selector::Carousel(carousel_selector, tui_assets) => {
-                carousel_selector.update_current_selection(selection, tui_assets)
+            Selector::Carousel(carousel_selector) => {
+                carousel_selector.update_current_selection(selection, assets)
             }
-            Selector::Color(color_selector) => color_selector.update_current_selection(selection),
+            Selector::Color(color_selector) => {
+                color_selector.update_current_selection(selection, assets)
+            }
             Selector::Number(number_selector) => {
-                number_selector.update_current_selection(selection)
+                number_selector.update_current_selection(selection, assets)
             }
         }
     }
@@ -78,7 +96,7 @@ impl StyledWidget for &Selector {
 
     fn render(self, area: Rect, buf: &mut Buffer, ctx: Self::Context<'_>) {
         match self {
-            Selector::Carousel(selector, _tui_assets) => selector.render(area, buf, ctx),
+            Selector::Carousel(selector) => selector.render(area, buf, ctx),
             Selector::Color(selector) => selector.render(area, buf, ctx.color_theme),
             Selector::Number(selector) => selector.render(area, buf, ctx.color_theme),
         }
@@ -121,18 +139,15 @@ impl SelectorType {
     pub fn create_selector(
         &self,
         setting: Setting,
-        tui_assets: &'static TuiAssets,
+        tui_assets: &TuiAssets,
         is_active: bool,
     ) -> Selector {
         match self {
-            SelectorType::Carousel => Selector::Carousel(
-                CarouselSelector::new(
-                    is_active,
-                    setting,
-                    self.carousel_options_for(setting, tui_assets),
-                ),
-                tui_assets,
-            ),
+            SelectorType::Carousel => Selector::Carousel(CarouselSelector::new(
+                is_active,
+                setting,
+                self.carousel_options_for(setting, tui_assets),
+            )),
             SelectorType::Color => Selector::Color(ColorSelector::new(is_active, setting)),
             SelectorType::Number => Selector::Number(NumberSelector::new(is_active, setting)),
         }
@@ -140,7 +155,7 @@ impl SelectorType {
 }
 
 pub(crate) enum Selector {
-    Carousel(CarouselSelector, &'static TuiAssets),
+    Carousel(CarouselSelector),
     Color(ColorSelector),
     Number(NumberSelector),
     // Text(TextInput),

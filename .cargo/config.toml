@@ -1,0 +1,4 @@
+[alias]
+tc           = "run --package tc"
+debug-view   = "run --package tc-tui --bin debug-view --features tc-tui/debug-views"
+check-config = "run --package tc-user_config_loader --bin check-config"
