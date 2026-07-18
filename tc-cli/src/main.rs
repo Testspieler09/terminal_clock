@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 use color_eyre::Result;
 use tc_tui::TuiRenderer;
@@ -22,22 +24,15 @@ struct Args {
     #[arg(short, long, default_value_t = 500)]
     refresh_rate: u16,
 
-    /// The quote that is displayed under the clock
+    /// Path to the config folder (defaults to ~/.config/terminal_clock on Unix,
+    /// %APPDATA%\terminal_clock on Windows)
     #[arg(short, long)]
-    quote_text: Option<String>,
-
-    /// The path to the terminal clock config
-    #[arg(short, long)]
-    configpath: Option<String>,
-
-    /// The path to the colorscheme
-    #[arg(short, long)]
-    themepath: Option<String>,
+    config: Option<PathBuf>,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let _args = Args::parse();
     color_eyre::install()?;
-    TuiRenderer::execute_renderer().await
+    let args = Args::parse();
+    TuiRenderer::execute_renderer(args.config, args.refresh_rate).await
 }

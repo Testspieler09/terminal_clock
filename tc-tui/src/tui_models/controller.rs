@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-const SETTINGS_TICK_MS: u64 = 50;
+const SETTINGS_TICK_MS: u16 = 50;
 
 pub(crate) fn handle_events(
     state: &mut TuiState,
@@ -30,7 +30,7 @@ pub(crate) fn handle_events(
         refresh_rate
     };
 
-    if event::poll(Duration::from_millis(poll_timeout))? {
+    if event::poll(Duration::from_millis(poll_timeout as u64))? {
         if let Event::Key(key_event) = event::read()? {
             if matches!(key_event.kind, event::KeyEventKind::Release) {
                 return Ok(false);

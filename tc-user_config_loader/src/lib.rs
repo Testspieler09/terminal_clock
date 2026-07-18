@@ -1,7 +1,7 @@
+pub(crate) mod bundled;
 pub mod clock_face_loader;
 pub mod color_theme_loader;
 pub(crate) mod configs;
-pub(crate) mod default_themes;
 pub mod quote_loader;
 
 use std::{fmt, io, path::PathBuf};
@@ -39,7 +39,7 @@ impl From<toml::de::Error> for AssetsLoadError {
     }
 }
 
-pub(crate) fn get_user_config_path() -> LoaderResult<PathBuf> {
+pub fn get_user_config_path() -> LoaderResult<PathBuf> {
     #[cfg(target_os = "windows")]
     {
         let appdata =

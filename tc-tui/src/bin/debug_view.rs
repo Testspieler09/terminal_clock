@@ -49,7 +49,7 @@ fn main() -> Result<()> {
     color_eyre::install()?;
     let args = Args::parse();
 
-    let assets = TuiAssets::try_default()?;
+    let assets = TuiAssets::try_new(tc_user_config_loader::get_user_config_path()?)?;
 
     let clock_cfg = debug_views::ClockViewConfig {
         clock_face: args.clock_face,

@@ -4,7 +4,7 @@ use tc_models::{clock::TimeFormat, color_theme::ThemeColor};
 #[derive(Clone, Copy)]
 pub enum TuiAction {
     /// General actions
-    UpdateRefreshRate(u64),
+    UpdateRefreshRate(u16),
     UpdateClockFace(u16),
     UpdateClockFormat(TimeFormat),
     UpdateQuote(Option<u16>),

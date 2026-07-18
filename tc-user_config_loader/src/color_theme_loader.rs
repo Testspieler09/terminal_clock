@@ -1,5 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
+    path::Path,
     str::FromStr,
 };
 
@@ -7,7 +8,7 @@ use ratatui::style::Color;
 use serde::Deserialize;
 use tc_models::color_theme::{ColorTheme, FALLBACK_COLOR_THEME, ThemeColor};
 
-use crate::{LoaderResult, default_themes::COLOR_THEMES, get_user_config_path};
+use crate::{LoaderResult, bundled::COLOR_THEMES};
 
 #[derive(Deserialize)]
 pub struct ThemeConfig {
@@ -81,8 +82,8 @@ impl From<ThemeConfig> for ColorTheme {
 pub struct ColorThemeLoader;
 
 impl ColorThemeLoader {
-    fn load_user_themes() -> LoaderResult<Vec<ColorTheme>> {
-        let folder_path = get_user_config_path()?.join("themes");
+    fn load_user_themes(config_path: &Path) -> LoaderResult<Vec<ColorTheme>> {
+        let folder_path = config_path.join("themes");
 
         let toml_count = std::fs::read_dir(&folder_path)?
             .filter_map(Result::ok)
@@ -122,7 +123,7 @@ impl ColorThemeLoader {
         Ok(themes)
     }
 
-    pub fn load_color_themes() -> LoaderResult<Vec<ColorTheme>> {
+    pub fn load_color_themes(config_path: &Path) -> LoaderResult<Vec<ColorTheme>> {
         let mut schemes = COLOR_THEMES
             .iter()
             .map(|scheme| {
@@ -131,7 +132,7 @@ impl ColorThemeLoader {
             })
             .collect::<LoaderResult<Vec<_>>>()?;
 
-        if let Ok(user_theme) = Self::load_user_themes() {
+        if let Ok(user_theme) = Self::load_user_themes(config_path) {
             schemes.extend(user_theme);
         }
 

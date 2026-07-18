@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use tc_models::{clock::Clock, color_theme::ColorTheme, quote::Quote};
 use tc_user_config_loader::{
     LoaderResult, clock_face_loader::ClockFaceLoader, color_theme_loader::ColorThemeLoader,
@@ -19,11 +21,11 @@ pub struct TuiAssets {
 }
 
 impl TuiAssets {
-    pub fn try_default() -> LoaderResult<TuiAssets> {
+    pub fn try_new(config_path: PathBuf) -> LoaderResult<TuiAssets> {
         Ok(TuiAssets {
-            color_themes: ColorThemeLoader::load_color_themes()?,
+            color_themes: ColorThemeLoader::load_color_themes(&config_path)?,
             clock_faces: ClockFaceLoader::load_clockfaces()?,
-            quotes: QuoteLoader::load_quotes()?,
+            quotes: QuoteLoader::load_quotes(&config_path)?,
         })
     }
 
@@ -61,7 +63,7 @@ pub(crate) struct TuiState {
     pub clock_state: ClockState,
     pub quote_idx: Option<u16>,
     pub pomodoro: Option<PomodoroTimer>,
-    pub refresh_rate: u64,
+    pub refresh_rate: u16,
 }
 
 pub(crate) struct TuiComponents {

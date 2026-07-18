@@ -9,11 +9,11 @@ use tc_models::{
 
 use crate::{
     LoaderResult,
+    bundled::CLOCK_FACES,
     configs::{
         analog_clock_config::AnalogClockConfig, color_clock_config::ColorClockConfig,
         digital_clock_config::DigitalClockConfig, helper::resolve_coords,
     },
-    default_themes::CLOCK_FACES,
 };
 
 #[derive(Deserialize)]
