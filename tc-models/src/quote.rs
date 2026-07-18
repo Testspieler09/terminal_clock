@@ -34,3 +34,36 @@ impl Quote {
         final_text
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn final_quote_string_with_author() {
+        let q = Quote::new(
+            Some("Seneca".to_string()),
+            "Nusquam est qui ubique est.",
+            None,
+        );
+        assert_eq!(
+            q.final_quote_string(),
+            "\"Nusquam est qui ubique est.\" ― Seneca"
+        );
+    }
+
+    #[test]
+    fn final_quote_string_without_author() {
+        let q = Quote::from_string("Fall down seven times, stand up eight.");
+        assert_eq!(
+            q.final_quote_string(),
+            "\"Fall down seven times, stand up eight.\""
+        );
+    }
+
+    #[test]
+    fn final_quote_string_empty_text() {
+        let q = Quote::from_string("");
+        assert_eq!(q.final_quote_string(), "\"\"");
+    }
+}

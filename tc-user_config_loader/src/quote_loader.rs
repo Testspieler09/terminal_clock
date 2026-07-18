@@ -68,3 +68,74 @@ impl QuoteLoader {
         Ok(quotes)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_config(quotes: Vec<(&str, bool, Option<&str>)>) -> QuotesConfig {
+        QuotesConfig {
+            quote: quotes
+                .into_iter()
+                .map(|(text, active, color)| QuoteConfig {
+                    author: None,
+                    text: text.to_string(),
+                    accent_color: color.map(str::to_string),
+                    active,
+                })
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn no_active_flag_returns_all_quotes() {
+        let config = make_config(vec![("a", false, None), ("b", false, None)]);
+        let quotes = config.into_quotes();
+        assert_eq!(quotes.len(), 2);
+    }
+
+    #[test]
+    fn active_flag_filters_to_only_active() {
+        let config = make_config(vec![
+            ("a", false, None),
+            ("b", true, None),
+            ("c", false, None),
+        ]);
+        let quotes = config.into_quotes();
+        assert_eq!(quotes.len(), 1);
+        assert_eq!(quotes[0].text, "b");
+    }
+
+    #[test]
+    fn multiple_active_flags_returns_all_active() {
+        let config = make_config(vec![
+            ("a", true, None),
+            ("b", false, None),
+            ("c", true, None),
+        ]);
+        let quotes = config.into_quotes();
+        assert_eq!(quotes.len(), 2);
+    }
+
+    #[test]
+    fn invalid_accent_color_skips_quote() {
+        let config = make_config(vec![("a", false, Some("not-a-color")), ("b", false, None)]);
+        let quotes = config.into_quotes();
+        assert_eq!(quotes.len(), 1);
+        assert_eq!(quotes[0].text, "b");
+    }
+
+    #[test]
+    fn valid_accent_color_is_parsed() {
+        let config = make_config(vec![("a", false, Some("#ff0000"))]);
+        let quotes = config.into_quotes();
+        assert_eq!(quotes.len(), 1);
+        assert!(quotes[0].accent_color.is_some());
+    }
+
+    #[test]
+    fn empty_config_returns_empty_vec() {
+        let config = QuotesConfig { quote: vec![] };
+        assert!(config.into_quotes().is_empty());
+    }
+}

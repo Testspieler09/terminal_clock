@@ -158,3 +158,89 @@ pub fn generate_led_coords_to_base(
 
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn digits_mode_produces_correct_entry_count_for_minutes() {
+        let tens = vec![
+            (0u8, vec![(0, 0)]),
+            (1, vec![(0, 1)]),
+            (2, vec![(0, 2)]),
+            (3, vec![(0, 3)]),
+            (4, vec![(0, 4)]),
+            (5, vec![(0, 5)]),
+        ];
+        let units: Vec<(u8, Vec<(u32, u32)>)> = (0..10).map(|i| (i, vec![(1, i as u32)])).collect();
+
+        let result =
+            generate_led_coords_to_base(&tens, &units, &[], TimeUnit::Minutes, RenderMode::Digits);
+
+        assert_eq!(result.len(), 60);
+    }
+
+    #[test]
+    fn digits_mode_produces_correct_entry_count_for_hours() {
+        let tens = vec![(0u8, vec![(0, 0)]), (1, vec![(0, 1)]), (2, vec![(0, 2)])];
+        let units: Vec<(u8, Vec<(u32, u32)>)> = (0..10).map(|i| (i, vec![(1, i as u32)])).collect();
+
+        let result =
+            generate_led_coords_to_base(&tens, &units, &[], TimeUnit::Hours, RenderMode::Digits);
+
+        assert_eq!(result.len(), 24);
+    }
+
+    #[test]
+    fn always_on_coords_appear_in_every_entry() {
+        let always_on = vec![(9, 9)];
+        let result = generate_led_coords_to_base(
+            &[],
+            &[],
+            &always_on,
+            TimeUnit::Seconds,
+            RenderMode::Digits,
+        );
+
+        assert_eq!(result.len(), 60);
+        for entry in &result {
+            assert!(entry.contains(&(9, 9)));
+        }
+    }
+
+    #[test]
+    fn bits_mode_value_zero_has_no_bit_coords() {
+        // bit 1 maps to position (0,0), bit 2 to (0,1) — value 0 activates neither
+        let units = vec![(1u8, vec![(0, 0)]), (2, vec![(0, 1)])];
+        let result =
+            generate_led_coords_to_base(&[], &units, &[], TimeUnit::Seconds, RenderMode::Bits);
+
+        assert!(result[0].is_empty());
+    }
+
+    #[test]
+    fn bits_mode_value_three_activates_bits_one_and_two() {
+        let units = vec![(1u8, vec![(0, 0)]), (2, vec![(0, 1)]), (4, vec![(0, 2)])];
+        let result =
+            generate_led_coords_to_base(&[], &units, &[], TimeUnit::Seconds, RenderMode::Bits);
+
+        // value 3 = bits 1 and 2 active, bit 4 not
+        let entry = &result[3];
+        assert!(entry.contains(&(0, 0)));
+        assert!(entry.contains(&(0, 1)));
+        assert!(!entry.contains(&(0, 2)));
+    }
+
+    #[test]
+    fn digits_mode_value_25_activates_correct_tens_and_units() {
+        let tens = vec![(2u8, vec![(0, 0)])];
+        let units = vec![(5u8, vec![(1, 0)])];
+        let result =
+            generate_led_coords_to_base(&tens, &units, &[], TimeUnit::Minutes, RenderMode::Digits);
+
+        let entry = &result[25];
+        assert!(entry.contains(&(0, 0)));
+        assert!(entry.contains(&(1, 0)));
+    }
+}
