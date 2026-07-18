@@ -7,4 +7,5 @@ pub(crate) mod settings;
 pub(crate) mod styled_widget;
 pub(crate) mod tui;
 pub(crate) mod tui_action;
+pub(crate) mod tui_assets;
 pub(crate) mod tui_error;

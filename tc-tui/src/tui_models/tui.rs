@@ -24,7 +24,7 @@ impl TuiAssets {
     pub fn try_new(config_path: PathBuf) -> LoaderResult<TuiAssets> {
         Ok(TuiAssets {
             color_themes: ColorThemeLoader::load_color_themes(&config_path)?,
-            clock_faces: ClockFaceLoader::load_clockfaces()?,
+            clock_faces: ClockFaceLoader::load_clockfaces(&config_path)?,
             quotes: QuoteLoader::load_quotes(&config_path)?,
         })
     }

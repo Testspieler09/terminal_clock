@@ -26,23 +26,12 @@ struct Args {
     theme: Option<String>,
 
     /// Time format: HH:MM:SS, HH:MM, or MM:HH:SS
-    #[arg(long, value_parser = parse_time_format)]
+    #[arg(long)]
     format: Option<TimeFormat>,
 
     /// Quote text to display, or "none" to disable
     #[arg(long)]
     quote: Option<String>,
-}
-
-fn parse_time_format(s: &str) -> Result<TimeFormat, String> {
-    match s {
-        "HH:MM:SS" => Ok(TimeFormat::Hms),
-        "HH:MM" => Ok(TimeFormat::Hm),
-        "MM:HH:SS" => Ok(TimeFormat::Mhs),
-        other => Err(format!(
-            "unknown format {other:?} -- valid values: HH:MM:SS, HH:MM, MM:HH:SS"
-        )),
-    }
 }
 
 fn main() -> Result<()> {

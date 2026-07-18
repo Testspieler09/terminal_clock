@@ -14,7 +14,7 @@ use ratatui::{
     style::Style,
     widgets::{Block, BorderType},
 };
-use tc_models::{clock::TimeFormat, color_theme::ThemeColor};
+use tc_models::color_theme::ThemeColor;
 #[cfg(feature = "debug-views")]
 pub use tui_models::tui::TuiAssets;
 
@@ -69,21 +69,10 @@ impl TuiRenderer {
         };
         static TUI_ASSETS: OnceLock<TuiAssets> = OnceLock::new();
         let assets = TUI_ASSETS.get_or_init(|| {
-            TuiAssets::try_new(config_path).expect("failed to initialize TUI assets")
+            TuiAssets::try_new(config_path.clone()).expect("failed to initialize TUI assets")
         });
 
-        let mut tui_state = TuiState {
-            application_state: ApplicationState::Running,
-            // TODO: Load the config one as the first here
-            clock_state: ClockState {
-                clock_face_idx: 0,
-                clock_time_fmt: TimeFormat::Hms,
-            },
-            color_theme_idx: 0,
-            quote_idx: Some(0),
-            pomodoro: None,
-            refresh_rate,
-        };
+        let mut tui_state = assets.initial_state(&config_path, refresh_rate);
 
         if fireworks::is_new_years(Local::now()) {
             fireworks::run_fireworks(&mut terminal, assets, &tui_state)?;

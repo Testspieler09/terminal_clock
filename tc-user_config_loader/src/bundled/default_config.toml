@@ -1,0 +1,5 @@
+clock_face   = "italic_seven_segment"
+color_theme  = "terminal_clock"
+time_format  = "HH:MM:SS"
+show_quote   = true
+refresh_rate = 500

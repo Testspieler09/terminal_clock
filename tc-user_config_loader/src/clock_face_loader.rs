@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{path::Path, str::FromStr};
 
 use ratatui::style::Color;
 use serde::Deserialize;
@@ -169,11 +169,36 @@ impl From<AnalogClockConfig> for AnalogClock {
 pub struct ClockFaceLoader;
 
 impl ClockFaceLoader {
-    fn load_user_clockfaces() -> LoaderResult<Vec<Clock>> {
-        todo!()
+    fn load_user_clockfaces(config_path: &Path) -> LoaderResult<Vec<Clock>> {
+        let folder_path = config_path.join("clock_faces");
+
+        if !folder_path.exists() {
+            return Ok(vec![]);
+        }
+
+        let mut clock_faces = Vec::new();
+
+        for entry in std::fs::read_dir(folder_path)? {
+            let path = entry?.path();
+
+            if path.extension().and_then(|ext| ext.to_str()) != Some("toml") {
+                continue;
+            }
+
+            let content = std::fs::read_to_string(&path)?;
+            let mut config: ClockConfig = toml::from_str(&content)?;
+
+            if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                config.set_name_if_none(stem.to_string());
+            }
+
+            clock_faces.push(config.into());
+        }
+
+        Ok(clock_faces)
     }
 
-    pub fn load_clockfaces() -> LoaderResult<Vec<Clock>> {
+    pub fn load_clockfaces(config_path: &Path) -> LoaderResult<Vec<Clock>> {
         let mut clock_faces = CLOCK_FACES
             .iter()
             .map(|clock_face| {
@@ -182,9 +207,9 @@ impl ClockFaceLoader {
             })
             .collect::<LoaderResult<Vec<_>>>()?;
 
-        // if let Ok(user_clockfaces) = Self::load_user_clockfaces() {
-        //  clock_faces.extend(user_clockfaces);
-        // }
+        if let Ok(user_clockfaces) = Self::load_user_clockfaces(config_path) {
+            clock_faces.extend(user_clockfaces);
+        }
 
         Ok(clock_faces)
     }

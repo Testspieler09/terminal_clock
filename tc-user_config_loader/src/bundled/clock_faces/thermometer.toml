@@ -61,6 +61,6 @@ second_coords = []
 always_on_coords = []
 
 
-format = "Hms"
+format = "HH:MM:SS"
 
 # vim: set tabstop=2 shiftwidth=2 expandtab:

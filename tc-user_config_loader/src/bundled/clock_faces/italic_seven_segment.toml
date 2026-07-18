@@ -439,6 +439,6 @@ second_coords = [
 always_on_coords = []
 
 clock_color = "#4a4a4a"
-format = "Hm"
+format = "HH:MM"
 
 # vim: set tabstop=2 shiftwidth=2 expandtab:

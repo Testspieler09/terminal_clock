@@ -1,3 +1,4 @@
+pub mod app_config_loader;
 pub(crate) mod bundled;
 pub mod clock_face_loader;
 pub mod color_theme_loader;

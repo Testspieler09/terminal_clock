@@ -1,29 +1,25 @@
 use chrono::{DateTime, Local};
 use ratatui::widgets::Paragraph;
 use serde::Deserialize;
-use strum::EnumIter;
+use strum::{Display, EnumIter, EnumString};
 
 use crate::{
     analog_clock::AnalogClock, color_clock::ColorClock, color_theme::ColorTheme,
     digital_clock::DigitalClock,
 };
 
-#[derive(Default, Deserialize, Clone, Copy, EnumIter)]
+#[derive(Default, Deserialize, Clone, Copy, EnumIter, Display, EnumString)]
 pub enum TimeFormat {
     #[default]
+    #[serde(rename = "HH:MM:SS")]
+    #[strum(serialize = "HH:MM:SS")]
     Hms,
+    #[serde(rename = "HH:MM")]
+    #[strum(serialize = "HH:MM")]
     Hm,
+    #[serde(rename = "MM:HH:SS")]
+    #[strum(serialize = "MM:HH:SS")]
     Mhs,
-}
-
-impl TimeFormat {
-    pub fn get_str_repr(&self) -> &str {
-        match self {
-            TimeFormat::Hms => "HH:MM:SS",
-            TimeFormat::Hm => "HH:MM",
-            TimeFormat::Mhs => "MM:HH:SS",
-        }
-    }
 }
 
 pub trait ClockBehaviour {

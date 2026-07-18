@@ -4,7 +4,7 @@ use ratatui::style::Color;
 use serde::Deserialize;
 use tc_models::quote::Quote;
 
-use crate::{LoaderResult, bundled::default_quotes::init_default_quotes};
+use crate::{LoaderResult, bundled::DEFAULT_QUOTES};
 
 #[derive(Deserialize)]
 pub struct QuoteConfig {
@@ -57,7 +57,9 @@ impl QuoteLoader {
     }
 
     pub fn load_quotes(config_path: &Path) -> LoaderResult<Vec<Quote>> {
-        let mut quotes = init_default_quotes();
+        let config: QuotesConfig =
+            toml::from_str(DEFAULT_QUOTES).expect("bundled default_quotes.toml is invalid");
+        let mut quotes = config.into_quotes();
 
         if let Ok(user_quotes) = Self::load_user_quotes(config_path) {
             quotes.extend(user_quotes);

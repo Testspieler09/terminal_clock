@@ -1,6 +1,5 @@
-pub(crate) mod default_quotes;
-
 pub(crate) const DEFAULT_QUOTES: &str = include_str!("./default_quotes.toml");
+pub(crate) const DEFAULT_CONFIG: &str = include_str!("./default_config.toml");
 
 pub(crate) const COLOR_THEMES: [&str; 3] = [
     include_str!("./color_themes/terminal_clock.toml"),

@@ -24,7 +24,7 @@ impl Selectable for SelectableItem {
             SelectableItem::ClockFace(clock_idx) => {
                 tui_assets.get_clock(*clock_idx).get_name().to_string()
             }
-            SelectableItem::Format(fmt) => fmt.get_str_repr().to_string(),
+            SelectableItem::Format(fmt) => fmt.to_string(),
             SelectableItem::Quote(quote_idx) => {
                 if let Some(quote) = tui_assets.get_quote(*quote_idx) {
                     quote.text.clone()
