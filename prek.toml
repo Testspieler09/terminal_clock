@@ -7,6 +7,8 @@ repo = "local"
   entry = "cargo +nightly fmt -- --check"
   language = "system"
   pass_filenames = false
+  files = '\.(rs|toml)$'
+  exclude = 'prek\.toml$'
 
   [[repos.hooks]]
   id = "cargo-clippy"
@@ -14,6 +16,8 @@ repo = "local"
   entry = "cargo clippy --all-targets -- -D warnings"
   language = "system"
   pass_filenames = false
+  files = '\.(rs|toml)$'
+  exclude = 'prek\.toml$'
 
   [[repos.hooks]]
   id = "cargo-check"
@@ -21,6 +25,8 @@ repo = "local"
   entry = "cargo check --all-targets"
   language = "system"
   pass_filenames = false
+  files = '\.(rs|toml)$'
+  exclude = 'prek\.toml$'
 
   [[repos.hooks]]
   id = "cargo-test"
@@ -28,3 +34,5 @@ repo = "local"
   entry = "cargo test --all"
   language = "system"
   pass_filenames = false
+  files = '\.(rs|toml)$'
+  exclude = 'prek\.toml$'

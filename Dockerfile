@@ -11,6 +11,7 @@ FROM debian:bookworm-slim
 WORKDIR /app
 
 COPY --from=builder /app/target/release/tc /usr/local/bin/tc
+COPY --from=builder /app/target/release/check-config /usr/local/bin/check-config
 
 RUN useradd -m appuser
 USER appuser

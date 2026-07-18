@@ -78,13 +78,10 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact_name: terminal_clock
             asset_name: terminal_clock-linux-x86_64.tar.gz
           - os: windows-latest
-            artifact_name: terminal_clock.exe
             asset_name: terminal_clock-windows-x86_64.zip
           - os: macos-latest
-            artifact_name: terminal_clock
             asset_name: terminal_clock-macos-x86_64.tar.gz
 
     steps:
@@ -100,14 +97,14 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           cd target/release
-          tar czf ../../${{ matrix.asset_name }} ${{ matrix.artifact_name }}
+          tar czf ../../${{ matrix.asset_name }} tc check-config
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           cd target/release
-          Compress-Archive -Path ${{ matrix.artifact_name }} -DestinationPath ..\..\${{ matrix.asset_name }}
+          Compress-Archive -Path tc.exe, check-config.exe -DestinationPath ..\..\${{ matrix.asset_name }}
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
@@ -156,3 +153,55 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ steps.ver.outputs.version }}
+
+  summary:
+    needs: [detect, tag, build-release, docker]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Write summary
+        run: |
+          VERSION="${{ needs.detect.outputs.version }}"
+          TAG="v$VERSION"
+          CHANGED="${{ needs.detect.outputs.changed }}"
+          BUILD_RESULT="${{ needs.build-release.result }}"
+          DOCKER_RESULT="${{ needs.docker.result }}"
+
+          echo "## Release Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$CHANGED" != "true" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "No version bump detected - nothing was released." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          echo "**Version:** \`$TAG\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** \`${{ github.event_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$BUILD_RESULT" = "success" ]; then
+            echo "| Platform | Archive | Binaries |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Linux    | \`terminal_clock-linux-x86_64.tar.gz\`   | \`tc\`, \`check-config\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| macOS    | \`terminal_clock-macos-x86_64.tar.gz\`   | \`tc\`, \`check-config\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| Windows  | \`terminal_clock-windows-x86_64.zip\`    | \`tc.exe\`, \`check-config.exe\` |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo ":x: Binary builds **$BUILD_RESULT** - no release artifacts uploaded." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Docker" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$DOCKER_RESULT" = "success" ]; then
+            echo "| Tag | Image |" >> $GITHUB_STEP_SUMMARY
+            echo "|-----|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| \`latest\`      | \`ghcr.io/${{ github.repository }}:latest\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| \`$VERSION\` | \`ghcr.io/${{ github.repository }}:$VERSION\` |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Includes: \`tc\`, \`check-config\` (entrypoint: \`tc\`)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo ":x: Docker build **$DOCKER_RESULT**." >> $GITHUB_STEP_SUMMARY
+          fi
