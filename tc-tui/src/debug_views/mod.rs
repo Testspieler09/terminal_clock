@@ -4,11 +4,11 @@ mod fireworks_view;
 use ratatui::DefaultTerminal;
 use tc_models::clock::TimeFormat;
 
-use crate::{Result, tui_models::tui::TuiAssets};
+use crate::Result;
 
 pub trait DebugView {
     fn name(&self) -> &'static str;
-    fn run(&self, terminal: &mut DefaultTerminal, assets: &TuiAssets) -> Result<()>;
+    fn run(&self, terminal: &mut DefaultTerminal) -> Result<()>;
 }
 
 pub struct ClockViewConfig {

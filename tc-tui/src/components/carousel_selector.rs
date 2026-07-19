@@ -17,11 +17,9 @@ use crate::tui_models::{
     selectable_item::{Selectable, SelectableItem},
     settings::Setting,
     styled_widget::StyledWidget,
-    tui::TuiAssets,
     tui_action::TuiAction,
     tui_error::{UpdateError, UpdateResult},
 };
-
 const SCROLL_STEP_MS: Duration = Duration::from_millis(200);
 const SCROLL_PAUSE_MS: Duration = Duration::from_millis(600);
 
@@ -90,7 +88,7 @@ impl CarouselSelector {
         self.scroll_phase = ScrollPhase::default();
     }
 
-    pub(crate) fn tick(&mut self, tui_assets: &TuiAssets) {
+    pub(crate) fn tick(&mut self) {
         if !self.is_active {
             return;
         }
@@ -100,7 +98,7 @@ impl CarouselSelector {
             return;
         }
 
-        let name = self.options[self.current_selection].get_name(tui_assets);
+        let name = self.options[self.current_selection].get_name();
         let name_len = name.chars().count();
         if name_len <= box_width {
             return;
@@ -183,12 +181,11 @@ impl CarouselSelector {
     pub(crate) fn update_current_selection(
         &mut self,
         selection: SelectableItem,
-        tui_assets: &TuiAssets,
     ) -> UpdateResult<()> {
         if let Some(idx) = self
             .options
             .iter()
-            .position(|item| *item.get_name(tui_assets) == *selection.get_name(tui_assets))
+            .position(|item| *item.get_name() == *selection.get_name())
         {
             self.current_selection = idx;
             Ok(())
@@ -200,15 +197,11 @@ impl CarouselSelector {
 
 pub(crate) struct SettingsMenuCtx<'a> {
     pub color_theme: &'a ColorTheme,
-    tui_assets: &'a TuiAssets,
 }
 
 impl<'a> SettingsMenuCtx<'a> {
-    pub fn new(color_theme: &'a ColorTheme, tui_assets: &'a TuiAssets) -> Self {
-        SettingsMenuCtx {
-            color_theme,
-            tui_assets,
-        }
+    pub fn new(color_theme: &'a ColorTheme) -> Self {
+        SettingsMenuCtx { color_theme }
     }
 }
 
@@ -257,7 +250,7 @@ impl StyledWidget for &CarouselSelector {
             .style(style)
             .render(button_left_section, buf);
 
-        let name = self.options[self.current_selection].get_name(ctx.tui_assets);
+        let name = self.options[self.current_selection].get_name();
         let box_width = option_section.width as usize;
         // Cache for tick() which runs without layout context.
         self.box_width.set(box_width);

@@ -8,20 +8,17 @@ use ratatui::{
 use tc_models::clock::TimeFormat;
 
 use crate::{
-    AppError, Result,
+    AppError, Result, assets,
     debug_views::{ClockViewConfig, DebugView},
-    tui_models::{
-        application::ApplicationState,
-        clock::ClockState,
-        tui::{TuiAssets, TuiState},
-    },
+    tui_models::{application::ApplicationState, clock::ClockState, tui::TuiState},
     views::clock::render_clock_view,
 };
 
 pub struct ClockView(pub ClockViewConfig);
 
 impl ClockView {
-    fn resolve_state(&self, assets: &TuiAssets) -> Result<TuiState> {
+    fn resolve_state(&self) -> Result<TuiState> {
+        let assets = assets();
         let clock_face_idx = match &self.0.clock_face {
             None => 0,
             Some(name) => assets
@@ -96,14 +93,14 @@ impl DebugView for ClockView {
         "Clock view"
     }
 
-    fn run(&self, terminal: &mut DefaultTerminal, assets: &TuiAssets) -> Result<()> {
+    fn run(&self, terminal: &mut DefaultTerminal) -> Result<()> {
         use ratatui::crossterm::event::{self, Event, KeyCode};
 
-        let state = self.resolve_state(assets)?;
+        let state = self.resolve_state()?;
 
         loop {
             terminal.draw(|frame| {
-                let theme = assets.get_color_theme(state.color_theme_idx);
+                let theme = assets().get_color_theme(state.color_theme_idx);
                 frame.render_widget(
                     Block::bordered()
                         .border_type(BorderType::Rounded)
@@ -114,7 +111,7 @@ impl DebugView for ClockView {
                         .style(theme.default_style()),
                     frame.area(),
                 );
-                render_clock_view(frame, &state, assets);
+                render_clock_view(frame, &state);
             })?;
 
             if event::poll(Duration::from_millis(500))? {

@@ -28,18 +28,25 @@ pub use tui_models::tui::TuiAssets;
 #[cfg(not(feature = "debug-views"))]
 use crate::tui_models::tui::TuiAssets;
 use crate::{
-    components::{
-        carousel_selector::SettingsMenuCtx,
-        pomodoro::{PomodoroConfig, PomodoroState, PomodoroTimer},
-    },
+    components::carousel_selector::SettingsMenuCtx,
     tui_models::{
         application::ApplicationState,
-        clock::ClockState,
         controller,
         tui::{TuiComponents, TuiState},
     },
     views::{clock::render_clock_view, fireworks},
 };
+
+static TUI_ASSETS: OnceLock<TuiAssets> = OnceLock::new();
+
+pub(crate) fn assets() -> &'static TuiAssets {
+    TUI_ASSETS.get().expect("TUI_ASSETS not initialised")
+}
+
+#[cfg(feature = "debug-views")]
+pub fn init_assets(assets: TuiAssets) {
+    TUI_ASSETS.get_or_init(|| assets);
+}
 
 pub struct TuiRenderer;
 
@@ -74,19 +81,18 @@ impl TuiRenderer {
             None => tc_user_config_loader::get_user_config_path()?,
         };
         let assets_owned = TuiAssets::try_new(config_path.clone())?;
-        static TUI_ASSETS: OnceLock<TuiAssets> = OnceLock::new();
-        let assets = TUI_ASSETS.get_or_init(|| assets_owned);
+        TUI_ASSETS.get_or_init(|| assets_owned);
 
-        let mut tui_state = assets.initial_state(&config_path, refresh_rate);
+        let mut tui_state = assets().initial_state(&config_path, refresh_rate);
 
         if fireworks::is_new_years(Local::now()) {
-            fireworks::run_fireworks(&mut terminal, assets, &tui_state)?;
+            fireworks::run_fireworks(&mut terminal, &tui_state)?;
         }
 
-        let mut tui_components = TuiComponents::new(assets);
+        let mut tui_components = TuiComponents::new();
 
         loop {
-            terminal.draw(|frame| Self::render(frame, &tui_state, assets, &tui_components))?;
+            terminal.draw(|frame| Self::render(frame, &tui_state, &tui_components))?;
 
             let should_exit = controller::handle_events(&mut tui_state, &mut tui_components)?;
 
@@ -94,7 +100,7 @@ impl TuiRenderer {
                 tui_state.application_state,
                 ApplicationState::ShowingSettings
             ) {
-                tui_components.settings_menu.tick(assets);
+                tui_components.settings_menu.tick();
             }
 
             if should_exit {
@@ -103,9 +109,10 @@ impl TuiRenderer {
         }
     }
 
-    fn render(frame: &mut Frame, state: &TuiState, assets: &TuiAssets, components: &TuiComponents) {
+    fn render(frame: &mut Frame, state: &TuiState, components: &TuiComponents) {
+        let tui_assets = assets();
         // Set the right background with a nice border
-        let theme = assets.get_color_theme(state.color_theme_idx);
+        let theme = tui_assets.get_color_theme(state.color_theme_idx);
         frame.render_widget(
             Block::bordered()
                 .border_type(BorderType::Rounded)
@@ -116,7 +123,7 @@ impl TuiRenderer {
 
         match state.application_state {
             ApplicationState::Running => {
-                render_clock_view(frame, state, assets);
+                render_clock_view(frame, state);
             }
             ApplicationState::ShowingHero => components
                 .logo
@@ -129,7 +136,7 @@ impl TuiRenderer {
             ApplicationState::ShowingSettings => components.logo.render_styled_component_with_logo(
                 &components.settings_menu,
                 frame,
-                &SettingsMenuCtx::new(theme, assets),
+                &SettingsMenuCtx::new(theme),
             ),
             ApplicationState::Finished => {}
         }

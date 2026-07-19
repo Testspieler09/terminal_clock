@@ -1,9 +1,9 @@
 use tc_models::clock::TimeFormat;
 
-use crate::tui_models::{tui::TuiAssets, tui_action::TuiAction};
+use crate::{assets, tui_models::tui_action::TuiAction};
 
 pub trait Selectable {
-    fn get_name(&self, tui_assets: &TuiAssets) -> String;
+    fn get_name(&self) -> String;
     fn get_corrosponding_action(&self) -> TuiAction;
 }
 
@@ -15,18 +15,17 @@ pub enum SelectableItem {
 }
 
 impl Selectable for SelectableItem {
-    fn get_name(&self, tui_assets: &TuiAssets) -> String {
+    fn get_name(&self) -> String {
         match self {
-            SelectableItem::Theme(theme_idx) => tui_assets
-                .get_color_theme(*theme_idx)
-                .get_name()
-                .to_string(),
+            SelectableItem::Theme(theme_idx) => {
+                assets().get_color_theme(*theme_idx).get_name().to_string()
+            }
             SelectableItem::ClockFace(clock_idx) => {
-                tui_assets.get_clock(*clock_idx).get_name().to_string()
+                assets().get_clock(*clock_idx).get_name().to_string()
             }
             SelectableItem::Format(fmt) => fmt.to_string(),
             SelectableItem::Quote(quote_idx) => {
-                if let Some(quote) = tui_assets.get_quote(*quote_idx) {
+                if let Some(quote) = assets().get_quote(*quote_idx) {
                     quote.text.clone()
                 } else {
                     "None".to_string()

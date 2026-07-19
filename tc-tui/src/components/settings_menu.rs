@@ -20,7 +20,6 @@ use crate::{
         selector::{Selector, SelectorType, SettingsSelector},
         settings::Setting,
         styled_widget::StyledWidget,
-        tui::TuiAssets,
         tui_action::TuiAction,
     },
 };
@@ -171,7 +170,7 @@ impl SettingMenu {
         },
     ];
 
-    pub fn new(tui_assets: &TuiAssets) -> SettingMenu {
+    pub fn new() -> SettingMenu {
         let general_tab_selectors: Vec<Selector> = Self::GENERAL_TAB_CONFIG
             .iter()
             .enumerate()
@@ -179,24 +178,16 @@ impl SettingMenu {
                 let is_active = idx == 0;
                 config
                     .selector_type
-                    .create_selector(config.setting, tui_assets, is_active)
+                    .create_selector(config.setting, is_active)
             })
             .collect();
         let pomodoro_tab_selectors: Vec<Selector> = Self::POMODORO_TAB_CONFIG
             .iter()
-            .map(|config| {
-                config
-                    .selector_type
-                    .create_selector(config.setting, tui_assets, false)
-            })
+            .map(|config| config.selector_type.create_selector(config.setting, false))
             .collect();
         let color_tab_selectors: Vec<Selector> = Self::COLOR_TAB_CONFIG
             .iter()
-            .map(|config| {
-                config
-                    .selector_type
-                    .create_selector(config.setting, tui_assets, false)
-            })
+            .map(|config| config.selector_type.create_selector(config.setting, false))
             .collect();
 
         SettingMenu {
@@ -311,13 +302,11 @@ impl SettingMenu {
         self.update_option_index(PrimitiveTabNavigationOperation::Prev);
     }
 
-    pub fn tick(&mut self, tui_assets: &TuiAssets) {
+    pub fn tick(&mut self) {
         match self.current_tab {
-            SettingsTab::General(idx) => self.general_tab_selectors[idx as usize].tick(tui_assets),
-            SettingsTab::Pomodoro(idx) => {
-                self.pomodoro_tab_selectors[idx as usize].tick(tui_assets)
-            }
-            SettingsTab::Color(idx) => self.color_tab_selectors[idx as usize].tick(tui_assets),
+            SettingsTab::General(idx) => self.general_tab_selectors[idx as usize].tick(),
+            SettingsTab::Pomodoro(idx) => self.pomodoro_tab_selectors[idx as usize].tick(),
+            SettingsTab::Color(idx) => self.color_tab_selectors[idx as usize].tick(),
         }
     }
 

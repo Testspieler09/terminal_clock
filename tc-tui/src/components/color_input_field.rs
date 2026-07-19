@@ -14,7 +14,7 @@ use tc_models::color_theme::{ColorTheme, ThemeColor};
 
 use crate::tui_models::{
     selectable_item::SelectableItem, selector::SettingsSelector, settings::Setting,
-    styled_widget::StyledWidget, tui::TuiAssets, tui_action::TuiAction, tui_error::UpdateResult,
+    styled_widget::StyledWidget, tui_action::TuiAction, tui_error::UpdateResult,
 };
 
 // TODO: add the global colorpicker component later on that gets rendered over the whole frame
@@ -53,11 +53,7 @@ impl SettingsSelector for ColorSelector {
         self.is_active = false;
     }
 
-    fn update_current_selection(
-        &mut self,
-        _selection: SelectableItem,
-        _assets: &TuiAssets,
-    ) -> UpdateResult<()> {
+    fn update_current_selection(&mut self, _selection: SelectableItem) -> UpdateResult<()> {
         todo!()
     }
 }

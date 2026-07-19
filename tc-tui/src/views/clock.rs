@@ -3,7 +3,7 @@ use ratatui::{Frame, prelude::Constraint};
 use tc_models::clock::ClockBehaviour;
 
 use crate::{
-    TuiState,
+    TuiState, assets,
     components::{
         Dimensions,
         fallback_terminal_too_small::{FallbackContext, FallbackView},
@@ -11,10 +11,11 @@ use crate::{
     helpers::{
         center_widget, center_widget_horizontally, unstable_widget_fits_frame, widget_fits_frame,
     },
-    tui_models::{styled_widget::StyledWidget, tui::TuiAssets},
+    tui_models::styled_widget::StyledWidget,
 };
 
-pub(crate) fn render_clock_view(frame: &mut Frame, config: &TuiState, tui_assets: &TuiAssets) {
+pub(crate) fn render_clock_view(frame: &mut Frame, config: &TuiState) {
+    let tui_assets = assets();
     let frame_area = frame.area();
 
     let clock = tui_assets.get_clock(config.clock_state.clock_face_idx);

@@ -14,7 +14,6 @@ use crate::{
     },
     tui_models::{application::ApplicationState, clock::ClockState},
 };
-
 pub struct TuiAssets {
     pub color_themes: Vec<ColorTheme>,
     pub clock_faces: Vec<Clock>,
@@ -78,10 +77,10 @@ pub(crate) struct TuiComponents {
 }
 
 impl TuiComponents {
-    pub fn new(tui_assets: &TuiAssets) -> TuiComponents {
+    pub fn new() -> TuiComponents {
         TuiComponents {
             help_box: HelpBox::new(),
-            settings_menu: SettingMenu::new(tui_assets),
+            settings_menu: SettingMenu::new(),
             hero: Hero::default(),
             logo: Logo::default(),
         }

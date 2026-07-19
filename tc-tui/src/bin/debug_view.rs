@@ -8,7 +8,7 @@ use ratatui::{
     widgets::{Block, BorderType, List, ListItem, ListState},
 };
 use tc_models::clock::TimeFormat;
-use tc_tui::{AppError, Result, TuiAssets, debug_views};
+use tc_tui::{AppError, Result, TuiAssets, debug_views, init_assets};
 
 /// Preview TUI views and animations without running the full clock.
 #[derive(Parser)]
@@ -45,6 +45,7 @@ fn main() {
 
 fn run(args: Args) -> Result<()> {
     let assets = TuiAssets::try_new(tc_user_config_loader::get_user_config_path()?)?;
+    init_assets(assets);
 
     let clock_cfg = debug_views::ClockViewConfig {
         clock_face: args.clock_face,
@@ -56,8 +57,8 @@ fn run(args: Args) -> Result<()> {
 
     let mut terminal = ratatui::init();
     let result = match args.view {
-        Some(idx) => launch_view(&mut terminal, &views, &assets, idx),
-        None => run_menu(&mut terminal, &views, &assets),
+        Some(idx) => launch_view(&mut terminal, &views, idx),
+        None => run_menu(&mut terminal, &views),
     };
     ratatui::restore();
     result
@@ -66,7 +67,6 @@ fn run(args: Args) -> Result<()> {
 fn run_menu(
     terminal: &mut DefaultTerminal,
     views: &[Box<dyn debug_views::DebugView>],
-    assets: &TuiAssets,
 ) -> Result<()> {
     let mut list_state = ListState::default();
     list_state.select(Some(0));
@@ -90,7 +90,7 @@ fn run_menu(
                 }
                 KeyCode::Enter => {
                     if let Some(idx) = list_state.selected() {
-                        launch_view(terminal, views, assets, idx)?;
+                        launch_view(terminal, views, idx)?;
                     }
                 }
                 _ => {}
@@ -124,11 +124,10 @@ fn render_menu(
 fn launch_view(
     terminal: &mut DefaultTerminal,
     views: &[Box<dyn debug_views::DebugView>],
-    assets: &TuiAssets,
     idx: usize,
 ) -> Result<()> {
     match views.get(idx) {
-        Some(view) => view.run(terminal, assets),
+        Some(view) => view.run(terminal),
         None => {
             eprintln!("FAILED  unknown view index {idx}");
             Ok(())

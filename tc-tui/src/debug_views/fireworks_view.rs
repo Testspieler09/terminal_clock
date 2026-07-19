@@ -7,10 +7,7 @@ use ratatui::{
     widgets::Widget,
 };
 
-use crate::{
-    Result, components::fireworks::FireworksAnimation, debug_views::DebugView,
-    tui_models::tui::TuiAssets,
-};
+use crate::{Result, components::fireworks::FireworksAnimation, debug_views::DebugView};
 
 pub struct FireworksView;
 
@@ -19,7 +16,7 @@ impl DebugView for FireworksView {
         "Fireworks (New Year's easter egg)"
     }
 
-    fn run(&self, terminal: &mut DefaultTerminal, _assets: &TuiAssets) -> Result<()> {
+    fn run(&self, terminal: &mut DefaultTerminal) -> Result<()> {
         use ratatui::crossterm::event::{self, Event};
 
         let mut animation = FireworksAnimation::new();

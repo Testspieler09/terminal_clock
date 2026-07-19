@@ -6,6 +6,7 @@ use strum::IntoEnumIterator;
 use tc_models::clock::TimeFormat;
 
 use crate::{
+    assets,
     components::{
         carousel_selector::{CarouselSelector, SettingsMenuCtx},
         color_input_field::ColorSelector,
@@ -15,7 +16,6 @@ use crate::{
         selectable_item::SelectableItem,
         settings::Setting,
         styled_widget::StyledWidget,
-        tui::TuiAssets,
         tui_action::TuiAction,
         tui_error::{UpdateError, UpdateResult},
     },
@@ -32,17 +32,13 @@ pub(crate) trait SettingsSelector {
     fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction>;
     fn set_to_active(&mut self);
     fn set_to_inactive(&mut self);
-    fn update_current_selection(
-        &mut self,
-        selection: SelectableItem,
-        assets: &TuiAssets,
-    ) -> UpdateResult<()>;
+    fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()>;
 }
 
 impl Selector {
-    pub(crate) fn tick(&mut self, assets: &TuiAssets) {
+    pub(crate) fn tick(&mut self) {
         if let Selector::Carousel(selector) = self {
-            selector.tick(assets);
+            selector.tick();
         }
     }
 }
@@ -72,20 +68,14 @@ impl SettingsSelector for Selector {
         }
     }
 
-    fn update_current_selection(
-        &mut self,
-        selection: SelectableItem,
-        assets: &TuiAssets,
-    ) -> Result<(), UpdateError> {
+    fn update_current_selection(&mut self, selection: SelectableItem) -> Result<(), UpdateError> {
         match self {
             Selector::Carousel(carousel_selector) => {
-                carousel_selector.update_current_selection(selection, assets)
+                carousel_selector.update_current_selection(selection)
             }
-            Selector::Color(color_selector) => {
-                color_selector.update_current_selection(selection, assets)
-            }
+            Selector::Color(color_selector) => color_selector.update_current_selection(selection),
             Selector::Number(number_selector) => {
-                number_selector.update_current_selection(selection, assets)
+                number_selector.update_current_selection(selection)
             }
         }
     }
@@ -104,11 +94,8 @@ impl StyledWidget for &Selector {
 }
 
 impl SelectorType {
-    fn carousel_options_for(
-        &self,
-        setting: Setting,
-        tui_assets: &TuiAssets,
-    ) -> Vec<SelectableItem> {
+    fn carousel_options_for(&self, setting: Setting) -> Vec<SelectableItem> {
+        let tui_assets = assets();
         match setting {
             Setting::ClockFace => tui_assets
                 .clock_faces
@@ -136,17 +123,12 @@ impl SelectorType {
         }
     }
 
-    pub fn create_selector(
-        &self,
-        setting: Setting,
-        tui_assets: &TuiAssets,
-        is_active: bool,
-    ) -> Selector {
+    pub fn create_selector(&self, setting: Setting, is_active: bool) -> Selector {
         match self {
             SelectorType::Carousel => Selector::Carousel(CarouselSelector::new(
                 is_active,
                 setting,
-                self.carousel_options_for(setting, tui_assets),
+                self.carousel_options_for(setting),
             )),
             SelectorType::Color => Selector::Color(ColorSelector::new(is_active, setting)),
             SelectorType::Number => Selector::Number(NumberSelector::new(is_active, setting)),

@@ -8,11 +8,7 @@ use ratatui::{
 };
 use tc_models::color_theme::ThemeColor;
 
-use crate::{
-    Result,
-    components::fireworks::FireworksAnimation,
-    tui_models::tui::{TuiAssets, TuiState},
-};
+use crate::{Result, assets, components::fireworks::FireworksAnimation, tui_models::tui::TuiState};
 
 // Trigger window: Dec 31 23:59:59 -> Jan 1 00:00:05
 pub(crate) fn is_new_years(now: DateTime<Local>) -> bool {
@@ -26,12 +22,8 @@ pub(crate) fn is_new_years(now: DateTime<Local>) -> bool {
         || (month == 1 && day == 1 && hour == 0 && min == 0 && sec <= 5)
 }
 
-pub(crate) fn run_fireworks(
-    terminal: &mut DefaultTerminal,
-    assets: &TuiAssets,
-    state: &TuiState,
-) -> Result<()> {
-    let theme = assets.get_color_theme(state.color_theme_idx);
+pub(crate) fn run_fireworks(terminal: &mut DefaultTerminal, state: &TuiState) -> Result<()> {
+    let theme = assets().get_color_theme(state.color_theme_idx);
     let border_color = *theme.get(&ThemeColor::Borders);
     let bg_style = theme.default_style();
 
