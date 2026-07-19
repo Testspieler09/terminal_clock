@@ -12,16 +12,16 @@ pub type LoaderResult<T> = Result<T, AssetsLoadError>;
 #[derive(Debug)]
 pub enum AssetsLoadError {
     Io(io::Error),
-    ConfigPath(String),
     Toml(toml::de::Error),
+    InvalidConfig(String),
 }
 
 impl fmt::Display for AssetsLoadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Io(e) => write!(f, "IO error: {e}"),
-            Self::ConfigPath(e) => write!(f, "Invalid config path: {e}"),
             Self::Toml(e) => write!(f, "TOML parse error: {e}"),
+            Self::InvalidConfig(e) => write!(f, "Invalid config: {e}"),
         }
     }
 }
@@ -43,15 +43,21 @@ impl From<toml::de::Error> for AssetsLoadError {
 pub fn get_user_config_path() -> LoaderResult<PathBuf> {
     #[cfg(target_os = "windows")]
     {
-        let appdata =
-            std::env::var("APPDATA").map_err(|e| AssetsLoadError::ConfigPath(e.to_string()))?;
+        let appdata = std::env::var("LOCALAPPDATA")
+            .map_err(|e| AssetsLoadError::InvalidConfig(e.to_string()))?;
         Ok(PathBuf::from(appdata).join("terminal_clock"))
     }
 
     // NOTE: on MacOS .config is not the default
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     {
-        let home = std::env::var("HOME").map_err(|e| AssetsLoadError::ConfigPath(e.to_string()))?;
-        Ok(PathBuf::from(home).join(".config").join("terminal_clock"))
+        let base = if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
+            PathBuf::from(xdg)
+        } else {
+            let home =
+                std::env::var("HOME").map_err(|e| AssetsLoadError::InvalidConfig(e.to_string()))?;
+            PathBuf::from(home).join(".config")
+        };
+        Ok(base.join("terminal_clock"))
     }
 }

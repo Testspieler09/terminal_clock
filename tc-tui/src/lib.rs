@@ -1,14 +1,21 @@
 pub(crate) mod components;
+pub mod error;
 pub(crate) mod helpers;
 pub(crate) mod tui_models;
 pub(crate) mod views;
 
 #[cfg(feature = "debug-views")]
 pub mod debug_views;
+
 use std::{path::PathBuf, sync::OnceLock};
 
+pub use error::AppError;
+#[cfg(feature = "debug-views")]
+pub type Result<T> = std::result::Result<T, AppError>;
+#[cfg(not(feature = "debug-views"))]
+pub(crate) type Result<T> = std::result::Result<T, AppError>;
+
 use chrono::Local;
-use color_eyre::Result;
 use ratatui::{
     DefaultTerminal, Frame,
     style::Style,
@@ -64,13 +71,11 @@ impl TuiRenderer {
     ) -> Result<()> {
         let config_path = match config_path {
             Some(path) => path,
-            None => tc_user_config_loader::get_user_config_path()
-                .map_err(|e| color_eyre::eyre::eyre!("{e}"))?,
+            None => tc_user_config_loader::get_user_config_path()?,
         };
+        let assets_owned = TuiAssets::try_new(config_path.clone())?;
         static TUI_ASSETS: OnceLock<TuiAssets> = OnceLock::new();
-        let assets = TUI_ASSETS.get_or_init(|| {
-            TuiAssets::try_new(config_path.clone()).expect("failed to initialize TUI assets")
-        });
+        let assets = TUI_ASSETS.get_or_init(|| assets_owned);
 
         let mut tui_state = assets.initial_state(&config_path, refresh_rate);
 

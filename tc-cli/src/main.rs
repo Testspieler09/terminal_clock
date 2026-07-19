@@ -1,7 +1,6 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, process};
 
 use clap::Parser;
-use color_eyre::Result;
 use tc_tui::TuiRenderer;
 
 /// A simple but fancy looking customizable terminal clock
@@ -25,14 +24,16 @@ struct Args {
     refresh_rate: u16,
 
     /// Path to the config folder (defaults to ~/.config/terminal_clock on Unix,
-    /// %APPDATA%\terminal_clock on Windows)
+    /// %LOCALAPPDATA%\terminal_clock on Windows)
     #[arg(short, long)]
     config: Option<PathBuf>,
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    color_eyre::install()?;
+async fn main() {
     let args = Args::parse();
-    TuiRenderer::execute_renderer(args.config, args.refresh_rate).await
+    if let Err(e) = TuiRenderer::execute_renderer(args.config, args.refresh_rate).await {
+        eprintln!("{e}");
+        process::exit(1);
+    }
 }

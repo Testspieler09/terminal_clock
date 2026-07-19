@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use color_eyre::Result;
 use ratatui::{
     DefaultTerminal,
     style::Style,
@@ -9,6 +8,7 @@ use ratatui::{
 use tc_models::clock::TimeFormat;
 
 use crate::{
+    AppError, Result,
     debug_views::{ClockViewConfig, DebugView},
     tui_models::{
         application::ApplicationState,
@@ -28,14 +28,15 @@ impl ClockView {
                 .clock_faces
                 .iter()
                 .position(|c| c.get_name().eq_ignore_ascii_case(name))
-                .ok_or_else(|| {
+                .ok_or_else(|| -> AppError {
                     let available: Vec<&str> =
                         assets.clock_faces.iter().map(|c| c.get_name()).collect();
-                    color_eyre::eyre::eyre!(
+                    format!(
                         "unknown clock face {:?} -- available: {}",
                         name,
                         available.join(", ")
                     )
+                    .into()
                 })? as u16,
         };
 
@@ -45,14 +46,15 @@ impl ClockView {
                 .color_themes
                 .iter()
                 .position(|t| t.get_name().eq_ignore_ascii_case(name))
-                .ok_or_else(|| {
+                .ok_or_else(|| -> AppError {
                     let available: Vec<&str> =
                         assets.color_themes.iter().map(|t| t.get_name()).collect();
-                    color_eyre::eyre::eyre!(
+                    format!(
                         "unknown theme {:?} -- available: {}",
                         name,
                         available.join(", ")
                     )
+                    .into()
                 })? as u16,
         };
 
@@ -64,11 +66,12 @@ impl ClockView {
                     .quotes
                     .iter()
                     .position(|q| q.text.eq_ignore_ascii_case(name.as_str()))
-                    .ok_or_else(|| {
-                        color_eyre::eyre::eyre!(
+                    .ok_or_else(|| -> AppError {
+                        format!(
                             "unknown quote {:?} -- use 'none' to disable, or omit for default",
                             name
                         )
+                        .into()
                     })? as u16;
                 Some(idx)
             }

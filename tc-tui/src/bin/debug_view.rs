@@ -1,5 +1,6 @@
+use std::process;
+
 use clap::Parser;
-use color_eyre::Result;
 use ratatui::{
     DefaultTerminal, Frame,
     style::{Style, Stylize},
@@ -7,7 +8,7 @@ use ratatui::{
     widgets::{Block, BorderType, List, ListItem, ListState},
 };
 use tc_models::clock::TimeFormat;
-use tc_tui::{TuiAssets, debug_views};
+use tc_tui::{AppError, Result, TuiAssets, debug_views};
 
 /// Preview TUI views and animations without running the full clock.
 #[derive(Parser)]
@@ -34,10 +35,15 @@ struct Args {
     quote: Option<String>,
 }
 
-fn main() -> Result<()> {
-    color_eyre::install()?;
+fn main() {
     let args = Args::parse();
+    if let Err(e) = run(args) {
+        eprintln!("{e}");
+        process::exit(1);
+    }
+}
 
+fn run(args: Args) -> Result<()> {
     let assets = TuiAssets::try_new(tc_user_config_loader::get_user_config_path()?)?;
 
     let clock_cfg = debug_views::ClockViewConfig {

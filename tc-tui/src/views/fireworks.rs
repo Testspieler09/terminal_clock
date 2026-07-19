@@ -1,7 +1,6 @@
 use std::{thread, time::Duration};
 
 use chrono::{DateTime, Datelike, Local, Timelike};
-use color_eyre::Result;
 use ratatui::{
     DefaultTerminal,
     style::Style,
@@ -10,6 +9,7 @@ use ratatui::{
 use tc_models::color_theme::ThemeColor;
 
 use crate::{
+    Result,
     components::fireworks::FireworksAnimation,
     tui_models::tui::{TuiAssets, TuiState},
 };

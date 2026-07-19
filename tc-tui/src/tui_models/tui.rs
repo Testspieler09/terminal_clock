@@ -2,11 +2,12 @@ use std::path::PathBuf;
 
 use tc_models::{clock::Clock, color_theme::ColorTheme, quote::Quote};
 use tc_user_config_loader::{
-    LoaderResult, clock_face_loader::ClockFaceLoader, color_theme_loader::ColorThemeLoader,
+    clock_face_loader::ClockFaceLoader, color_theme_loader::ColorThemeLoader,
     quote_loader::QuoteLoader,
 };
 
 use crate::{
+    Result,
     components::{
         help_box::HelpBox, hero::Hero, logo::Logo, pomodoro::PomodoroTimer,
         settings_menu::SettingMenu,
@@ -18,14 +19,17 @@ pub struct TuiAssets {
     pub color_themes: Vec<ColorTheme>,
     pub clock_faces: Vec<Clock>,
     pub quotes: Vec<Quote>,
+    pub initial_quote_idx: Option<usize>,
 }
 
 impl TuiAssets {
-    pub fn try_new(config_path: PathBuf) -> LoaderResult<TuiAssets> {
+    pub fn try_new(config_path: PathBuf) -> Result<TuiAssets> {
+        let (quotes, initial_quote_idx) = QuoteLoader::load_quotes(&config_path)?;
         Ok(TuiAssets {
             color_themes: ColorThemeLoader::load_color_themes(&config_path)?,
             clock_faces: ClockFaceLoader::load_clockfaces(&config_path)?,
-            quotes: QuoteLoader::load_quotes(&config_path)?,
+            quotes,
+            initial_quote_idx,
         })
     }
 

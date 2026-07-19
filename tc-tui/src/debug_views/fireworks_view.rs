@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use color_eyre::Result;
 use ratatui::{
     DefaultTerminal,
     prelude::{Buffer, Rect},
@@ -9,7 +8,8 @@ use ratatui::{
 };
 
 use crate::{
-    components::fireworks::FireworksAnimation, debug_views::DebugView, tui_models::tui::TuiAssets,
+    Result, components::fireworks::FireworksAnimation, debug_views::DebugView,
+    tui_models::tui::TuiAssets,
 };
 
 pub struct FireworksView;

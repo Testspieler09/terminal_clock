@@ -1,11 +1,10 @@
 mod clock_view;
 mod fireworks_view;
 
-use color_eyre::Result;
 use ratatui::DefaultTerminal;
 use tc_models::clock::TimeFormat;
 
-use crate::tui_models::tui::TuiAssets;
+use crate::{Result, tui_models::tui::TuiAssets};
 
 pub trait DebugView {
     fn name(&self) -> &'static str;
