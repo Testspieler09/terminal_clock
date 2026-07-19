@@ -27,7 +27,7 @@ impl TuiAssets {
         let clock_time_fmt = config.time_format.unwrap_or_default();
 
         let quote_idx = if config.show_quote.unwrap_or(true) && !self.quotes.is_empty() {
-            Some(0)
+            Some(self.initial_quote_idx.unwrap_or(0))
         } else {
             None
         };

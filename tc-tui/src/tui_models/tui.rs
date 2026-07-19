@@ -19,7 +19,7 @@ pub struct TuiAssets {
     pub color_themes: Vec<ColorTheme>,
     pub clock_faces: Vec<Clock>,
     pub quotes: Vec<Quote>,
-    pub initial_quote_idx: Option<usize>,
+    pub initial_quote_idx: Option<u16>,
 }
 
 impl TuiAssets {
