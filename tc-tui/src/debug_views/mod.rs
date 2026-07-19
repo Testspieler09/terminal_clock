@@ -18,9 +18,16 @@ pub struct ClockViewConfig {
     pub quote: Option<String>,
 }
 
-pub fn all_views(clock_cfg: ClockViewConfig) -> Vec<Box<dyn DebugView>> {
+pub struct FireworksViewConfig {
+    pub theme: Option<String>,
+}
+
+pub fn all_views(
+    clock_cfg: ClockViewConfig,
+    fireworks_cfg: FireworksViewConfig,
+) -> Vec<Box<dyn DebugView>> {
     vec![
-        Box::new(fireworks_view::FireworksView),
+        Box::new(fireworks_view::FireworksView(fireworks_cfg)),
         Box::new(clock_view::ClockView(clock_cfg)),
     ]
 }

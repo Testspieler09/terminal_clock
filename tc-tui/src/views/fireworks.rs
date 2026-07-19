@@ -24,10 +24,17 @@ pub(crate) fn is_new_years(now: DateTime<Local>) -> bool {
 
 pub(crate) fn run_fireworks(terminal: &mut DefaultTerminal, state: &TuiState) -> Result<()> {
     let theme = assets().get_color_theme(state.color_theme_idx);
-    let border_color = *theme.get(&ThemeColor::Borders);
     let bg_style = theme.default_style();
+    let border_color = *theme.get(&ThemeColor::Borders);
 
-    let mut animation = FireworksAnimation::new();
+    let burst_colors = [
+        *theme.get(&ThemeColor::Accent),
+        *theme.get(&ThemeColor::Foreground),
+        *theme.get(&ThemeColor::Selection),
+        *theme.get(&ThemeColor::Borders),
+    ];
+
+    let mut animation = FireworksAnimation::new(burst_colors);
 
     loop {
         terminal.draw(|frame| {
@@ -50,7 +57,6 @@ pub(crate) fn run_fireworks(terminal: &mut DefaultTerminal, state: &TuiState) ->
             break;
         }
 
-        // Cap at ~60 fps; the animation advances by wall-time so rate doesn't affect speed
         thread::sleep(Duration::from_millis(16));
     }
 

@@ -6,20 +6,8 @@ use ratatui::{
     widgets::Widget,
 };
 
-// Wide pool of printable ASCII — the source animation uses essentially all of these
 const CHARS: &[u8] =
     b"@#$%&*+=^~!?|\\/<>{}[]()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-const BURST_COLORS: [Color; 8] = [
-    Color::Red,
-    Color::Yellow,
-    Color::Green,
-    Color::Cyan,
-    Color::Magenta,
-    Color::White,
-    Color::LightRed,
-    Color::LightYellow,
-];
 
 const SHOW_DURATION: f32 = 5.0;
 
@@ -52,22 +40,22 @@ impl Particle {
         self.ttl > 0.0 || !self.trail.is_empty()
     }
 
-    fn tick(&mut self, dt: f32) {
+    fn tick(&mut self, dt: f32, area: Rect) {
+        let w = area.width as f32;
+        let h = area.height as f32;
         if self.ttl > 0.0 {
-            // Emit a trail point ~every cell moved
+            // Emit a trail point ~every cell moved, only when inside the area
             self.trail_accum += (self.vx.abs() + self.vy.abs()) * dt * 20.0;
             if self.trail_accum >= 0.8 {
                 self.trail_accum = 0.0;
-                self.trail.push(TrailPoint {
-                    x: self.x as u16,
-                    y: self.y as u16,
-                    glyph_seed: self.glyph_seed.wrapping_add(self.trail.len() as u32 * 37),
-                    age_frac: 0.0,
-                    color: self.color,
-                });
-                // cap trail length so memory stays bounded
-                if self.trail.len() > 12 {
-                    self.trail.remove(0);
+                if self.x >= 0.0 && self.x < w && self.y >= 0.0 && self.y < h {
+                    self.trail.push(TrailPoint {
+                        x: self.x as u16,
+                        y: self.y as u16,
+                        glyph_seed: self.glyph_seed.wrapping_add(self.trail.len() as u32 * 37),
+                        age_frac: 0.0,
+                        color: self.color,
+                    });
                 }
             }
 
@@ -104,10 +92,11 @@ pub struct FireworksAnimation {
     elapsed: f32,
     started_at: Instant,
     pub finished: bool,
+    burst_colors: [Color; 4],
 }
 
 impl FireworksAnimation {
-    pub fn new() -> Self {
+    pub fn new(burst_colors: [Color; 4]) -> Self {
         let pending_launches = vec![(0.20, 0.0), (0.75, 0.8), (0.45, 1.8), (0.60, 3.0)];
 
         FireworksAnimation {
@@ -117,6 +106,7 @@ impl FireworksAnimation {
             elapsed: 0.0,
             started_at: Instant::now(),
             finished: false,
+            burst_colors,
         }
     }
 
@@ -133,15 +123,15 @@ impl FireworksAnimation {
         for (i, &(x_frac, launch_t)) in self.pending_launches.iter().enumerate() {
             if self.elapsed >= launch_t {
                 let seed = (x_frac * 1000.0) as u32 + (launch_t * 100.0) as u32;
-                let color_idx = (x_frac * 100.0) as usize % BURST_COLORS.len();
+                let color_idx = (x_frac * 100.0) as usize % self.burst_colors.len();
                 let target_y = h * (0.10 + pseudo_rand(seed) * 0.35);
                 self.rockets.push(Rocket {
                     x: x_frac * w,
                     y: h - 1.0,
                     vy: -(2.5 + pseudo_rand(seed + 7) * 1.5),
                     target_y,
-                    color: BURST_COLORS[color_idx],
-                    color2: BURST_COLORS[(color_idx + 3) % BURST_COLORS.len()],
+                    color: self.burst_colors[color_idx],
+                    color2: self.burst_colors[(color_idx + 2) % self.burst_colors.len()],
                     trail_accum: 0.0,
                 });
                 launched.push(i);
@@ -193,7 +183,7 @@ impl FireworksAnimation {
         }
 
         for p in &mut self.particles {
-            p.tick(dt);
+            p.tick(dt, area);
         }
         self.particles.retain(Particle::is_alive);
 
@@ -221,7 +211,7 @@ impl FireworksAnimation {
             let vy = angle.sin() * speed;
 
             let c = match hash(s.wrapping_add(3)) % 4 {
-                0 => Color::White,
+                0 => self.burst_colors[1],
                 1 => color,
                 2 => color2,
                 _ => color,
@@ -250,55 +240,75 @@ impl FireworksAnimation {
 
 impl Widget for &mut FireworksAnimation {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        // Draw rockets
+        let buf_area = *buf.area();
+
         for r in &self.rockets {
-            let x = r.x as u16;
-            let y = r.y as u16;
-            if in_bounds(x, y, area) {
-                buf[(x, y)]
-                    .set_symbol("|")
-                    .set_style(Style::default().fg(Color::White));
+            if r.x >= 0.0 && r.y >= 0.0 {
+                draw(buf, buf_area, area, r.x as u16, r.y as u16, "|", r.color);
             }
         }
 
-        // Draw particle trails first (underneath the particle head)
         for p in &self.particles {
             for tp in &p.trail {
-                if in_bounds(tp.x, tp.y, area) {
-                    let color = trail_color(tp.color, tp.age_frac);
-                    buf[(tp.x, tp.y)]
-                        .set_symbol(rand_char(tp.glyph_seed))
-                        .set_style(Style::default().fg(color));
-                }
+                draw(
+                    buf,
+                    buf_area,
+                    area,
+                    tp.x,
+                    tp.y,
+                    rand_char(tp.glyph_seed),
+                    trail_color(tp.color, tp.age_frac),
+                );
             }
         }
 
-        // Draw particle heads on top
         for p in &self.particles {
             if p.ttl <= 0.0 {
                 continue;
             }
-            let x = p.x as u16;
-            let y = p.y as u16;
-            if in_bounds(x, y, area) {
-                let life_frac = (p.ttl / p.max_ttl).clamp(0.0, 1.0);
-                let color = if life_frac > 0.5 {
-                    p.color
-                } else if life_frac > 0.25 {
-                    dim_color(p.color)
-                } else {
-                    Color::DarkGray
-                };
-                buf[(x, y)]
-                    .set_symbol(rand_char(p.glyph_seed))
-                    .set_style(Style::default().fg(color));
+            if p.x < 0.0 || p.y < 0.0 {
+                continue;
             }
+            let life_frac = (p.ttl / p.max_ttl).clamp(0.0, 1.0);
+            let color = if life_frac > 0.5 {
+                p.color
+            } else if life_frac > 0.25 {
+                dim_color(p.color)
+            } else {
+                Color::DarkGray
+            };
+            draw(
+                buf,
+                buf_area,
+                area,
+                p.x as u16,
+                p.y as u16,
+                rand_char(p.glyph_seed),
+                color,
+            );
         }
     }
 }
 
-fn in_bounds(x: u16, y: u16, area: Rect) -> bool {
-    x >= area.left() && x < area.right() && y >= area.top() && y < area.bottom()
+fn draw(
+    buf: &mut Buffer,
+    buf_area: Rect,
+    area: Rect,
+    x: u16,
+    y: u16,
+    symbol: &'static str,
+    color: Color,
+) {
+    if x >= area.width || y >= area.height {
+        return;
+    }
+    let ax = area.x.saturating_add(x);
+    let ay = area.y.saturating_add(y);
+    if ax < buf_area.right() && ay < buf_area.bottom() {
+        buf[(ax, ay)]
+            .set_symbol(symbol)
+            .set_style(Style::default().fg(color));
+    }
 }
 
 fn rand_char(seed: u32) -> &'static str {
@@ -319,12 +329,7 @@ fn trail_color(base: Color, age_frac: f32) -> Color {
 
 fn dim_color(c: Color) -> Color {
     match c {
-        Color::Red | Color::LightRed => Color::Red,
-        Color::Yellow | Color::LightYellow => Color::Yellow,
-        Color::Green => Color::Green,
-        Color::Cyan => Color::Cyan,
-        Color::Magenta => Color::Magenta,
-        Color::White => Color::Gray,
+        Color::Rgb(r, g, b) => Color::Rgb(r / 2, g / 2, b / 2),
         _ => Color::DarkGray,
     }
 }

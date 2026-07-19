@@ -49,11 +49,12 @@ fn run(args: Args) -> Result<()> {
 
     let clock_cfg = debug_views::ClockViewConfig {
         clock_face: args.clock_face,
-        theme: args.theme,
+        theme: args.theme.clone(),
         format: args.format,
         quote: args.quote,
     };
-    let views = debug_views::all_views(clock_cfg);
+    let fireworks_cfg = debug_views::FireworksViewConfig { theme: args.theme };
+    let views = debug_views::all_views(clock_cfg, fireworks_cfg);
 
     let mut terminal = ratatui::init();
     let result = match args.view {

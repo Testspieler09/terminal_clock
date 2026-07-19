@@ -2,14 +2,18 @@ use std::time::Duration;
 
 use ratatui::{
     DefaultTerminal,
-    prelude::{Buffer, Rect},
-    style::{Color, Style},
-    widgets::Widget,
+    style::Style,
+    widgets::{Block, BorderType, Widget},
+};
+use tc_models::color_theme::ThemeColor;
+
+use crate::{
+    AppError, Result, assets,
+    components::fireworks::FireworksAnimation,
+    debug_views::{DebugView, FireworksViewConfig},
 };
 
-use crate::{Result, components::fireworks::FireworksAnimation, debug_views::DebugView};
-
-pub struct FireworksView;
+pub struct FireworksView(pub FireworksViewConfig);
 
 impl DebugView for FireworksView {
     fn name(&self) -> &'static str {
@@ -19,13 +23,50 @@ impl DebugView for FireworksView {
     fn run(&self, terminal: &mut DefaultTerminal) -> Result<()> {
         use ratatui::crossterm::event::{self, Event};
 
-        let mut animation = FireworksAnimation::new();
+        let theme_idx = match &self.0.theme {
+            None => 0,
+            Some(name) => assets()
+                .color_themes
+                .iter()
+                .position(|t| t.get_name().eq_ignore_ascii_case(name))
+                .ok_or_else(|| -> AppError {
+                    let available: Vec<&str> =
+                        assets().color_themes.iter().map(|t| t.get_name()).collect();
+                    format!(
+                        "unknown theme {:?} -- available: {}",
+                        name,
+                        available.join(", ")
+                    )
+                    .into()
+                })?,
+        };
+
+        let theme = assets().get_color_theme(theme_idx as u16);
+        let bg_style = theme.default_style();
+        let border_color = *theme.get(&ThemeColor::Borders);
+        let burst_colors = [
+            *theme.get(&ThemeColor::Accent),
+            *theme.get(&ThemeColor::Foreground),
+            *theme.get(&ThemeColor::Selection),
+            *theme.get(&ThemeColor::Borders),
+        ];
+        let mut animation = FireworksAnimation::new(burst_colors);
 
         loop {
             terminal.draw(|frame| {
                 let area = frame.area();
-                animation.tick(area);
-                render_frame(frame.buffer_mut(), area, &mut animation);
+                let buf = frame.buffer_mut();
+
+                let block = Block::bordered()
+                    .border_type(BorderType::Rounded)
+                    .border_style(Style::default().fg(border_color))
+                    .style(bg_style);
+
+                let inner = block.inner(area);
+                block.render(area, buf);
+
+                animation.tick(inner);
+                animation.render(inner, buf);
             })?;
 
             if animation.finished {
@@ -38,21 +79,9 @@ impl DebugView for FireworksView {
                 }
             }
 
-            // Cap at ~60 fps; animation advances by wall-time so rate doesn't affect speed
             std::thread::sleep(Duration::from_millis(16));
         }
 
         Ok(())
     }
-}
-
-fn render_frame(buf: &mut Buffer, area: Rect, animation: &mut FireworksAnimation) {
-    for y in area.top()..area.bottom() {
-        for x in area.left()..area.right() {
-            buf[(x, y)]
-                .set_symbol(" ")
-                .set_style(Style::default().bg(Color::Black));
-        }
-    }
-    (&mut *animation).render(area, buf);
 }
