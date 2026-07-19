@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{thread, time::Duration};
 
 use chrono::{DateTime, Datelike, Local, Timelike};
 use color_eyre::Result;
@@ -58,7 +58,8 @@ pub(crate) fn run_fireworks(
             break;
         }
 
-        std::thread::sleep(Duration::from_millis(50));
+        // Cap at ~60 fps; the animation advances by wall-time so rate doesn't affect speed
+        thread::sleep(Duration::from_millis(16));
     }
 
     Ok(())

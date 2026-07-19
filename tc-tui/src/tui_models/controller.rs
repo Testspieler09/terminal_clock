@@ -22,6 +22,8 @@ pub(crate) fn handle_events(
     let refresh_rate = state.refresh_rate;
     let app_state = state.application_state.clone();
 
+    // FIX: I think this should be refactored, as it is to inversive regarding user config
+    //
     // Use a short poll timeout when settings are visible so the scroll
     // animation in carousel selectors can advance at its own pace.
     let poll_timeout = if matches!(app_state, ApplicationState::ShowingSettings) {

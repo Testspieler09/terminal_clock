@@ -15,7 +15,6 @@ use tc_models::color_theme::{ColorTheme, ThemeColor};
 
 use crate::tui_models::{
     selectable_item::{Selectable, SelectableItem},
-    selector::SettingsSelector,
     settings::Setting,
     styled_widget::StyledWidget,
     tui::TuiAssets,

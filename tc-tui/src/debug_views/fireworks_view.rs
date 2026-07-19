@@ -41,7 +41,8 @@ impl DebugView for FireworksView {
                 }
             }
 
-            std::thread::sleep(Duration::from_millis(50));
+            // Cap at ~60 fps; animation advances by wall-time so rate doesn't affect speed
+            std::thread::sleep(Duration::from_millis(16));
         }
 
         Ok(())
