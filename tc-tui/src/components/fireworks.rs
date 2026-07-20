@@ -101,7 +101,7 @@ impl FireworksAnimation {
 
         FireworksAnimation {
             particles: Vec::with_capacity(1024),
-            rockets: Vec::new(),
+            rockets: Vec::with_capacity(pending_launches.len()),
             pending_launches,
             elapsed: 0.0,
             started_at: Instant::now(),
@@ -119,7 +119,7 @@ impl FireworksAnimation {
         let h = area.height as f32;
 
         // Launch pending rockets
-        let mut launched = Vec::new();
+        let mut launched = Vec::with_capacity(self.pending_launches.len());
         for (i, &(x_frac, launch_t)) in self.pending_launches.iter().enumerate() {
             if self.elapsed >= launch_t {
                 let seed = (x_frac * 1000.0) as u32 + (launch_t * 100.0) as u32;
@@ -142,7 +142,8 @@ impl FireworksAnimation {
         }
 
         // Advance rockets; collect burst positions
-        let mut to_burst: Vec<(f32, f32, Color, Color, u32)> = Vec::new();
+        let mut to_burst: Vec<(f32, f32, Color, Color, u32)> =
+            Vec::with_capacity(self.rockets.len());
         self.rockets.retain_mut(|r| {
             r.y += r.vy * dt * 20.0;
             r.vy *= 1.0 - (0.03 * dt * 20.0).min(0.99);
@@ -173,7 +174,7 @@ impl FireworksAnimation {
                 ttl: 0.18,
                 max_ttl: 0.18,
                 glyph_seed: seed,
-                trail: Vec::new(),
+                trail: Vec::with_capacity(64),
                 trail_accum: 0.0,
             });
         }
