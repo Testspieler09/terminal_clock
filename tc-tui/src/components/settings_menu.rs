@@ -50,12 +50,12 @@ impl Default for SettingsTab {
 
 impl PartialEq for SettingsTab {
     fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::General(_), Self::General(_)) => true,
-            (Self::Pomodoro(_), Self::Pomodoro(_)) => true,
-            (Self::Color(_), Self::Color(_)) => true,
-            _ => false,
-        }
+        matches!(
+            (self, other),
+            (Self::General(_), Self::General(_))
+                | (Self::Pomodoro(_), Self::Pomodoro(_))
+                | (Self::Color(_), Self::Color(_))
+        )
     }
 }
 
@@ -227,8 +227,7 @@ impl SettingMenu {
         self.current_tab = SettingsTab::iter()
             .cycle()
             .skip_while(|tab| *tab != self.current_tab)
-            .skip(1)
-            .next()
+            .nth(1)
             .unwrap();
         self.reset_tab_page();
     }
@@ -448,7 +447,7 @@ impl StyledWidget for &SettingMenu {
         settings_block.render(area, buf);
 
         SettingsTab::iter()
-            .zip(header_layout.into_iter())
+            .zip(&*header_layout)
             .enumerate()
             .for_each(|(i, (tab, area))| {
                 let is_active = tab == self.current_tab;

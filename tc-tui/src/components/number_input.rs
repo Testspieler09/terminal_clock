@@ -82,14 +82,13 @@ impl StyledWidget for &NumberSelector {
             Style::default().fg(default_color)
         };
 
-        Line::from(title)
+        title
             .alignment(Alignment::Center)
             .style(style)
             .render(area, buf);
 
         Span::from("   ").style(style).render(left_section, buf);
-        Line::from(text)
-            .alignment(Alignment::Center)
+        text.alignment(Alignment::Center)
             .style(style)
             .render(text_middle_section, buf);
         Span::from(" ⏎ ")

@@ -122,6 +122,23 @@ pub fn generate_led_coords_to_base(
         TimeUnit::Hours => 24,
     };
 
+    if matches!(render_mode, RenderMode::Gauge) {
+        // tens_bits holds ordered gauge steps: (step_index, cells).
+        // Entry v contains all steps whose index <= v (cumulative fill).
+        let mut result = Vec::with_capacity(max_value as usize);
+        for value in 0..max_value {
+            let mut coords = Vec::new();
+            coords.extend_from_slice(always_on);
+            for &(step, ref positions) in tens_bits {
+                if (step as u32) <= value {
+                    coords.extend(positions);
+                }
+            }
+            result.push(coords);
+        }
+        return result;
+    }
+
     let mut result = Vec::with_capacity(max_value as usize);
 
     for value in 0..max_value {
@@ -133,8 +150,9 @@ pub fn generate_led_coords_to_base(
 
         for &(bit, ref positions) in tens_bits {
             let matches = match render_mode {
-                RenderMode::Bits => (tens & bit) != 0,
-                RenderMode::Digits => tens == bit,
+                RenderMode::Bits => (tens & bit as u32) != 0,
+                RenderMode::Digits => tens == bit as u32,
+                RenderMode::Gauge => unreachable!(),
             };
 
             if matches {
@@ -144,8 +162,9 @@ pub fn generate_led_coords_to_base(
 
         for &(bit, ref positions) in units_bits {
             let matches = match render_mode {
-                RenderMode::Bits => (units & bit) != 0,
-                RenderMode::Digits => units == bit,
+                RenderMode::Bits => (units & bit as u32) != 0,
+                RenderMode::Digits => units == bit as u32,
+                RenderMode::Gauge => unreachable!(),
             };
 
             if matches {

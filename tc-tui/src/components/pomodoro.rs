@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use ratatui::prelude::{Buffer, Rect};
 use tc_models::color_theme::ColorTheme;
 use tokio::time::{Duration, Instant};
@@ -62,7 +64,11 @@ impl PomodoroTimer {
             TimerPhase::Work => {
                 if self.state.session >= self.config.total_sessions {
                     self.state.phase = TimerPhase::Finished;
-                } else if self.state.session % self.config.sessions_before_long_break == 0 {
+                } else if self
+                    .state
+                    .session
+                    .is_multiple_of(self.config.sessions_before_long_break)
+                {
                     self.state.phase = TimerPhase::LongBreak;
                     self.state.remaining_secs = self.config.long_break_duration * 60;
                 } else {
@@ -87,7 +93,7 @@ impl PomodoroTimer {
 impl StyledWidget for PomodoroTimer {
     type Context<'a> = &'a ColorTheme;
 
-    fn render(self, area: Rect, buf: &mut Buffer, ctx: Self::Context<'_>) {
+    fn render(self, _area: Rect, _buf: &mut Buffer, _ctx: Self::Context<'_>) {
         todo!()
     }
 }

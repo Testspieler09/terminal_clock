@@ -33,15 +33,13 @@ impl TuiAssets {
     }
 
     pub fn get_clock(&self, clock_idx: u16) -> &Clock {
-        &self
-            .clock_faces
+        self.clock_faces
             .get(clock_idx as usize)
             .expect("The clock_idx should never be out of range")
     }
 
     pub fn get_color_theme(&self, color_theme_idx: u16) -> &ColorTheme {
-        &self
-            .color_themes
+        self.color_themes
             .get(color_theme_idx as usize)
             .expect("The color_theme_idx should never be out of range")
     }
@@ -49,8 +47,7 @@ impl TuiAssets {
     pub fn get_quote(&self, quote_idx: Option<u16>) -> Option<&Quote> {
         if let Some(idx) = quote_idx {
             Some(
-                &self
-                    .quotes
+                self.quotes
                     .get(idx as usize)
                     .expect("The quote_idx should never be out of range"),
             )
@@ -60,6 +57,7 @@ impl TuiAssets {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) struct TuiState {
     pub application_state: ApplicationState,
     pub color_theme_idx: u16,

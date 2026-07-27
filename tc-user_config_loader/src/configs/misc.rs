@@ -3,21 +3,42 @@ use std::collections::HashMap;
 use serde::Deserialize;
 use tc_models::helper::TimeUnit;
 
+#[derive(Deserialize, PartialEq, Clone, Copy)]
+pub enum SymbolRole {
+    Hours,
+    HourTens,
+    Minutes,
+    MinuteTens,
+    Seconds,
+    SecondTens,
+}
+
+impl SymbolRole {
+    pub fn time_unit(self) -> TimeUnit {
+        match self {
+            SymbolRole::Hours | SymbolRole::HourTens => TimeUnit::Hours,
+            SymbolRole::Minutes | SymbolRole::MinuteTens => TimeUnit::Minutes,
+            SymbolRole::Seconds | SymbolRole::SecondTens => TimeUnit::Seconds,
+        }
+    }
+
+    pub fn is_tens(self) -> bool {
+        matches!(
+            self,
+            SymbolRole::HourTens | SymbolRole::MinuteTens | SymbolRole::SecondTens
+        )
+    }
+}
+
 #[derive(Deserialize)]
 pub struct MappingConfig {
-    /// maps characters in ASCII -> semantic meaning
-    ///
-    /// example:
-    /// H = "hour"
-    /// M = "minute"
-    /// S = "second"
-    pub symbols: HashMap<char, TimeUnit>,
+    pub symbols: HashMap<char, SymbolRole>,
 }
 
 #[derive(Deserialize)]
 pub struct BehaviorConfig {
     pub bits: Option<BitsConfig>,
-    pub stack: Option<StackConfig>,
+    pub gauge: Option<GaugeConfig>,
 }
 
 #[derive(Deserialize)]
@@ -31,7 +52,7 @@ pub struct BitsConfig {
 }
 
 #[derive(Deserialize)]
-pub struct StackConfig {
+pub struct GaugeConfig {
     /// max values (fallback to 24/60/60 if None)
     pub max_hour: Option<u32>,
     pub max_minute: Option<u32>,

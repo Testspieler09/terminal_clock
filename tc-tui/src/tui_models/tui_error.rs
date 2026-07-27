@@ -1,7 +1,9 @@
 use std::fmt;
 
+#[allow(dead_code)]
 pub(crate) type UpdateResult<T> = Result<T, UpdateError>;
 
+#[allow(dead_code)]
 pub(crate) struct UpdateError;
 
 impl fmt::Debug for UpdateError {

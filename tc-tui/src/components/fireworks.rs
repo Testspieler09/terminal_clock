@@ -124,11 +124,11 @@ impl FireworksAnimation {
             if self.elapsed >= launch_t {
                 let seed = (x_frac * 1000.0) as u32 + (launch_t * 100.0) as u32;
                 let color_idx = (x_frac * 100.0) as usize % self.burst_colors.len();
-                let target_y = h * (0.10 + pseudo_rand(seed) * 0.35);
+                let target_y = h * (0.10 + lcg_rand(seed) * 0.35);
                 self.rockets.push(Rocket {
                     x: x_frac * w,
                     y: h - 1.0,
-                    vy: -(2.5 + pseudo_rand(seed + 7) * 1.5),
+                    vy: -(2.5 + lcg_rand(seed + 7) * 1.5),
                     target_y,
                     color: self.burst_colors[color_idx],
                     color2: self.burst_colors[(color_idx + 2) % self.burst_colors.len()],
@@ -166,10 +166,10 @@ impl FireworksAnimation {
             .collect();
         for (rx, ry, seed) in trail_data {
             self.particles.push(Particle {
-                x: rx + (pseudo_rand(seed) - 0.5),
+                x: rx + (lcg_rand(seed) - 0.5),
                 y: ry,
-                vx: (pseudo_rand(seed + 1) - 0.5) * 0.3,
-                vy: 0.15 + pseudo_rand(seed + 2) * 0.25,
+                vx: (lcg_rand(seed + 1) - 0.5) * 0.3,
+                vy: 0.15 + lcg_rand(seed + 2) * 0.25,
                 color: Color::Yellow,
                 ttl: 0.18,
                 max_ttl: 0.18,
@@ -196,28 +196,28 @@ impl FireworksAnimation {
     fn burst(&mut self, cx: f32, cy: f32, color: Color, color2: Color, base_seed: u32) {
         let count = 120usize;
         // Scramble base_seed so different burst positions produce genuinely different patterns
-        let s0 = hash(base_seed);
+        let s0 = avalanche_hash(base_seed);
         for i in 0..count {
-            // Chain hash through i so each particle is independent
-            let s = hash(s0.wrapping_add(i as u32));
-            let angle = hf(s) * std::f32::consts::TAU;
+            // Chain avalanche_hash through i so each particle is independent
+            let s = avalanche_hash(s0.wrapping_add(i as u32));
+            let angle = rand_f32(s) * std::f32::consts::TAU;
             // Bimodal speed: dense inner cloud + scattered outer sparks
-            let speed = if hf(hash(s)) < 0.55 {
-                0.15 + hf(hash(s.wrapping_add(1))) * 0.9
+            let speed = if rand_f32(avalanche_hash(s)) < 0.55 {
+                0.15 + rand_f32(avalanche_hash(s.wrapping_add(1))) * 0.9
             } else {
-                0.9 + hf(hash(s.wrapping_add(2))) * 1.6
+                0.9 + rand_f32(avalanche_hash(s.wrapping_add(2))) * 1.6
             };
             // Compensate for terminal cell aspect ratio (~2:1 height:width)
             let vx = angle.cos() * speed * 2.0;
             let vy = angle.sin() * speed;
 
-            let c = match hash(s.wrapping_add(3)) % 4 {
+            let c = match avalanche_hash(s.wrapping_add(3)) % 4 {
                 0 => self.burst_colors[1],
                 1 => color,
                 2 => color2,
                 _ => color,
             };
-            let ttl = 0.5 + hf(hash(s.wrapping_add(4))) * 1.3;
+            let ttl = 0.5 + rand_f32(avalanche_hash(s.wrapping_add(4))) * 1.3;
 
             self.particles.push(Particle {
                 x: cx,
@@ -313,7 +313,7 @@ fn draw(
 }
 
 fn rand_char(seed: u32) -> &'static str {
-    let idx = (hf(seed) * CHARS.len() as f32) as usize % CHARS.len();
+    let idx = (rand_f32(seed) * CHARS.len() as f32) as usize % CHARS.len();
     // SAFETY: CHARS is pure ASCII, so every byte is valid UTF-8
     unsafe { std::str::from_utf8_unchecked(&CHARS[idx..idx + 1]) }
 }
@@ -321,8 +321,6 @@ fn rand_char(seed: u32) -> &'static str {
 fn trail_color(base: Color, age_frac: f32) -> Color {
     if age_frac < 0.3 {
         dim_color(base)
-    } else if age_frac < 0.6 {
-        Color::DarkGray
     } else {
         Color::DarkGray
     }
@@ -335,8 +333,8 @@ fn dim_color(c: Color) -> Color {
     }
 }
 
-// Avalanche hash — each bit of seed affects all output bits, no stride patterns
-fn hash(mut x: u32) -> u32 {
+// Avalanche hash - each bit of seed affects all output bits, no stride patterns
+fn avalanche_hash(mut x: u32) -> u32 {
     x ^= x >> 17;
     x = x.wrapping_mul(0xbf324c81);
     x ^= x >> 11;
@@ -345,12 +343,11 @@ fn hash(mut x: u32) -> u32 {
     x
 }
 
-fn hf(seed: u32) -> f32 {
-    hash(seed) as f32 / u32::MAX as f32
+fn rand_f32(seed: u32) -> f32 {
+    avalanche_hash(seed) as f32 / u32::MAX as f32
 }
 
-// Keep pseudo_rand for seeding rockets/launches where uniformity is fine
-fn pseudo_rand(seed: u32) -> f32 {
+fn lcg_rand(seed: u32) -> f32 {
     let x = seed.wrapping_mul(1664525).wrapping_add(1013904223);
     (x >> 8) as f32 / (1u32 << 24) as f32
 }

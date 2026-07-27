@@ -12,40 +12,40 @@ use crate::components::{CYAN_SHADES, Dimensions, GRAY_SHADES};
 #[derive(Default, PartialEq, Eq, Clone, Copy, EnumIter)]
 pub(crate) enum MenuLabel {
     #[default]
-    SETTINGS,
-    HELP,
-    QUIT,
+    Settings,
+    Help,
+    Quit,
 }
 
 impl MenuLabel {
     pub fn get_repr_for(&self, active: bool) -> &'static str {
         match (self, active) {
-            (MenuLabel::SETTINGS, false) => {
+            (MenuLabel::Settings, false) => {
                 "┌─┐┌─┐┌┬┐┌┬┐┬┌┐┌┌─┐┌─┐\n\
                  └─┐├┤  │  │ │││││ ┬└─┐\n\
                  └─┘└─┘ ┴  ┴ ┴┘└┘└─┘└─┘"
             }
-            (MenuLabel::SETTINGS, true) => {
+            (MenuLabel::Settings, true) => {
                 "╔═╗╔═╗╔╦╗╔╦╗╦╔╗╔╔═╗╔═╗\n\
                  ╚═╗╠╣  ║  ║ ║║║║║ ╦╚═╗\n\
                  ╚═╝╚═╝ ╩  ╩ ╩╝╚╝╚═╝╚═╝"
             }
-            (MenuLabel::HELP, false) => {
+            (MenuLabel::Help, false) => {
                 "┬ ┬┌─┐┬  ┌─┐\n\
                  ├─┤├┤ │  ├─┘\n\
                  ┴ ┴└─┘┴─┘┴  "
             }
-            (MenuLabel::HELP, true) => {
+            (MenuLabel::Help, true) => {
                 "╦ ╦╔═╗╦  ╔═╗\n\
                  ╠═╣╠╣ ║  ╠═╝\n\
                  ╩ ╩╚═╝╩═╝╩  "
             }
-            (MenuLabel::QUIT, false) => {
+            (MenuLabel::Quit, false) => {
                 "┌─┐ ┬ ┬ ┬┌┬┐\n\
                  │─┼┐│ │ │ │ \n\
                  └─┘└└─┘ ┴ ┴ "
             }
-            (MenuLabel::QUIT, true) => {
+            (MenuLabel::Quit, true) => {
                 "╔═╗ ╦ ╦ ╦╔╦╗\n\
                  ║═╬╗║ ║ ║ ║ \n\
                  ╚═╝╚╚═╝ ╩ ╩ "
@@ -79,8 +79,7 @@ impl Hero {
         self.active_label = MenuLabel::iter()
             .cycle()
             .skip_while(|label| *label != self.active_label)
-            .skip(1)
-            .next()
+            .nth(1)
             .unwrap();
     }
 
@@ -115,7 +114,7 @@ impl Default for Hero {
                         label
                             .get_repr_for(true)
                             .lines()
-                            .filter_map(|line| Some(line.len()))
+                            .map(|line| line.len())
                             .max()
                             .expect("The labels string representation should not be empty")
                     })
@@ -159,7 +158,7 @@ impl Widget for &Hero {
                 buf.set_line(
                     label_layout[index].x + offset,
                     label_layout[index].y + i as u16,
-                    &line,
+                    line,
                     label_layout[index].width,
                 );
             })

@@ -37,17 +37,17 @@ impl Selectable for SelectableItem {
     fn get_corrosponding_action(&self) -> TuiAction {
         match self {
             SelectableItem::Theme(new_theme_idx) => {
-                TuiAction::UpdateColorTheme(*new_theme_idx)
+                TuiAction::ColorTheme(*new_theme_idx)
                 // TODO: also update the linked fields here (each color theme field in the
                 // color tab)
             }
             SelectableItem::ClockFace(new_clockface_idx) => {
-                TuiAction::UpdateClockFace(*new_clockface_idx)
+                TuiAction::ClockFace(*new_clockface_idx)
                 // TODO: also update the linked fields here (Format field)
                 // also the custom color for the clock?!
             }
-            SelectableItem::Format(new_format) => TuiAction::UpdateClockFormat(*new_format),
-            SelectableItem::Quote(new_quote) => TuiAction::UpdateQuote(*new_quote),
+            SelectableItem::Format(new_format) => TuiAction::ClockFormat(*new_format),
+            SelectableItem::Quote(new_quote) => TuiAction::Quote(*new_quote),
         }
     }
 }

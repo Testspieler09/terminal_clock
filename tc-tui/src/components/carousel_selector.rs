@@ -154,6 +154,7 @@ impl CarouselSelector {
     }
 }
 
+#[allow(dead_code)]
 impl CarouselSelector {
     pub(crate) fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction> {
         match key_event.code {
@@ -178,6 +179,7 @@ impl CarouselSelector {
         self.reset_scroll();
     }
 
+    #[allow(dead_code)]
     pub(crate) fn update_current_selection(
         &mut self,
         selection: SelectableItem,

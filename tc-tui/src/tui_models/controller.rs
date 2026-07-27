@@ -32,32 +32,32 @@ pub(crate) fn handle_events(
         refresh_rate
     };
 
-    if event::poll(Duration::from_millis(poll_timeout as u64))? {
-        if let Event::Key(key_event) = event::read()? {
-            if matches!(key_event.kind, event::KeyEventKind::Release) {
-                return Ok(false);
-            }
+    if event::poll(Duration::from_millis(poll_timeout as u64))?
+        && let Event::Key(key_event) = event::read()?
+    {
+        if matches!(key_event.kind, event::KeyEventKind::Release) {
+            return Ok(false);
+        }
 
-            if handle_global_keys(state, key_event, components) {
-                return Ok(matches!(
-                    state.application_state,
-                    ApplicationState::Finished
-                ));
-            }
+        if handle_global_keys(state, key_event, components) {
+            return Ok(matches!(
+                state.application_state,
+                ApplicationState::Finished
+            ));
+        }
 
-            match app_state {
-                ApplicationState::Running => handle_normal_keys(state, key_event, components),
-                ApplicationState::ShowingHero => handle_hero_keys(state, key_event, components),
-                ApplicationState::ShowingSettings => {
-                    if let Some(action) = components
-                        .settings_menu
-                        .handle_setting_keys(key_event, state)
-                    {
-                        process_settings_action(state, &action);
-                    }
+        match app_state {
+            ApplicationState::Running => handle_normal_keys(state, key_event, components),
+            ApplicationState::ShowingHero => handle_hero_keys(state, key_event, components),
+            ApplicationState::ShowingSettings => {
+                if let Some(action) = components
+                    .settings_menu
+                    .handle_setting_keys(key_event, state)
+                {
+                    process_settings_action(state, &action);
                 }
-                ApplicationState::ShowingHelp | ApplicationState::Finished => {}
             }
+            ApplicationState::ShowingHelp | ApplicationState::Finished => {}
         }
     }
 
@@ -69,19 +69,19 @@ pub(crate) fn handle_events(
 
 pub(crate) fn process_settings_action(state: &mut TuiState, action: &TuiAction) {
     match action {
-        TuiAction::UpdateClockFace(new_clock_face_idx) => {
+        TuiAction::ClockFace(new_clock_face_idx) => {
             state.clock_state.clock_face_idx = *new_clock_face_idx
         }
-        TuiAction::UpdateClockFormat(new_format) => state.clock_state.clock_time_fmt = *new_format,
-        TuiAction::UpdateRefreshRate(new_refresh_rate) => state.refresh_rate = *new_refresh_rate,
-        TuiAction::UpdateQuote(new_quote) => state.quote_idx = *new_quote,
-        TuiAction::UpdateTotalSession(_) => {}
-        TuiAction::UpdateWorkDuration(_) => {}
-        TuiAction::UpdateLongBreakDuration(_) => {}
-        TuiAction::UpdateShortBreakDuration(_) => {}
-        TuiAction::UpdateSessionsBeforeLongBreak(_) => {}
-        TuiAction::UpdateColorTheme(theme) => state.color_theme_idx = *theme,
-        TuiAction::UpdateColor(_variant, _new_color) => {
+        TuiAction::ClockFormat(new_format) => state.clock_state.clock_time_fmt = *new_format,
+        TuiAction::RefreshRate(new_refresh_rate) => state.refresh_rate = *new_refresh_rate,
+        TuiAction::Quote(new_quote) => state.quote_idx = *new_quote,
+        TuiAction::TotalSession(_) => {}
+        TuiAction::WorkDuration(_) => {}
+        TuiAction::LongBreakDuration(_) => {}
+        TuiAction::ShortBreakDuration(_) => {}
+        TuiAction::SessionsBeforeLongBreak(_) => {}
+        TuiAction::ColorTheme(theme) => state.color_theme_idx = *theme,
+        TuiAction::Color(_variant, _new_color) => {
             // self.tui_assets.color_themes[state.color_theme_idx as usize]
             //     .update(variant.clone(), *new_color);
         }
@@ -153,12 +153,12 @@ fn handle_hero_keys(state: &mut TuiState, key_event: KeyEvent, components: &mut 
         KeyCode::Char('j') | KeyCode::Down => components.hero.next_label(),
         KeyCode::Char('k') | KeyCode::Up => components.hero.prev_label(),
         KeyCode::Enter => match components.hero.active_label {
-            MenuLabel::QUIT => state.application_state = ApplicationState::Finished,
-            MenuLabel::HELP => {
+            MenuLabel::Quit => state.application_state = ApplicationState::Finished,
+            MenuLabel::Help => {
                 components.help_box.set_called_from_hero(true);
                 state.application_state = ApplicationState::ShowingHelp;
             }
-            MenuLabel::SETTINGS => {
+            MenuLabel::Settings => {
                 components.settings_menu.set_called_from_hero(true);
                 state.application_state = ApplicationState::ShowingSettings;
             }

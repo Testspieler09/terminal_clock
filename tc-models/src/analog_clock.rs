@@ -6,6 +6,7 @@ use crate::{
     color_theme::ColorTheme,
 };
 
+#[allow(dead_code)]
 #[derive(Clone)]
 pub struct AnalogClock {
     name: &'static str,
@@ -30,12 +31,11 @@ impl AnalogClock {
 }
 
 impl ClockBehaviour for AnalogClock {
-    // TODO: add a default implementation of the func here
     fn generate_clock_face_with_dimensions(
         &self,
-        theme: &ColorTheme,
-        clock_fmt: TimeFormat,
-        now: DateTime<Local>,
+        _theme: &ColorTheme,
+        _clock_fmt: TimeFormat,
+        _now: DateTime<Local>,
     ) -> (Paragraph<'_>, usize, usize) {
         todo!()
     }

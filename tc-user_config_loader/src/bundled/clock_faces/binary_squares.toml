@@ -1,0 +1,34 @@
+clock_type = "ColorClock"
+
+[config]
+name = "Minimal Binary"
+
+hour = """ H
+ H
+hH
+hH"""
+
+minutes = """ M
+mM
+mM
+mM"""
+
+seconds = """ S
+sS
+sS
+sS"""
+
+separator = " "
+
+render_mode = "bits"
+
+[config.mapping]
+symbols = { H = "Hours", h = "HourTens", M = "Minutes", m = "MinuteTens", S = "Seconds", s = "SecondTens" }
+
+always_on_coords = []
+
+clock_color = "#444444"
+
+format = "HH:MM:SS"
+
+# vim: set tabstop=2 shiftwidth=2 expandtab:

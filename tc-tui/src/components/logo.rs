@@ -50,14 +50,14 @@ impl Logo {
             for ch in line.chars() {
                 let style = Style::default().fg(if ch == '█' {
                     line_cyan
-                } else if matches!(ch, 'v' | '.' | '0'..'9') {
+                } else if matches!(ch, 'v' | '.' | '0'..='9') {
                     Color::Yellow
                 } else {
                     line_gray
                 });
 
                 // If we encounter a new style or this is the first character
-                if current_style.map_or(true, |s| s != style) {
+                if current_style != Some(style) {
                     // Push the accumulated text with its style
                     if !current_text.is_empty() {
                         line_spans.push(Span::styled(current_text, current_style.unwrap()));
@@ -70,8 +70,8 @@ impl Logo {
             }
 
             // Add the last span
-            if !current_text.is_empty() && current_style.is_some() {
-                line_spans.push(Span::styled(current_text, current_style.unwrap()));
+            if let (false, Some(s)) = (current_text.is_empty(), current_style) {
+                line_spans.push(Span::styled(current_text, s));
             }
 
             spans_vec.push(Line::from(line_spans));

@@ -32,6 +32,7 @@ pub(crate) trait SettingsSelector {
     fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction>;
     fn set_to_active(&mut self);
     fn set_to_inactive(&mut self);
+    #[allow(dead_code)]
     fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()>;
 }
 
@@ -109,9 +110,7 @@ impl SelectorType {
                 .enumerate()
                 .map(|(i, _color_theme)| SelectableItem::Theme(i as u16))
                 .collect(),
-            Setting::ClockFormat => TimeFormat::iter()
-                .map(|fmt| SelectableItem::Format(fmt))
-                .collect(),
+            Setting::ClockFormat => TimeFormat::iter().map(SelectableItem::Format).collect(),
             Setting::Quote => tui_assets
                 .quotes
                 .iter()
