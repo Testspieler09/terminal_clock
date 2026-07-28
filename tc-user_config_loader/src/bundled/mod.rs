@@ -8,7 +8,7 @@ pub(crate) const COLOR_THEMES: [&str; 3] = [
 ];
 pub(crate) const CLOCK_FACES: [&str; 3] = [
     include_str!("./clock_faces/temple.toml"),
-    include_str!("./clock_faces/binary_squares.toml"),
+    include_str!("./clock_faces/minimal_bin.toml"),
     // include_str!("./clock_faces/thermometer.toml"),
     // include_str!("./clock_faces/seven_segment_led.toml"),
     include_str!("./clock_faces/italic_seven_segment.toml"),

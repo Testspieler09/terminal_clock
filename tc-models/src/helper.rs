@@ -103,7 +103,7 @@ pub(crate) fn combine_ascii_art_while_applying_led<'a>(
 }
 
 // Helpers for external and internal use
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Clone, Copy)]
 pub enum TimeUnit {
     Seconds,
     Minutes,

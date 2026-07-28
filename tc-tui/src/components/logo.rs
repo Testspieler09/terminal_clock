@@ -6,10 +6,14 @@ use ratatui::{
     text::{Line, Span, Text},
     widgets::{Widget, WidgetRef},
 };
+use tc_models::color_theme::ColorTheme;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
-    components::{CYAN_SHADES, Dimensions, GRAY_SHADES},
+    components::{
+        CYAN_SHADES, Dimensions, GRAY_SHADES,
+        fallback_terminal_too_small::{FallbackContext, FallbackView},
+    },
     helpers::unstable_widget_fits_frame,
     tui_models::styled_widget::StyledWidget,
 };
@@ -84,6 +88,7 @@ impl Logo {
         &self,
         component: W,
         frame: &mut Frame,
+        color_theme: &ColorTheme,
     ) {
         let area = frame.area();
 
@@ -100,9 +105,8 @@ impl Logo {
         let buf = frame.buffer_mut();
 
         if needs_fallback {
-            // TODO: make the colortheme work
-            // let fallback_ctx = FallbackContext::new(/* Colortheme, */ w, h);
-            // fallback.render(area, buf, fallback_ctx);
+            let fallback_ctx = FallbackContext::new(color_theme, w, h);
+            FallbackView.render(area, buf, fallback_ctx);
             return;
         }
 
@@ -130,6 +134,7 @@ impl Logo {
         component: W,
         frame: &mut Frame,
         ctx: <W as StyledWidget>::Context<'_>,
+        color_theme: &ColorTheme,
     ) {
         let area = frame.area();
 
@@ -146,9 +151,8 @@ impl Logo {
         let buf = frame.buffer_mut();
 
         if needs_fallback {
-            // TODO: make the colortheme work
-            // let fallback_ctx = FallbackContext::new(/* Colortheme, */ w, h);
-            // fallback.render(area, buf, fallback_ctx);
+            let fallback_ctx = FallbackContext::new(color_theme, w, h);
+            FallbackView.render(area, buf, fallback_ctx);
             return;
         }
 

@@ -125,18 +125,22 @@ impl TuiRenderer {
             ApplicationState::Running => {
                 render_clock_view(frame, state);
             }
-            ApplicationState::ShowingHero => components
-                .logo
-                .render_component_with_logo(&components.hero, frame),
+            ApplicationState::ShowingHero => {
+                components
+                    .logo
+                    .render_component_with_logo(&components.hero, frame, theme)
+            }
             ApplicationState::ShowingHelp => components.logo.render_styled_component_with_logo(
                 &components.help_box,
                 frame,
+                theme,
                 theme,
             ),
             ApplicationState::ShowingSettings => components.logo.render_styled_component_with_logo(
                 &components.settings_menu,
                 frame,
                 &SettingsMenuCtx::new(theme),
+                theme,
             ),
             ApplicationState::Finished => {}
         }

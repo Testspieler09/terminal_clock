@@ -62,7 +62,7 @@ pub(crate) fn render_clock_view(frame: &mut Frame, config: &TuiState) {
             (clock_w as u16, clock_h as u16)
         };
 
-        let mut fallback_view = FallbackView;
+        let fallback_view = FallbackView;
         let fallback_ctx = FallbackContext::new(color_theme, w, h);
 
         fallback_view.render(frame_area, frame.buffer_mut(), fallback_ctx);

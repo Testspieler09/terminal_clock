@@ -46,10 +46,11 @@ pub(crate) fn generate_title(title: String, fg: Color) -> Line<'static> {
 }
 
 pub(crate) fn centered_bold_label<'a>(text: &'a str, color: Color) -> Paragraph<'a> {
-    Paragraph::new(text)
-        .style(Style::default().fg(color))
-        .add_modifier(Modifier::BOLD)
-        .alignment(Alignment::Center)
+    Paragraph::new(Line::from(Span::styled(
+        text,
+        Style::default().fg(color).add_modifier(Modifier::BOLD),
+    )))
+    .alignment(Alignment::Center)
 }
 
 pub(crate) fn centered_size_line(width: u16, height: u16, highlight: Color) -> Paragraph<'static> {

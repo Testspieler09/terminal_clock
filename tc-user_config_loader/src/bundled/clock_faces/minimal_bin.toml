@@ -3,27 +3,27 @@ clock_type = "ColorClock"
 [config]
 name = "Minimal Binary"
 
-hour = """ H
- H
-hH
-hH"""
+hour = """ @
+ @
+#@
+#@"""
 
-minutes = """ M
-mM
-mM
-mM"""
+minutes = """ [
+][
+][
+]["""
 
-seconds = """ S
-sS
-sS
-sS"""
+seconds = """ Θ
+0Θ
+0Θ
+0Θ"""
 
 separator = " "
 
 render_mode = "bits"
 
 [config.mapping]
-symbols = { H = "Hours", h = "HourTens", M = "Minutes", m = "MinuteTens", S = "Seconds", s = "SecondTens" }
+symbols = { "@" = "Hours", "#" = "HourTens", "[" = "Minutes", "]" = "MinuteTens", "Θ" = "Seconds", "0" = "SecondTens" }
 
 always_on_coords = []
 

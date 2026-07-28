@@ -28,7 +28,7 @@ impl<'a> FallbackContext<'a> {
 
 pub(crate) struct FallbackView;
 
-impl StyledWidget for &mut FallbackView {
+impl StyledWidget for FallbackView {
     type Context<'a> = FallbackContext<'a>;
 
     fn render(self, area: Rect, buf: &mut Buffer, ctx: Self::Context<'_>) {

@@ -8,6 +8,14 @@ use crate::{AssetsLoadError, configs::misc::MappingConfig};
 type LedMapEntry = (u8, Vec<(u32, u32)>);
 type LedMap = Vec<LedMapEntry>;
 
+fn max_bits(unit: TimeUnit, is_tens: bool) -> usize {
+    match (unit, is_tens) {
+        (TimeUnit::Hours, true) => 2, // tens digit: 0–2
+        (_, true) => 3,               // minutes/seconds tens: 0–5
+        (_, false) => 4,              // units digit: 0–9
+    }
+}
+
 pub(crate) fn generate_from_ascii(
     layout: &str,
     mapping: &MappingConfig,
@@ -41,8 +49,10 @@ pub(crate) fn generate_from_ascii(
 
     match render_mode {
         RenderMode::Bits => {
-            let tens_map = positions_to_bit_ledmap(tens_positions)?;
-            let units_map = positions_to_bit_ledmap(units_positions)?;
+            let tens_map =
+                positions_to_bit_ledmap(tens_positions, max_bits(unit, true), unit, true)?;
+            let units_map =
+                positions_to_bit_ledmap(units_positions, max_bits(unit, false), unit, false)?;
             Ok(generate_led_coords_to_base(
                 &tens_map,
                 &units_map,
@@ -60,10 +70,16 @@ pub(crate) fn generate_from_ascii(
     }
 }
 
-fn positions_to_bit_ledmap(mut positions: Vec<(u32, u32)>) -> Result<LedMap, AssetsLoadError> {
-    if positions.len() > 7 {
+fn positions_to_bit_ledmap(
+    mut positions: Vec<(u32, u32)>,
+    max: usize,
+    unit: TimeUnit,
+    is_tens: bool,
+) -> Result<LedMap, AssetsLoadError> {
+    if positions.len() > max {
+        let which = if is_tens { "tens" } else { "units" };
         return Err(AssetsLoadError::InvalidConfig(format!(
-            "Too many marker positions ({}) for bits mode — maximum is 7",
+            "Too many {which} positions for {unit:?} ({} given, maximum is {max})",
             positions.len()
         )));
     }
