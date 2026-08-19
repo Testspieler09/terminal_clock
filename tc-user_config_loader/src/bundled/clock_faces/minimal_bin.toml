@@ -22,13 +22,13 @@ separator = " "
 
 render_mode = "bits"
 
-[config.mapping]
-symbols = { "@" = "Hours", "#" = "HourTens", "[" = "Minutes", "]" = "MinuteTens", "Θ" = "Seconds", "0" = "SecondTens" }
-
 always_on_coords = []
 
-clock_color = "#444444"
+accent_color = "#88bf84"
 
 format = "HH:MM:SS"
+
+[config.mapping]
+symbols = { "@" = "Hours", "#" = "HourTens", "[" = "Minutes", "]" = "MinuteTens", "Θ" = "Seconds", "0" = "SecondTens" }
 
 # vim: set tabstop=2 shiftwidth=2 expandtab:
