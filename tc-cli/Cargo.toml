@@ -11,3 +11,6 @@ tc-tui     = { path = "../tc-tui/" }
 # External dependencies
 clap       = { workspace = true }
 tokio      = { workspace = true }
+
+[lints]
+workspace = true
