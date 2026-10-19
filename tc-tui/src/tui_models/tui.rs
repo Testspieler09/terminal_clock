@@ -58,7 +58,7 @@ impl TuiAssets {
 }
 
 #[allow(dead_code)]
-pub(crate) struct TuiState {
+pub struct TuiState {
     pub application_state: ApplicationState,
     pub color_theme_idx: u16,
     pub clock_state: ClockState,

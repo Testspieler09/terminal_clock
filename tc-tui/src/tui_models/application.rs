@@ -1,5 +1,5 @@
 #[derive(Clone)]
-pub(crate) enum ApplicationState {
+pub enum ApplicationState {
     /// The clock is running and displayed for the user
     Running,
 

@@ -4,15 +4,9 @@ pub(crate) mod helpers;
 pub(crate) mod tui_models;
 pub(crate) mod views;
 
-#[cfg(feature = "debug-views")]
-pub mod debug_views;
-
 use std::{path::PathBuf, sync::OnceLock};
 
 pub use error::AppError;
-#[cfg(feature = "debug-views")]
-pub type Result<T> = std::result::Result<T, AppError>;
-#[cfg(not(feature = "debug-views"))]
 pub(crate) type Result<T> = std::result::Result<T, AppError>;
 
 use chrono::Local;
@@ -22,17 +16,13 @@ use ratatui::{
     widgets::{Block, BorderType},
 };
 use tc_models::color_theme::ThemeColor;
-#[cfg(feature = "debug-views")]
-pub use tui_models::tui::TuiAssets;
 
-#[cfg(not(feature = "debug-views"))]
-use crate::tui_models::tui::TuiAssets;
 use crate::{
     components::carousel_selector::SettingsMenuCtx,
     tui_models::{
         application::ApplicationState,
         controller,
-        tui::{TuiComponents, TuiState},
+        tui::{TuiAssets, TuiComponents, TuiState},
     },
     views::{clock::render_clock_view, fireworks},
 };
@@ -41,11 +31,6 @@ static TUI_ASSETS: OnceLock<TuiAssets> = OnceLock::new();
 
 pub(crate) fn assets() -> &'static TuiAssets {
     TUI_ASSETS.get().expect("TUI_ASSETS not initialised")
-}
-
-#[cfg(feature = "debug-views")]
-pub fn init_assets(assets: TuiAssets) {
-    TUI_ASSETS.get_or_init(|| assets);
 }
 
 pub struct TuiRenderer;

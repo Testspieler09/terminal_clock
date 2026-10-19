@@ -13,7 +13,7 @@ pub(crate) enum TimerPhase {
     Finished,
 }
 
-pub(crate) struct PomodoroConfig {
+pub struct PomodoroConfig {
     pub work_duration: u64,
     pub short_break_duration: u64,
     pub long_break_duration: u64,
@@ -27,7 +27,7 @@ pub(crate) struct PomodoroState {
     pub remaining_secs: u64,
 }
 
-pub(crate) struct PomodoroTimer {
+pub struct PomodoroTimer {
     config: PomodoroConfig,
     state: PomodoroState,
     last_tick: Instant,

@@ -185,6 +185,7 @@ impl SettingMenu {
             .iter()
             .map(|config| config.selector_type.create_selector(config.setting, false))
             .collect();
+        // TODO: the bool should get a status::inactive / active type
         let color_tab_selectors: Vec<Selector> = Self::COLOR_TAB_CONFIG
             .iter()
             .map(|config| config.selector_type.create_selector(config.setting, false))
