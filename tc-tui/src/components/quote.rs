@@ -4,13 +4,13 @@ use ratatui::{
     text::Span,
     widgets::Paragraph,
 };
-use tc_models::{
-    color_theme::{ColorTheme, ThemeColor},
-    quote::Quote,
-};
+use tc_models::{color_theme::ThemeColor, quote::Quote};
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::{components::Dimensions, tui_models::styled_widget::StyledWidget};
+use crate::{
+    TuiState, assets,
+    tui_models::tui_traits::{Dimensions, TcWidget},
+};
 
 impl Dimensions for &Quote {
     fn width(&self) -> u16 {
@@ -24,10 +24,9 @@ impl Dimensions for &Quote {
     }
 }
 
-impl StyledWidget for &Quote {
-    type Context<'a> = &'a ColorTheme;
-
-    fn render(self, area: Rect, buf: &mut Buffer, color_theme: Self::Context<'_>) {
+impl TcWidget<'_> for &Quote {
+    fn render(self, area: Rect, buf: &mut Buffer, state: &TuiState) {
+        let theme = assets().get_color_theme(state.color_theme_idx);
         let final_text = self.final_quote_string();
 
         if let Some(color) = self.accent_color {
@@ -40,7 +39,7 @@ impl StyledWidget for &Quote {
             Paragraph::new(Span::styled(
                 final_text,
                 Style::default()
-                    .fg(*color_theme.get(&ThemeColor::Accent))
+                    .fg(*theme.get(&ThemeColor::Accent))
                     .add_modifier(Modifier::BOLD),
             ))
             .render(area, buf);

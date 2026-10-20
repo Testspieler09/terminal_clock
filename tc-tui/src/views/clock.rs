@@ -4,27 +4,27 @@ use tc_models::clock::ClockBehaviour;
 
 use crate::{
     TuiState, assets,
-    components::{
-        Dimensions,
-        fallback_terminal_too_small::{FallbackContext, FallbackView},
-    },
+    components::fallback_terminal_too_small::FallbackView,
     helpers::{
         center_widget, center_widget_horizontally, unstable_widget_fits_frame, widget_fits_frame,
     },
-    tui_models::styled_widget::StyledWidget,
+    tui_models::{
+        tui_action::TuiAction,
+        tui_traits::{Dimensions, TcWidget},
+    },
 };
 
-pub(crate) fn render_clock_view(frame: &mut Frame, config: &TuiState) {
+pub(crate) fn render_clock_view(frame: &mut Frame, state: &TuiState) {
     let tui_assets = assets();
     let frame_area = frame.area();
 
-    let clock = tui_assets.get_clock(config.clock_state.clock_face_idx);
-    let color_theme = tui_assets.get_color_theme(config.color_theme_idx);
+    let clock = tui_assets.get_clock(state.clock_state.clock_face_idx);
+    let color_theme = tui_assets.get_color_theme(state.color_theme_idx);
 
     let now = Local::now();
     let (clock_widget, clock_w, clock_h) = clock.generate_clock_face_with_dimensions(
         color_theme,
-        config.clock_state.clock_time_fmt,
+        state.clock_state.clock_time_fmt,
         now,
     );
     let clock_area = center_widget(
@@ -35,7 +35,7 @@ pub(crate) fn render_clock_view(frame: &mut Frame, config: &TuiState) {
     let clock_overflows =
         unstable_widget_fits_frame(frame, (clock_w as u16, clock_h as u16), clock_area);
 
-    let quote = tui_assets.get_quote(config.quote_idx);
+    let quote = tui_assets.get_quote(state.quote_idx);
 
     let quote_info = quote.as_ref().map(|quote| {
         let qw = quote.width();
@@ -62,16 +62,19 @@ pub(crate) fn render_clock_view(frame: &mut Frame, config: &TuiState) {
             (clock_w as u16, clock_h as u16)
         };
 
-        let fallback_view = FallbackView;
-        let fallback_ctx = FallbackContext::new(color_theme, w, h);
+        // TODO: send a tui action msg instead
+        // state.needed_width = w;
+        // state.needed_height = h;
+        let _ = TuiAction::UpdateFallback((w, h));
 
-        fallback_view.render(frame_area, frame.buffer_mut(), fallback_ctx);
+        let fallback_view = FallbackView;
+        fallback_view.render(frame_area, frame.buffer_mut(), state);
 
         return;
     }
 
     frame.render_widget(clock_widget, clock_area);
     if let Some((quote, quote_area, _)) = quote_info {
-        quote.render(quote_area, frame.buffer_mut(), color_theme);
+        quote.render(quote_area, frame.buffer_mut(), state);
     }
 }

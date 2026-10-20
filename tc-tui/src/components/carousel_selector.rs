@@ -1,7 +1,4 @@
-use std::{
-    cell::Cell,
-    time::{Duration, Instant},
-};
+use std::{cell::Cell, time::Instant};
 
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
@@ -11,17 +8,20 @@ use ratatui::{
     text::{Line, Span},
     widgets::Widget,
 };
-use tc_models::color_theme::{ColorTheme, ThemeColor};
+use tc_models::color_theme::ThemeColor;
 
-use crate::tui_models::{
-    selectable_item::{Selectable, SelectableItem},
-    settings::Setting,
-    styled_widget::StyledWidget,
-    tui_action::TuiAction,
-    tui_error::{UpdateError, UpdateResult},
+use crate::{
+    assets,
+    tui_models::{
+        selectable_item::{Selectable, SelectableItem},
+        settings::Setting,
+        tui::TuiState,
+        tui_action::TuiAction,
+        tui_constants::{CAROUSEL_SCROLL_PAUSE_MS, CAROUSEL_SCROLL_STEP_MS},
+        tui_error::{UpdateError, UpdateResult},
+        tui_traits::TcWidget,
+    },
 };
-const SCROLL_STEP_MS: Duration = Duration::from_millis(200);
-const SCROLL_PAUSE_MS: Duration = Duration::from_millis(600);
 
 enum ScrollPhase {
     /// Waiting before scroll starts (or after looping back to the beginning).
@@ -107,13 +107,13 @@ impl CarouselSelector {
 
         match &self.scroll_phase {
             ScrollPhase::Pausing { since } => {
-                if since.elapsed() >= SCROLL_PAUSE_MS {
+                if since.elapsed() >= CAROUSEL_SCROLL_PAUSE_MS {
                     self.last_step = Instant::now();
                     self.scroll_phase = ScrollPhase::Scrolling;
                 }
             }
             ScrollPhase::Scrolling => {
-                if self.last_step.elapsed() >= SCROLL_STEP_MS {
+                if self.last_step.elapsed() >= CAROUSEL_SCROLL_STEP_MS {
                     self.last_step = Instant::now();
                     if self.scroll_offset < overflow {
                         self.scroll_offset += 1;
@@ -125,7 +125,7 @@ impl CarouselSelector {
                 }
             }
             ScrollPhase::EndPause { since } => {
-                if since.elapsed() >= SCROLL_PAUSE_MS {
+                if since.elapsed() >= CAROUSEL_SCROLL_PAUSE_MS {
                     self.scroll_offset = 0;
                     self.scroll_phase = ScrollPhase::Pausing {
                         since: Instant::now(),
@@ -197,22 +197,12 @@ impl CarouselSelector {
     }
 }
 
-pub(crate) struct SettingsMenuCtx<'a> {
-    pub color_theme: &'a ColorTheme,
-}
+impl TcWidget<'_> for &CarouselSelector {
+    fn render(self, area: Rect, buf: &mut Buffer, state: &TuiState) {
+        let theme = assets().get_color_theme(state.color_theme_idx);
 
-impl<'a> SettingsMenuCtx<'a> {
-    pub fn new(color_theme: &'a ColorTheme) -> Self {
-        SettingsMenuCtx { color_theme }
-    }
-}
-
-impl StyledWidget for &CarouselSelector {
-    type Context<'a> = &'a SettingsMenuCtx<'a>;
-
-    fn render(self, area: Rect, buf: &mut Buffer, ctx: Self::Context<'_>) {
-        let highlight_color = *ctx.color_theme.get(&ThemeColor::Selection);
-        let default_color = *ctx.color_theme.get(&ThemeColor::Foreground);
+        let highlight_color = *theme.get(&ThemeColor::Selection);
+        let default_color = *theme.get(&ThemeColor::Foreground);
 
         let style = if self.is_active {
             Style::default().fg(default_color).bg(highlight_color)

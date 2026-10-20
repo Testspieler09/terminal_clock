@@ -7,7 +7,10 @@ use ratatui::{
 };
 use strum::{EnumIter, IntoEnumIterator};
 
-use crate::components::{CYAN_SHADES, Dimensions, GRAY_SHADES};
+use crate::tui_models::{
+    tui_constants::{CYAN_SHADES, GRAY_SHADES},
+    tui_traits::Dimensions,
+};
 
 #[derive(Default, PartialEq, Eq, Clone, Copy, EnumIter)]
 pub(crate) enum MenuLabel {

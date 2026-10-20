@@ -1,9 +1,5 @@
-#![allow(dead_code)]
+use tc_models::clock::TimeFormat;
 
-use ratatui::style::Color;
-use tc_models::{clock::TimeFormat, color_theme::ThemeColor};
-
-#[allow(dead_code)]
 #[derive(Clone, Copy)]
 pub enum TuiAction {
     /// General actions
@@ -21,5 +17,7 @@ pub enum TuiAction {
 
     /// Color actions
     ColorTheme(u16),
-    Color(ThemeColor, Color),
+
+    /// Fallback actions
+    UpdateFallback((u16, u16)),
 }

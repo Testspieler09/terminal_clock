@@ -1,10 +1,9 @@
 #![allow(dead_code)]
 
 use ratatui::prelude::{Buffer, Rect};
-use tc_models::color_theme::ColorTheme;
 use tokio::time::{Duration, Instant};
 
-use crate::tui_models::styled_widget::StyledWidget;
+use crate::tui_models::{tui::TuiState, tui_traits::TcWidget};
 
 pub(crate) enum TimerPhase {
     Work,
@@ -90,10 +89,8 @@ impl PomodoroTimer {
     }
 }
 
-impl StyledWidget for PomodoroTimer {
-    type Context<'a> = &'a ColorTheme;
-
-    fn render(self, _area: Rect, _buf: &mut Buffer, _ctx: Self::Context<'_>) {
+impl TcWidget<'_> for PomodoroTimer {
+    fn render(self, _area: Rect, _buf: &mut Buffer, _state: &TuiState) {
         todo!()
     }
 }

@@ -1,3 +1,6 @@
+use std::ops::ControlFlow;
+
+use chrono::Local;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
 use tokio::{io, time::Duration};
 
@@ -7,10 +10,9 @@ use crate::{
         application::ApplicationState,
         tui::{TuiComponents, TuiState},
         tui_action::TuiAction,
+        tui_constants::{FIREWORK_FRAME_MS, SETTINGS_MENU_TICK_MS},
     },
 };
-
-const SETTINGS_TICK_MS: u16 = 50;
 
 pub(crate) fn handle_events(
     state: &mut TuiState,
@@ -19,6 +21,18 @@ pub(crate) fn handle_events(
     if matches!(state.application_state, ApplicationState::Finished) {
         return Ok(true);
     }
+
+    let fw = &mut components.firework_animation;
+
+    if let Some(year) = fw.pending_trigger(Local::now()) {
+        fw.start(year);
+        state.application_state = ApplicationState::ShowingFirework;
+    }
+
+    if matches!(state.application_state, ApplicationState::ShowingFirework) && fw.is_finished() {
+        state.application_state = ApplicationState::Running;
+    }
+
     let refresh_rate = state.refresh_rate;
     let app_state = state.application_state.clone();
 
@@ -26,10 +40,10 @@ pub(crate) fn handle_events(
     //
     // Use a short poll timeout when settings are visible so the scroll
     // animation in carousel selectors can advance at its own pace.
-    let poll_timeout = if matches!(app_state, ApplicationState::ShowingSettings) {
-        SETTINGS_TICK_MS
-    } else {
-        refresh_rate
+    let poll_timeout = match app_state {
+        ApplicationState::ShowingFirework => FIREWORK_FRAME_MS,
+        ApplicationState::ShowingSettings => SETTINGS_MENU_TICK_MS,
+        _ => refresh_rate,
     };
 
     if event::poll(Duration::from_millis(poll_timeout as u64))?
@@ -39,7 +53,7 @@ pub(crate) fn handle_events(
             return Ok(false);
         }
 
-        if handle_global_keys(state, key_event, components) {
+        if let ControlFlow::Break(_) = handle_global_keys(state, key_event, components) {
             return Ok(matches!(
                 state.application_state,
                 ApplicationState::Finished
@@ -57,7 +71,9 @@ pub(crate) fn handle_events(
                     process_settings_action(state, &action);
                 }
             }
-            ApplicationState::ShowingHelp | ApplicationState::Finished => {}
+            ApplicationState::ShowingHelp
+            | ApplicationState::ShowingFirework
+            | ApplicationState::Finished => {}
         }
     }
 
@@ -81,9 +97,9 @@ pub(crate) fn process_settings_action(state: &mut TuiState, action: &TuiAction) 
         TuiAction::ShortBreakDuration(_) => {}
         TuiAction::SessionsBeforeLongBreak(_) => {}
         TuiAction::ColorTheme(theme) => state.color_theme_idx = *theme,
-        TuiAction::Color(_variant, _new_color) => {
-            // self.tui_assets.color_themes[state.color_theme_idx as usize]
-            //     .update(variant.clone(), *new_color);
+        TuiAction::UpdateFallback((w, h)) => {
+            state.needed_width = *w;
+            state.needed_height = *h;
         }
     }
 }
@@ -92,12 +108,12 @@ fn handle_global_keys(
     state: &mut TuiState,
     key_event: KeyEvent,
     components: &mut TuiComponents,
-) -> bool {
+) -> ControlFlow<()> {
     match key_event.code {
         KeyCode::Esc | KeyCode::Char('q') => match state.application_state {
             ApplicationState::ShowingHero => {
                 state.application_state = ApplicationState::Running;
-                true
+                ControlFlow::Break(())
             }
             ApplicationState::ShowingHelp => {
                 if components.help_box.was_called_from_hero() {
@@ -106,7 +122,7 @@ fn handle_global_keys(
                     state.application_state = ApplicationState::Running;
                 }
                 components.help_box.set_called_from_hero(false);
-                true
+                ControlFlow::Break(())
             }
             ApplicationState::ShowingSettings => {
                 if components.settings_menu.was_called_from_hero() {
@@ -115,19 +131,24 @@ fn handle_global_keys(
                     state.application_state = ApplicationState::Running;
                 }
                 components.settings_menu.set_called_from_hero(false);
-                true
+                ControlFlow::Break(())
             }
             ApplicationState::Running => {
                 if matches!(key_event.code, KeyCode::Char('q')) {
                     state.application_state = ApplicationState::Finished;
-                    true
+                    ControlFlow::Break(())
                 } else {
-                    false
+                    ControlFlow::Continue(())
                 }
             }
-            _ => false,
+            ApplicationState::ShowingFirework => {
+                components.firework_animation.skip();
+                state.application_state = ApplicationState::Finished;
+                ControlFlow::Break(())
+            }
+            _ => ControlFlow::Continue(()),
         },
-        _ => false,
+        _ => ControlFlow::Continue(()),
     }
 }
 

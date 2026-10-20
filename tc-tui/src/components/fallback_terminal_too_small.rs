@@ -3,37 +3,22 @@ use ratatui::{
     prelude::{Buffer, Rect},
     widgets::Widget,
 };
-use tc_models::color_theme::{ColorTheme, ThemeColor};
+use tc_models::color_theme::ThemeColor;
 
 use crate::{
+    assets,
     helpers::{centered_bold_label, centered_size_line},
-    tui_models::styled_widget::StyledWidget,
+    tui_models::{tui::TuiState, tui_traits::TcWidget},
 };
-
-pub(crate) struct FallbackContext<'a> {
-    color_theme: &'a ColorTheme,
-    needed_width: u16,
-    needed_height: u16,
-}
-
-impl<'a> FallbackContext<'a> {
-    pub(crate) fn new(color_theme: &'a ColorTheme, needed_width: u16, needed_height: u16) -> Self {
-        Self {
-            color_theme,
-            needed_width,
-            needed_height,
-        }
-    }
-}
 
 pub(crate) struct FallbackView;
 
-impl StyledWidget for FallbackView {
-    type Context<'a> = FallbackContext<'a>;
+impl TcWidget<'_> for FallbackView {
+    fn render(self, area: Rect, buf: &mut Buffer, state: &TuiState) {
+        let theme = assets().get_color_theme(state.color_theme_idx);
 
-    fn render(self, area: Rect, buf: &mut Buffer, ctx: Self::Context<'_>) {
-        let fg_color = *ctx.color_theme.get(&ThemeColor::Foreground);
-        let highlight_color = *ctx.color_theme.get(&ThemeColor::Accent);
+        let fg_color = *theme.get(&ThemeColor::Foreground);
+        let highlight_color = *theme.get(&ThemeColor::Accent);
 
         let [
             actual_label,
@@ -55,7 +40,7 @@ impl StyledWidget for FallbackView {
         centered_size_line(area.width, area.height, highlight_color).render(actual_size_line, buf);
 
         centered_bold_label("Currently needed space:", fg_color).render(needed_label, buf);
-        centered_size_line(ctx.needed_width, ctx.needed_height, highlight_color)
+        centered_size_line(state.needed_width, state.needed_height, highlight_color)
             .render(needed_size_line, buf);
     }
 }

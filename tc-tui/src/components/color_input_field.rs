@@ -3,8 +3,6 @@
 // ESC -> leave no save / ask for save
 // enter -> leave with save
 
-use std::str::FromStr;
-
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     prelude::{Alignment, Buffer, Constraint, Layout, Rect, Stylize},
@@ -12,56 +10,48 @@ use ratatui::{
     text::{Line, Span},
     widgets::Widget,
 };
-use tc_models::color_theme::{ColorTheme, FALLBACK_COLOR_THEME, ThemeColor};
+use tc_models::color_theme::{FALLBACK_COLOR_THEME, ThemeColor};
 
 use crate::{
-    TUI_ASSETS,
+    assets,
     tui_models::{
         selectable_item::SelectableItem, selector::SettingsSelector, settings::Setting,
-        styled_widget::StyledWidget, tui_action::TuiAction, tui_error::UpdateResult,
+        tui::TuiState, tui_action::TuiAction, tui_error::UpdateResult, tui_traits::TcWidget,
     },
 };
 
 // TODO: add the global colorpicker component later on that gets rendered over the whole frame
 pub(crate) struct ColorSelector {
     is_active: bool,
-
     setting: Setting,
-    current_hex_color: String,
 }
 
 impl ColorSelector {
     pub fn new(is_active: bool, setting: Setting) -> ColorSelector {
-        ColorSelector {
-            is_active,
-            setting,
-            current_hex_color: ColorSelector::resolve_color(setting).to_string(),
-        }
+        ColorSelector { is_active, setting }
     }
 
-    fn resolve_color(color_setting: Setting) -> &'static Color {
-        let Some(assets) = TUI_ASSETS.get() else {
-            return &Color::Black;
-        };
+    fn resolve_color(&self, color_theme_idx: u16) -> &'static Color {
+        let theme = assets().get_color_theme(color_theme_idx);
 
-        match color_setting {
-            Setting::ForegroundColor => assets.color_themes[0]
+        match self.setting {
+            Setting::ForegroundColor => theme
                 .colors
                 .get(&ThemeColor::Foreground)
                 .unwrap_or(&FALLBACK_COLOR_THEME[0]),
-            Setting::BackgroundColor => assets.color_themes[0]
+            Setting::BackgroundColor => theme
                 .colors
                 .get(&ThemeColor::Background)
                 .unwrap_or(&FALLBACK_COLOR_THEME[1]),
-            Setting::SelectionColor => assets.color_themes[0]
+            Setting::SelectionColor => theme
                 .colors
                 .get(&ThemeColor::Selection)
                 .unwrap_or(&FALLBACK_COLOR_THEME[2]),
-            Setting::AccentColor => assets.color_themes[0]
+            Setting::AccentColor => theme
                 .colors
                 .get(&ThemeColor::Accent)
                 .unwrap_or(&FALLBACK_COLOR_THEME[3]),
-            Setting::BorderColor => assets.color_themes[0]
+            Setting::BorderColor => theme
                 .colors
                 .get(&ThemeColor::Borders)
                 .unwrap_or(&FALLBACK_COLOR_THEME[4]),
@@ -93,12 +83,13 @@ impl SettingsSelector for ColorSelector {
     }
 }
 
-impl StyledWidget for &ColorSelector {
-    type Context<'a> = &'a ColorTheme;
+impl TcWidget<'_> for &ColorSelector {
+    fn render(self, area: Rect, buf: &mut Buffer, state: &TuiState) {
+        let theme = assets().get_color_theme(state.color_theme_idx);
 
-    fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
-        let highlight_color = *color_theme.get(&ThemeColor::Selection);
-        let default_color = *color_theme.get(&ThemeColor::Foreground);
+        let highlight_color = *theme.get(&ThemeColor::Selection);
+        let default_color = *theme.get(&ThemeColor::Foreground);
+        let background_color = *theme.get(&ThemeColor::Background);
 
         let style = if self.is_active {
             Style::default().fg(default_color).bg(highlight_color)
@@ -122,24 +113,24 @@ impl StyledWidget for &ColorSelector {
         .style(style)
         .render(title_row_section, buf);
 
-        let bg_color = Color::from_str(&self.current_hex_color)
-            .expect("The current hex color can never be invalid.");
+        let current_color = self.resolve_color(state.color_theme_idx);
+        let bg_color = current_color;
         let fg_color = match bg_color {
             Color::Rgb(r, g, b) => {
-                let luminance = 0.2126 * (r as f32) + 0.7152 * (g as f32) + 0.0722 * (b as f32);
+                let luminance = 0.2126 * (*r as f32) + 0.7152 * (*g as f32) + 0.0722 * (*b as f32);
                 if luminance > 128.0 {
-                    Color::Black
+                    background_color
                 } else {
-                    Color::White
+                    default_color
                 }
             }
             _ => default_color,
         };
 
         Span::from("   ").style(style).render(left_section, buf);
-        Line::from(self.current_hex_color.clone())
+        Line::from(current_color.to_string())
             .alignment(Alignment::Center)
-            .style(Style::default().fg(fg_color).bg(bg_color))
+            .style(Style::default().fg(fg_color).bg(*bg_color))
             .render(text_middle_section, buf);
         Span::from(" ⏎ ")
             .style(style)

@@ -12,6 +12,9 @@ pub enum ApplicationState {
     /// The settings menu is rendered and displayed for the user
     ShowingSettings,
 
+    /// Fireworks Easteregg
+    ShowingFirework,
+
     /// The program finished successfully
     Finished,
 }

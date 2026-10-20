@@ -9,8 +9,8 @@ use tc_user_config_loader::{
 use crate::{
     Result,
     components::{
-        help_box::HelpBox, hero::Hero, logo::Logo, pomodoro::PomodoroTimer,
-        settings_menu::SettingMenu,
+        fireworks::FireworksAnimation, help_box::HelpBox, hero::Hero, logo::Logo,
+        pomodoro::PomodoroTimer, settings_menu::SettingMenu,
     },
     tui_models::{application::ApplicationState, clock::ClockState},
 };
@@ -57,7 +57,6 @@ impl TuiAssets {
     }
 }
 
-#[allow(dead_code)]
 pub struct TuiState {
     pub application_state: ApplicationState,
     pub color_theme_idx: u16,
@@ -65,6 +64,8 @@ pub struct TuiState {
     pub quote_idx: Option<u16>,
     pub pomodoro: Option<PomodoroTimer>,
     pub refresh_rate: u16,
+    pub needed_width: u16,
+    pub needed_height: u16,
 }
 
 pub(crate) struct TuiComponents {
@@ -72,6 +73,7 @@ pub(crate) struct TuiComponents {
     pub settings_menu: SettingMenu,
     pub hero: Hero,
     pub logo: Logo,
+    pub firework_animation: FireworksAnimation,
 }
 
 impl TuiComponents {
@@ -81,6 +83,7 @@ impl TuiComponents {
             settings_menu: SettingMenu::new(),
             hero: Hero::default(),
             logo: Logo::default(),
+            firework_animation: FireworksAnimation::new(),
         }
     }
 }

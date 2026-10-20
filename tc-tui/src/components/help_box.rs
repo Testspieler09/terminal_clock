@@ -5,10 +5,16 @@ use ratatui::{
     style::{Modifier, Style},
     widgets::{Block, BorderType, Paragraph, Widget},
 };
-use tc_models::color_theme::{ColorTheme, ThemeColor};
+use tc_models::color_theme::ThemeColor;
 
 use crate::{
-    components::Dimensions, helpers::generate_title, tui_models::styled_widget::StyledWidget,
+    assets,
+    helpers::generate_title,
+    tui_models::{
+        tui::TuiState,
+        tui_constants::HELP_BOX_CONTENT,
+        tui_traits::{Dimensions, TcWidget},
+    },
 };
 
 pub(crate) struct HelpBox {
@@ -18,16 +24,10 @@ pub(crate) struct HelpBox {
 }
 
 impl HelpBox {
-    const HELP_BOX_CONTENT: [[&str; 2]; 3] = [
-        ["?, h", "Show this help box"],
-        ["q", "Quit this program"],
-        ["ESC", "Toggles main menu"],
-    ];
-
     pub fn new() -> Self {
         HelpBox {
-            height: HelpBox::HELP_BOX_CONTENT.len() as u16 + 3, // Border (2) + Tableheader (1)
-            width: HelpBox::HELP_BOX_CONTENT
+            height: HELP_BOX_CONTENT.len() as u16 + 3, // Border (2) + Tableheader (1)
+            width: HELP_BOX_CONTENT
                 .iter()
                 .map(|pair| pair[0].len() + pair[1].len() + 15)
                 .max()
@@ -55,14 +55,14 @@ impl Dimensions for &HelpBox {
     }
 }
 
-impl StyledWidget for &HelpBox {
-    type Context<'a> = &'a ColorTheme;
+impl TcWidget<'_> for &HelpBox {
+    fn render(self, area: Rect, buf: &mut Buffer, state: &TuiState) {
+        let theme = assets().get_color_theme(state.color_theme_idx);
 
-    fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
         // Color Settings for this widget
-        let fg_color = *color_theme.get(&ThemeColor::Foreground);
-        let border_color = *color_theme.get(&ThemeColor::Borders);
-        let highlight_color = *color_theme.get(&ThemeColor::Accent);
+        let fg_color = *theme.get(&ThemeColor::Foreground);
+        let border_color = *theme.get(&ThemeColor::Borders);
+        let highlight_color = *theme.get(&ThemeColor::Accent);
 
         let block = Block::bordered()
             .title(generate_title("help".to_string(), fg_color))
@@ -98,29 +98,26 @@ impl StyledWidget for &HelpBox {
                 .add_modifier(Modifier::BOLD),
         );
 
-        HelpBox::HELP_BOX_CONTENT
-            .iter()
-            .enumerate()
-            .for_each(|(i, line)| {
-                Paragraph::new(line[0])
-                    .style(Style::default().fg(fg_color))
-                    .alignment(Alignment::Center)
-                    .render(
-                        Rect {
-                            x: table_layout[0].x,
-                            y: table_layout[1].y + i as u16 + 1,
-                            width: table_layout[0].width,
-                            height: 1,
-                        },
-                        buf,
-                    );
-
-                buf.set_string(
-                    table_layout[1].x,
-                    table_layout[1].y + i as u16 + 1,
-                    line[1],
-                    Style::default().fg(fg_color),
+        HELP_BOX_CONTENT.iter().enumerate().for_each(|(i, line)| {
+            Paragraph::new(line[0])
+                .style(Style::default().fg(fg_color))
+                .alignment(Alignment::Center)
+                .render(
+                    Rect {
+                        x: table_layout[0].x,
+                        y: table_layout[1].y + i as u16 + 1,
+                        width: table_layout[0].width,
+                        height: 1,
+                    },
+                    buf,
                 );
-            });
+
+            buf.set_string(
+                table_layout[1].x,
+                table_layout[1].y + i as u16 + 1,
+                line[1],
+                Style::default().fg(fg_color),
+            );
+        });
     }
 }

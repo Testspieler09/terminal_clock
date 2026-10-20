@@ -8,16 +8,16 @@ use tc_models::clock::TimeFormat;
 use crate::{
     assets,
     components::{
-        carousel_selector::{CarouselSelector, SettingsMenuCtx},
-        color_input_field::ColorSelector,
+        carousel_selector::CarouselSelector, color_input_field::ColorSelector,
         number_input::NumberSelector,
     },
     tui_models::{
         selectable_item::SelectableItem,
         settings::Setting,
-        styled_widget::StyledWidget,
+        tui::TuiState,
         tui_action::TuiAction,
         tui_error::{UpdateError, UpdateResult},
+        tui_traits::TcWidget,
     },
 };
 
@@ -82,14 +82,12 @@ impl SettingsSelector for Selector {
     }
 }
 
-impl StyledWidget for &Selector {
-    type Context<'a> = &'a SettingsMenuCtx<'a>;
-
-    fn render(self, area: Rect, buf: &mut Buffer, ctx: Self::Context<'_>) {
+impl TcWidget<'_> for &Selector {
+    fn render(self, area: Rect, buf: &mut Buffer, state: &TuiState) {
         match self {
-            Selector::Carousel(selector) => selector.render(area, buf, ctx),
-            Selector::Color(selector) => selector.render(area, buf, ctx.color_theme),
-            Selector::Number(selector) => selector.render(area, buf, ctx.color_theme),
+            Selector::Carousel(selector) => selector.render(area, buf, state),
+            Selector::Color(selector) => selector.render(area, buf, state),
+            Selector::Number(selector) => selector.render(area, buf, state),
         }
     }
 }

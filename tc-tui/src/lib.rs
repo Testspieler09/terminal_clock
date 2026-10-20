@@ -1,3 +1,4 @@
+use ratatui::prelude::Widget;
 pub(crate) mod components;
 pub mod error;
 pub(crate) mod helpers;
@@ -7,9 +8,10 @@ pub(crate) mod views;
 use std::{path::PathBuf, sync::OnceLock};
 
 pub use error::AppError;
+
+use crate::components::fireworks::FireworksAnimation;
 pub(crate) type Result<T> = std::result::Result<T, AppError>;
 
-use chrono::Local;
 use ratatui::{
     DefaultTerminal, Frame,
     style::Style,
@@ -18,13 +20,12 @@ use ratatui::{
 use tc_models::color_theme::ThemeColor;
 
 use crate::{
-    components::carousel_selector::SettingsMenuCtx,
     tui_models::{
         application::ApplicationState,
         controller,
         tui::{TuiAssets, TuiComponents, TuiState},
     },
-    views::{clock::render_clock_view, fireworks},
+    views::clock::render_clock_view,
 };
 
 static TUI_ASSETS: OnceLock<TuiAssets> = OnceLock::new();
@@ -70,14 +71,21 @@ impl TuiRenderer {
 
         let mut tui_state = assets().initial_state(&config_path, refresh_rate);
 
-        if fireworks::is_new_years(Local::now()) {
-            fireworks::run_fireworks(&mut terminal, &tui_state)?;
-        }
-
         let mut tui_components = TuiComponents::new();
 
         loop {
-            terminal.draw(|frame| Self::render(frame, &tui_state, &tui_components))?;
+            terminal.draw(|frame| {
+                if matches!(
+                    tui_state.application_state,
+                    ApplicationState::ShowingFirework
+                ) {
+                    tui_components.firework_animation.tick(
+                        frame.area(),
+                        FireworksAnimation::get_burst_colors(tui_state.color_theme_idx),
+                    );
+                }
+                Self::render(frame, &tui_state, &tui_components)
+            })?;
 
             let should_exit = controller::handle_events(&mut tui_state, &mut tui_components)?;
 
@@ -95,9 +103,9 @@ impl TuiRenderer {
     }
 
     fn render(frame: &mut Frame, state: &TuiState, components: &TuiComponents) {
-        let tui_assets = assets();
+        let theme = assets().get_color_theme(state.color_theme_idx);
+
         // Set the right background with a nice border
-        let theme = tui_assets.get_color_theme(state.color_theme_idx);
         frame.render_widget(
             Block::bordered()
                 .border_type(BorderType::Rounded)
@@ -113,20 +121,23 @@ impl TuiRenderer {
             ApplicationState::ShowingHero => {
                 components
                     .logo
-                    .render_component_with_logo(&components.hero, frame, theme)
+                    .render_component_with_logo(&components.hero, frame, state)
             }
             ApplicationState::ShowingHelp => components.logo.render_styled_component_with_logo(
                 &components.help_box,
                 frame,
-                theme,
-                theme,
+                state,
             ),
             ApplicationState::ShowingSettings => components.logo.render_styled_component_with_logo(
                 &components.settings_menu,
                 frame,
-                &SettingsMenuCtx::new(theme),
-                theme,
+                state,
             ),
+            ApplicationState::ShowingFirework => {
+                components
+                    .firework_animation
+                    .render(frame.area(), frame.buffer_mut());
+            }
             ApplicationState::Finished => {}
         }
     }

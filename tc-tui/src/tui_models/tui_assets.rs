@@ -49,6 +49,8 @@ impl TuiAssets {
             quote_idx,
             pomodoro: None,
             refresh_rate,
+            needed_width: 0,
+            needed_height: 0,
         }
     }
 }

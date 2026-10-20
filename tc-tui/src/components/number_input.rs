@@ -6,14 +6,17 @@ use ratatui::{
     text::{Line, Span},
     widgets::Widget,
 };
-use tc_models::color_theme::{ColorTheme, ThemeColor};
+use tc_models::color_theme::ThemeColor;
 
-use crate::tui_models::{
-    selectable_item::SelectableItem, selector::SettingsSelector, settings::Setting,
-    styled_widget::StyledWidget, tui_action::TuiAction, tui_error::UpdateResult,
+use crate::{
+    TuiState, assets,
+    tui_models::{
+        selectable_item::SelectableItem, selector::SettingsSelector, settings::Setting,
+        tui_action::TuiAction, tui_error::UpdateResult, tui_traits::TcWidget,
+    },
 };
 
-// TODO: add the global colorpicker component later on that gets rendered over the whole frame
+// TODO: add the global numberpicker component later on that gets rendered over the whole frame
 pub(crate) struct NumberSelector {
     is_active: bool,
 
@@ -22,11 +25,14 @@ pub(crate) struct NumberSelector {
 }
 
 impl NumberSelector {
-    pub fn new(is_active: bool, setting: Setting) -> NumberSelector {
+    pub fn new(
+        is_active: bool,
+        setting: Setting, /* , state: &TuiState for the current_selectd_number */
+    ) -> NumberSelector {
         NumberSelector {
             is_active,
             setting,
-            current_selected_number: 0, // TODO: fetch from tui_controller
+            current_selected_number: 0,
         }
     }
 }
@@ -54,12 +60,12 @@ impl SettingsSelector for NumberSelector {
     }
 }
 
-impl StyledWidget for &NumberSelector {
-    type Context<'a> = &'a ColorTheme;
+impl TcWidget<'_> for &NumberSelector {
+    fn render(self, area: Rect, buf: &mut Buffer, state: &TuiState) {
+        let theme = assets().get_color_theme(state.color_theme_idx);
 
-    fn render(self, area: Rect, buf: &mut Buffer, color_theme: &ColorTheme) {
-        let highlight_color = *color_theme.get(&ThemeColor::Selection);
-        let default_color = *color_theme.get(&ThemeColor::Foreground);
+        let highlight_color = *theme.get(&ThemeColor::Selection);
+        let default_color = *theme.get(&ThemeColor::Foreground);
 
         let [_, bottom_row_section] =
             Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(area);
