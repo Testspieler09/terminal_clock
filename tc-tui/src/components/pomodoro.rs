@@ -27,7 +27,7 @@ pub(crate) struct PomodoroState {
 }
 
 pub struct PomodoroTimer {
-    config: PomodoroConfig,
+    pub config: PomodoroConfig,
     state: PomodoroState,
     last_tick: Instant,
 }

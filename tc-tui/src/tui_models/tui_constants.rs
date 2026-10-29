@@ -2,10 +2,7 @@ use std::time::Duration;
 
 use ratatui::style::Color;
 
-use crate::{
-    components::settings_menu::SelectorConfig,
-    tui_models::{selector::SelectorType, settings::Setting},
-};
+use crate::{components::settings_menu::SelectorConfig, tui_models::settings::Setting};
 
 pub const FULL_LOGO: &str = concat!(
     "████████╗ ██████╗\n",
@@ -41,12 +38,10 @@ pub const GENERAL_TAB_CONFIG: &'static [SelectorConfig<'static>] = &[
     SelectorConfig {
         setting: Setting::RefreshRate,
         description: &["The rate on which the screen gets refreshed"],
-        selector_type: SelectorType::Number,
     },
     SelectorConfig {
         setting: Setting::ClockFace,
         description: &["The clock face you want to be displayed"],
-        selector_type: SelectorType::Carousel,
     },
     SelectorConfig {
         setting: Setting::ClockFormat,
@@ -55,12 +50,10 @@ pub const GENERAL_TAB_CONFIG: &'static [SelectorConfig<'static>] = &[
             "",
             "The options are HH:MM:SS, MM:HH:SS and HH:MM",
         ],
-        selector_type: SelectorType::Carousel,
     },
     SelectorConfig {
         setting: Setting::Quote,
         description: &["The quote that is supposed to be rendered"],
-        selector_type: SelectorType::Carousel,
     },
 ];
 
@@ -68,27 +61,22 @@ pub const POMODORO_TAB_CONFIG: &'static [SelectorConfig<'static>] = &[
     SelectorConfig {
         setting: Setting::TotalSessions,
         description: &["The total number of Pomodoro sessions"],
-        selector_type: SelectorType::Number,
     },
     SelectorConfig {
         setting: Setting::SessionsBeforeLongBreak,
         description: &["The number of sessions to complete before taking a long break"],
-        selector_type: SelectorType::Number,
     },
     SelectorConfig {
         setting: Setting::WorkDuration,
         description: &["Duration of each focused work session (in minutes)"],
-        selector_type: SelectorType::Number,
     },
     SelectorConfig {
         setting: Setting::ShortBreakDuration,
         description: &["Duration of a short break between work sessions (in minutes)"],
-        selector_type: SelectorType::Number,
     },
     SelectorConfig {
         setting: Setting::LongBreakDuration,
         description: &["Duration of a long break after multiple sessions (in minutes)"],
-        selector_type: SelectorType::Number,
     },
 ];
 
@@ -96,12 +84,10 @@ pub const COLOR_TAB_CONFIG: &'static [SelectorConfig<'static>] = &[
     SelectorConfig {
         setting: Setting::ColorTheme,
         description: &["The overall color theme used across the application"],
-        selector_type: SelectorType::Carousel,
     },
     SelectorConfig {
         setting: Setting::ForegroundColor,
         description: &["Color used for primary text and UI elements"],
-        selector_type: SelectorType::Color,
     },
     SelectorConfig {
         setting: Setting::BackgroundColor,
@@ -110,22 +96,18 @@ pub const COLOR_TAB_CONFIG: &'static [SelectorConfig<'static>] = &[
             "",
             "Set this to `None` to get a transparent background",
         ],
-        selector_type: SelectorType::Color,
     },
     SelectorConfig {
         setting: Setting::SelectionColor,
         description: &["Color used when selecting text or items"],
-        selector_type: SelectorType::Color,
     },
     SelectorConfig {
         setting: Setting::AccentColor,
         description: &["Highlight color used for emphasis or active items"],
-        selector_type: SelectorType::Color,
     },
     SelectorConfig {
         setting: Setting::BorderColor,
         description: &["Color used for borders and outlines"],
-        selector_type: SelectorType::Color,
     },
 ];
 

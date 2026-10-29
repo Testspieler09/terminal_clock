@@ -1,4 +1,7 @@
-use std::{path::PathBuf, process};
+use std::{
+    backtrace::Backtrace, fs::OpenOptions, io::Write, panic, path::PathBuf, process,
+    time::SystemTime,
+};
 
 use clap::Parser;
 use tc_tui::TuiRenderer;
@@ -29,8 +32,43 @@ struct Args {
     config: Option<PathBuf>,
 }
 
+pub fn setup_panic_hook() {
+    panic::set_hook(Box::new(|info| {
+        let Ok(mut file) = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("crash.log")
+        else {
+            eprintln!("Panic occurred, but crash.log could not be opened.");
+            return;
+        };
+
+        let backtrace = Backtrace::force_capture();
+
+        let _ = writeln!(file, "\n========== APPLICATION CRASH ==========");
+        let _ = writeln!(file, "Time: {:?}", SystemTime::now());
+        let _ = writeln!(file, "Panic: {info}");
+
+        if let Some(location) = info.location() {
+            let _ = writeln!(
+                file,
+                "Location: {}:{}:{}",
+                location.file(),
+                location.line(),
+                location.column()
+            );
+        }
+
+        let _ = writeln!(file, "\nBacktrace:\n{backtrace}");
+        let _ = writeln!(file, "=======================================\n");
+        let _ = file.flush();
+    }));
+}
+
 #[tokio::main]
 async fn main() {
+    setup_panic_hook();
+
     let args = Args::parse();
     if let Err(e) = TuiRenderer::execute_renderer(args.config, args.refresh_rate).await {
         eprintln!("{e}");

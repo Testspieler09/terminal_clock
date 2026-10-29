@@ -11,28 +11,46 @@ use tc_models::color_theme::ThemeColor;
 use crate::{
     TuiState, assets,
     tui_models::{
-        selectable_item::SelectableItem, selector::SettingsSelector, settings::Setting,
-        tui_action::TuiAction, tui_error::UpdateResult, tui_traits::TcWidget,
+        selectable_item::SelectableItem,
+        selector::SettingsSelector,
+        settings::{GeneralSetting, PomodoroSetting, Setting},
+        tui_action::TuiAction,
+        tui_error::UpdateResult,
+        tui_traits::TcWidget,
     },
 };
 
 // TODO: add the global numberpicker component later on that gets rendered over the whole frame
 pub(crate) struct NumberSelector {
     is_active: bool,
-
     setting: Setting,
-    current_selected_number: u32,
 }
 
 impl NumberSelector {
-    pub fn new(
-        is_active: bool,
-        setting: Setting, /* , state: &TuiState for the current_selectd_number */
-    ) -> NumberSelector {
-        NumberSelector {
-            is_active,
-            setting,
-            current_selected_number: 0,
+    pub fn new(is_active: bool, setting: Setting) -> NumberSelector {
+        NumberSelector { is_active, setting }
+    }
+
+    fn resolve_number(&self, state: &TuiState) -> String {
+        match self.setting {
+            Setting::General(GeneralSetting::RefreshRate) => state.refresh_rate.to_string(),
+            Setting::Pomodoro(setting) => match state.pomodoro.as_ref() {
+                Some(timer) => match setting {
+                    PomodoroSetting::WorkDuration => timer.config.work_duration.to_string(),
+                    PomodoroSetting::SessionsBeforeLongBreak => {
+                        timer.config.sessions_before_long_break.to_string()
+                    }
+                    PomodoroSetting::TotalSessions => timer.config.total_sessions.to_string(),
+                    PomodoroSetting::LongBreakDuration => {
+                        timer.config.long_break_duration.to_string()
+                    }
+                    PomodoroSetting::ShortBreakDuration => {
+                        timer.config.short_break_duration.to_string()
+                    }
+                },
+                None => "/".to_string(),
+            },
+            _ => unreachable!("resolve_number called for a non-number setting"),
         }
     }
 }
@@ -80,7 +98,7 @@ impl TcWidget<'_> for &NumberSelector {
             Span::from(self.setting.as_ref()).style(Style::default().fg(default_color).bold()),
         ]);
 
-        let text = Line::from(self.current_selected_number.to_string());
+        let text = Line::from(self.resolve_number(state));
 
         let style = if self.is_active {
             Style::default().fg(default_color).bg(highlight_color)

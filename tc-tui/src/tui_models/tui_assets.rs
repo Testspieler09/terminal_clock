@@ -1,11 +1,14 @@
-use std::path::Path;
+use std::{path::Path, sync::mpsc::channel};
 
 use tc_user_config_loader::app_config_loader::AppConfigLoader;
 
-use crate::tui_models::{
-    application::ApplicationState,
-    clock::ClockState,
-    tui::{TuiAssets, TuiState},
+use crate::{
+    TuiAction,
+    tui_models::{
+        application::ApplicationState,
+        clock::ClockState,
+        tui::{TuiAssets, TuiState},
+    },
 };
 
 impl TuiAssets {
@@ -39,12 +42,16 @@ impl TuiAssets {
             config.refresh_rate.unwrap_or(500)
         };
 
+        let (action_tx, action_rx) = channel::<TuiAction>();
+
         TuiState {
             application_state: ApplicationState::Running,
             clock_state: ClockState {
                 clock_face_idx,
                 clock_time_fmt,
             },
+            action_tx,
+            action_rx,
             color_theme_idx,
             quote_idx,
             pomodoro: None,

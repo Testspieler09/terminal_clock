@@ -62,10 +62,13 @@ pub(crate) fn render_clock_view(frame: &mut Frame, state: &TuiState) {
             (clock_w as u16, clock_h as u16)
         };
 
-        // TODO: send a tui action msg instead
-        // state.needed_width = w;
-        // state.needed_height = h;
-        let _ = TuiAction::UpdateFallback((w, h));
+        // FIX: handle the error instead of ignoring it?!
+        if let Err(e) = state.action_tx.send(TuiAction::UpdateFallback((w, h))) {
+            panic!(
+                "Receiver should never close before application.\nError: {}",
+                e
+            );
+        }
 
         let fallback_view = FallbackView;
         fallback_view.render(frame_area, frame.buffer_mut(), state);

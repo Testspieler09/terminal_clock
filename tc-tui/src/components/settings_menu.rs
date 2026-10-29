@@ -16,7 +16,7 @@ use crate::{
     ApplicationState, TuiState, assets,
     helpers::generate_title,
     tui_models::{
-        selector::{Selector, SelectorType, SettingsSelector},
+        selector::{Selector, SettingsSelector},
         settings::Setting,
         tui_action::TuiAction,
         tui_constants::{COLOR_TAB_CONFIG, GENERAL_TAB_CONFIG, POMODORO_TAB_CONFIG},
@@ -27,7 +27,6 @@ use crate::{
 pub(crate) struct SelectorConfig<'a> {
     pub setting: Setting,
     pub description: &'a [&'a str],
-    pub selector_type: SelectorType,
 }
 
 enum PrimitiveTabNavigationOperation {
@@ -84,19 +83,17 @@ impl SettingMenu {
             .enumerate()
             .map(|(idx, config)| {
                 let is_active = idx == 0;
-                config
-                    .selector_type
-                    .create_selector(config.setting, is_active)
+                Selector::create_selector_from_setting(config.setting, is_active)
             })
             .collect();
         let pomodoro_tab_selectors: Vec<Selector> = POMODORO_TAB_CONFIG
             .iter()
-            .map(|config| config.selector_type.create_selector(config.setting, false))
+            .map(|config| Selector::create_selector_from_setting(config.setting, false))
             .collect();
-        // TODO: the bool should get a status::inactive / active type
+        // TODO: the bool should get a status::inactive / active type + optional disabled?!
         let color_tab_selectors: Vec<Selector> = COLOR_TAB_CONFIG
             .iter()
-            .map(|config| config.selector_type.create_selector(config.setting, false))
+            .map(|config| Selector::create_selector_from_setting(config.setting, false))
             .collect();
 
         SettingMenu {
@@ -264,11 +261,7 @@ impl SettingMenu {
         }
     }
 
-    pub fn handle_setting_keys(
-        &mut self,
-        key_event: KeyEvent,
-        tui_state: &mut TuiState,
-    ) -> Option<TuiAction> {
+    pub fn handle_setting_keys(&mut self, key_event: KeyEvent, state: &mut TuiState) {
         self.pending_action = None;
 
         match key_event.code {
@@ -281,9 +274,9 @@ impl SettingMenu {
             KeyCode::Char('3') => self.display_tab(SettingsTab::Color(0)),
             KeyCode::Char('s') => {
                 if self.was_called_from_hero() {
-                    tui_state.application_state = ApplicationState::ShowingHero;
+                    state.application_state = ApplicationState::ShowingHero;
                 } else {
-                    tui_state.application_state = ApplicationState::Running;
+                    state.application_state = ApplicationState::Running;
                 }
                 self.set_called_from_hero(false);
             }
@@ -302,7 +295,14 @@ impl SettingMenu {
             }
         }
 
-        self.pending_action
+        if let Some(action) = self.pending_action
+            && let Err(e) = state.action_tx.send(action)
+        {
+            panic!(
+                "Receiver should never close before application.\nError: {}",
+                e
+            );
+        }
     }
 }
 

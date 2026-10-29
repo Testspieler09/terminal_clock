@@ -18,6 +18,16 @@ pub(crate) fn handle_events(
     state: &mut TuiState,
     components: &mut TuiComponents,
 ) -> io::Result<bool> {
+    match state.action_rx.recv_timeout(Duration::from_millis(20)) {
+        Ok(action) => process_settings_action(state, &action),
+        // TODO: check if this is to harsh
+        // Also wrap in custom error?!
+        Err(e) => panic!(
+            "Sender should never close before application.\nError: {}",
+            e
+        ),
+    }
+
     if matches!(state.application_state, ApplicationState::Finished) {
         return Ok(true);
     }
@@ -63,14 +73,9 @@ pub(crate) fn handle_events(
         match app_state {
             ApplicationState::Running => handle_normal_keys(state, key_event, components),
             ApplicationState::ShowingHero => handle_hero_keys(state, key_event, components),
-            ApplicationState::ShowingSettings => {
-                if let Some(action) = components
-                    .settings_menu
-                    .handle_setting_keys(key_event, state)
-                {
-                    process_settings_action(state, &action);
-                }
-            }
+            ApplicationState::ShowingSettings => components
+                .settings_menu
+                .handle_setting_keys(key_event, state),
             ApplicationState::ShowingHelp
             | ApplicationState::ShowingFirework
             | ApplicationState::Finished => {}

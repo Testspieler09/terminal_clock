@@ -1,4 +1,7 @@
-use std::path::PathBuf;
+use std::{
+    path::PathBuf,
+    sync::mpsc::{Receiver, Sender},
+};
 
 use tc_models::{clock::Clock, color_theme::ColorTheme, quote::Quote};
 use tc_user_config_loader::{
@@ -12,7 +15,7 @@ use crate::{
         fireworks::FireworksAnimation, help_box::HelpBox, hero::Hero, logo::Logo,
         pomodoro::PomodoroTimer, settings_menu::SettingMenu,
     },
-    tui_models::{application::ApplicationState, clock::ClockState},
+    tui_models::{application::ApplicationState, clock::ClockState, tui_action::TuiAction},
 };
 pub struct TuiAssets {
     pub color_themes: Vec<ColorTheme>,
@@ -59,6 +62,8 @@ impl TuiAssets {
 
 pub struct TuiState {
     pub application_state: ApplicationState,
+    pub action_tx: Sender<TuiAction>,
+    pub action_rx: Receiver<TuiAction>,
     pub color_theme_idx: u16,
     pub clock_state: ClockState,
     pub quote_idx: Option<u16>,

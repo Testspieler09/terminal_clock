@@ -17,7 +17,7 @@ use crate::{
         tui::TuiState,
         tui_action::TuiAction,
         tui_error::{UpdateError, UpdateResult},
-        tui_traits::TcWidget,
+        tui_traits::{GetSelectorType, TcWidget},
     },
 };
 
@@ -25,7 +25,6 @@ pub(crate) enum SelectorType {
     Carousel,
     Color,
     Number,
-    // Text,
 }
 
 pub(crate) trait SettingsSelector {
@@ -40,6 +39,45 @@ impl Selector {
     pub(crate) fn tick(&mut self) {
         if let Selector::Carousel(selector) = self {
             selector.tick();
+        }
+    }
+
+    fn carousel_options_for(setting: Setting) -> Vec<SelectableItem> {
+        let tui_assets = assets();
+        match setting {
+            Setting::ClockFace => tui_assets
+                .clock_faces
+                .iter()
+                .enumerate()
+                .map(|(i, _clock_face)| SelectableItem::ClockFace(i as u16))
+                .collect(),
+            Setting::ColorTheme => tui_assets
+                .color_themes
+                .iter()
+                .enumerate()
+                .map(|(i, _color_theme)| SelectableItem::Theme(i as u16))
+                .collect(),
+            Setting::ClockFormat => TimeFormat::iter().map(SelectableItem::Format).collect(),
+            Setting::Quote => tui_assets
+                .quotes
+                .iter()
+                .enumerate()
+                .map(|(i, _quote)| SelectableItem::Quote(Some(i as u16)))
+                .chain(std::iter::once(SelectableItem::Quote(None)))
+                .collect(),
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn create_selector_from_setting(setting: Setting, is_active: bool) -> Selector {
+        match setting.selector_type() {
+            SelectorType::Carousel => Selector::Carousel(CarouselSelector::new(
+                is_active,
+                setting,
+                Selector::carousel_options_for(setting),
+            )),
+            SelectorType::Color => Selector::Color(ColorSelector::new(is_active, setting)),
+            SelectorType::Number => Selector::Number(NumberSelector::new(is_active, setting)),
         }
     }
 }
@@ -92,50 +130,8 @@ impl TcWidget<'_> for &Selector {
     }
 }
 
-impl SelectorType {
-    fn carousel_options_for(&self, setting: Setting) -> Vec<SelectableItem> {
-        let tui_assets = assets();
-        match setting {
-            Setting::ClockFace => tui_assets
-                .clock_faces
-                .iter()
-                .enumerate()
-                .map(|(i, _clock_face)| SelectableItem::ClockFace(i as u16))
-                .collect(),
-            Setting::ColorTheme => tui_assets
-                .color_themes
-                .iter()
-                .enumerate()
-                .map(|(i, _color_theme)| SelectableItem::Theme(i as u16))
-                .collect(),
-            Setting::ClockFormat => TimeFormat::iter().map(SelectableItem::Format).collect(),
-            Setting::Quote => tui_assets
-                .quotes
-                .iter()
-                .enumerate()
-                .map(|(i, _quote)| SelectableItem::Quote(Some(i as u16)))
-                .chain(std::iter::once(SelectableItem::Quote(None)))
-                .collect(),
-            _ => unreachable!(),
-        }
-    }
-
-    pub fn create_selector(&self, setting: Setting, is_active: bool) -> Selector {
-        match self {
-            SelectorType::Carousel => Selector::Carousel(CarouselSelector::new(
-                is_active,
-                setting,
-                self.carousel_options_for(setting),
-            )),
-            SelectorType::Color => Selector::Color(ColorSelector::new(is_active, setting)),
-            SelectorType::Number => Selector::Number(NumberSelector::new(is_active, setting)),
-        }
-    }
-}
-
 pub(crate) enum Selector {
     Carousel(CarouselSelector),
     Color(ColorSelector),
     Number(NumberSelector),
-    // Text(TextInput),
 }

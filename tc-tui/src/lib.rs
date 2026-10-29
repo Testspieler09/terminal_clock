@@ -9,7 +9,7 @@ use std::{path::PathBuf, sync::OnceLock};
 
 pub use error::AppError;
 
-use crate::components::fireworks::FireworksAnimation;
+use crate::{components::fireworks::FireworksAnimation, tui_models::tui_action::TuiAction};
 pub(crate) type Result<T> = std::result::Result<T, AppError>;
 
 use ratatui::{
