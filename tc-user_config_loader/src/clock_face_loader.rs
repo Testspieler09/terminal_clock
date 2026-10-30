@@ -6,7 +6,7 @@ use tc_models::{
     analog_clock::AnalogClock,
     clock::Clock,
     color_clock::ColorClock,
-    color_theme::FALLBACK_COLOR_THEME,
+    color_theme::ThemeColor,
     digital_clock::DigitalClock,
     helper::{TimeUnit, generate_led_coords_to_base},
 };
@@ -120,11 +120,11 @@ impl TryFrom<ColorClockConfig> for ColorClock {
 
         let clock_color = config
             .clock_color
-            .map(|c| Color::from_str(&c).unwrap_or(FALLBACK_COLOR_THEME[0]));
+            .map(|c| Color::from_str(&c).unwrap_or(*ThemeColor::Foreground.fallback()));
 
         let accent_color = config
             .accent_color
-            .map(|c| Color::from_str(&c).unwrap_or(FALLBACK_COLOR_THEME[2]));
+            .map(|c| Color::from_str(&c).unwrap_or(*ThemeColor::Selection.fallback()));
 
         Ok(ColorClock::new(
             config.name.unwrap(),

@@ -1,8 +1,12 @@
 use std::ops::ControlFlow;
 
 use chrono::Local;
+use futures::StreamExt;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
-use tokio::{io, time::Duration};
+use tokio::{
+    io,
+    time::{Duration, sleep},
+};
 
 use crate::{
     components::hero::MenuLabel,
@@ -14,78 +18,74 @@ use crate::{
     },
 };
 
-pub(crate) fn handle_events(
+pub(crate) async fn handle_events(
     state: &mut TuiState,
     components: &mut TuiComponents,
 ) -> io::Result<bool> {
-    match state.action_rx.recv_timeout(Duration::from_millis(20)) {
-        Ok(action) => process_settings_action(state, &action),
-        // TODO: check if this is to harsh
-        // Also wrap in custom error?!
-        Err(e) => panic!(
-            "Sender should never close before application.\nError: {}",
-            e
-        ),
-    }
-
     if matches!(state.application_state, ApplicationState::Finished) {
         return Ok(true);
     }
-
-    let fw = &mut components.firework_animation;
-
-    if let Some(year) = fw.pending_trigger(Local::now()) {
-        fw.start(year);
-        state.application_state = ApplicationState::ShowingFirework;
-    }
-
-    if matches!(state.application_state, ApplicationState::ShowingFirework) && fw.is_finished() {
-        state.application_state = ApplicationState::Running;
-    }
-
-    let refresh_rate = state.refresh_rate;
-    let app_state = state.application_state.clone();
 
     // FIX: I think this should be refactored, as it is to inversive regarding user config
     //
     // Use a short poll timeout when settings are visible so the scroll
     // animation in carousel selectors can advance at its own pace.
-    let poll_timeout = match app_state {
+    let tick = Duration::from_millis(match state.application_state {
         ApplicationState::ShowingFirework => FIREWORK_FRAME_MS,
         ApplicationState::ShowingSettings => SETTINGS_MENU_TICK_MS,
-        _ => refresh_rate,
-    };
+        _ => state.refresh_rate,
+    } as u64);
 
-    if event::poll(Duration::from_millis(poll_timeout as u64))?
-        && let Event::Key(key_event) = event::read()?
-    {
-        if matches!(key_event.kind, event::KeyEventKind::Release) {
-            return Ok(false);
+    tokio::select! {
+        maybe_event = state.events.next() => {
+            match maybe_event {
+                Some(Ok(Event::Key(key))) if key.kind != event::KeyEventKind::Release => {
+                    if handle_global_keys(state, key, components).is_continue() {
+                        dispatch_key(state, components, key).await;
+                    }
+                }
+                Some(Ok(Event::Resize(w, h))) => {
+                    process_settings_action(state, &TuiAction::UpdateFallback((w, h)));
+                }
+                Some(Ok(_)) => {}
+                Some(Err(e)) => return Err(e),
+                None => state.application_state = ApplicationState::Finished,
+            }
         }
 
-        if let ControlFlow::Break(_) = handle_global_keys(state, key_event, components) {
-            return Ok(matches!(
-                state.application_state,
-                ApplicationState::Finished
-            ));
-        }
+        _ = sleep(tick) => {}
+    }
 
-        match app_state {
-            ApplicationState::Running => handle_normal_keys(state, key_event, components),
-            ApplicationState::ShowingHero => handle_hero_keys(state, key_event, components),
-            ApplicationState::ShowingSettings => components
-                .settings_menu
-                .handle_setting_keys(key_event, state),
-            ApplicationState::ShowingHelp
-            | ApplicationState::ShowingFirework
-            | ApplicationState::Finished => {}
-        }
+    while let Ok(action) = state.action_rx.try_recv() {
+        process_settings_action(state, &action);
+    }
+
+    let fw = &mut components.firework_animation;
+    if let Some(year) = fw.pending_trigger(Local::now()) {
+        fw.start(year);
+        state.application_state = ApplicationState::ShowingFirework;
+    }
+    if matches!(state.application_state, ApplicationState::ShowingFirework) && fw.is_finished() {
+        state.application_state = ApplicationState::Running;
     }
 
     Ok(matches!(
         state.application_state,
         ApplicationState::Finished
     ))
+}
+
+async fn dispatch_key(state: &mut TuiState, components: &mut TuiComponents, key: KeyEvent) {
+    match state.application_state.clone() {
+        ApplicationState::Running => handle_normal_keys(state, key, components),
+        ApplicationState::ShowingHero => handle_hero_keys(state, key, components),
+        ApplicationState::ShowingSettings => {
+            components.settings_menu.handle_setting_keys(key, state)
+        }
+        ApplicationState::ShowingHelp
+        | ApplicationState::ShowingFirework
+        | ApplicationState::Finished => {}
+    }
 }
 
 pub(crate) fn process_settings_action(state: &mut TuiState, action: &TuiAction) {

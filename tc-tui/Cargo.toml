@@ -12,6 +12,8 @@ tc-models             = { path = "../tc-models/" }
 # External dependencies
 clap                  = { workspace = true }
 ratatui               = { workspace = true }
+crossterm             = { workspace = true }
+futures               = { workspace = true }
 unicode-segmentation  = { workspace = true }
 chrono                = { workspace = true }
 tokio                 = { workspace = true }

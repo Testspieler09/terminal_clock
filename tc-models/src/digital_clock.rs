@@ -6,7 +6,6 @@ use crate::{
     color_theme::ColorTheme,
 };
 
-#[allow(dead_code)]
 #[derive(Clone, Copy)]
 pub struct DigitalClock {
     name: &'static str,

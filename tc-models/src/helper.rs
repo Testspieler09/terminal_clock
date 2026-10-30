@@ -60,15 +60,12 @@ pub(crate) fn combine_ascii_art_while_applying_led<'a>(
     for line_index in 0..max_lines {
         let mut line_spans = Vec::with_capacity(paragraph_width);
 
-        for (art_idx, lines) in split_lines.iter().enumerate() {
-            let width = max_widths[art_idx];
+        for ((lines, &width), artwork) in split_lines.iter().zip(&max_widths).zip(artworks) {
             let line = lines.get(line_index).copied().unwrap_or("");
             let graphemes: Vec<&str> = line.graphemes(true).collect();
             let padding = width.saturating_sub(graphemes.len());
 
-            let coords = &artworks[art_idx].led_coords;
-            let digit = artworks[art_idx].time_value as usize;
-            let active = coords.get(digit);
+            let active = artwork.led_coords.get(artwork.time_value as usize);
 
             for (char_index, grapheme) in graphemes.iter().enumerate() {
                 let is_led = active

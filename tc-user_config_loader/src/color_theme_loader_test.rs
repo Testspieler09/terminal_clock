@@ -49,8 +49,8 @@ fn invalid_color_falls_back_to_default() {
     let theme: ColorTheme = make_config("t", Some("not-a-color"), None, None, None, None).into();
 
     assert_eq!(
-        *theme.get(&ThemeColor::Foreground),
-        FALLBACK_COLOR_THEME[ThemeColor::Foreground as usize]
+        theme.get(&ThemeColor::Foreground),
+        ThemeColor::Foreground.fallback()
     );
 }
 
@@ -75,19 +75,19 @@ fn all_none_fields_use_fallbacks() {
     let theme: ColorTheme = make_config("t", None, None, None, None, None).into();
 
     assert_eq!(
-        *theme.get(&ThemeColor::Foreground),
-        FALLBACK_COLOR_THEME[ThemeColor::Foreground as usize]
+        theme.get(&ThemeColor::Foreground),
+        ThemeColor::Foreground.fallback()
     );
     assert_eq!(
-        *theme.get(&ThemeColor::Selection),
-        FALLBACK_COLOR_THEME[ThemeColor::Selection as usize]
+        theme.get(&ThemeColor::Selection),
+        ThemeColor::Selection.fallback()
     );
     assert_eq!(
-        *theme.get(&ThemeColor::Accent),
-        FALLBACK_COLOR_THEME[ThemeColor::Accent as usize]
+        theme.get(&ThemeColor::Accent),
+        ThemeColor::Accent.fallback()
     );
     assert_eq!(
-        *theme.get(&ThemeColor::Borders),
-        FALLBACK_COLOR_THEME[ThemeColor::Borders as usize]
+        theme.get(&ThemeColor::Borders),
+        ThemeColor::Borders.fallback()
     );
 }

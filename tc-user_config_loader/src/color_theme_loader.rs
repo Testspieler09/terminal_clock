@@ -6,7 +6,7 @@ use std::{
 
 use ratatui::style::Color;
 use serde::Deserialize;
-use tc_models::color_theme::{ColorTheme, FALLBACK_COLOR_THEME, ThemeColor};
+use tc_models::color_theme::{ColorTheme, ThemeColor};
 
 use crate::{LoaderResult, bundled::COLOR_THEMES};
 
@@ -33,10 +33,7 @@ impl From<ThemeConfig> for ColorTheme {
 
         colors.insert(
             ThemeColor::Foreground,
-            parse_color(
-                config.foreground,
-                FALLBACK_COLOR_THEME[ThemeColor::Foreground as usize],
-            ),
+            parse_color(config.foreground, *ThemeColor::Foreground.fallback()),
         );
 
         let background_color = config
@@ -51,24 +48,15 @@ impl From<ThemeConfig> for ColorTheme {
 
         colors.insert(
             ThemeColor::Selection,
-            parse_color(
-                config.selection,
-                FALLBACK_COLOR_THEME[ThemeColor::Selection as usize],
-            ),
+            parse_color(config.selection, *ThemeColor::Selection.fallback()),
         );
         colors.insert(
             ThemeColor::Accent,
-            parse_color(
-                config.accent,
-                FALLBACK_COLOR_THEME[ThemeColor::Accent as usize],
-            ),
+            parse_color(config.accent, *ThemeColor::Accent.fallback()),
         );
         colors.insert(
             ThemeColor::Borders,
-            parse_color(
-                config.borders,
-                FALLBACK_COLOR_THEME[ThemeColor::Borders as usize],
-            ),
+            parse_color(config.borders, *ThemeColor::Borders.fallback()),
         );
 
         ColorTheme {

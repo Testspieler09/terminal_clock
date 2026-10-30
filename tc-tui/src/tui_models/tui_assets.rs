@@ -1,6 +1,8 @@
-use std::{path::Path, sync::mpsc::channel};
+use std::path::Path;
 
+use crossterm::event::EventStream;
 use tc_user_config_loader::app_config_loader::AppConfigLoader;
+use tokio::sync::mpsc::unbounded_channel;
 
 use crate::{
     TuiAction,
@@ -42,7 +44,7 @@ impl TuiAssets {
             config.refresh_rate.unwrap_or(500)
         };
 
-        let (action_tx, action_rx) = channel::<TuiAction>();
+        let (action_tx, action_rx) = unbounded_channel::<TuiAction>();
 
         TuiState {
             application_state: ApplicationState::Running,
@@ -58,6 +60,7 @@ impl TuiAssets {
             refresh_rate,
             needed_width: 0,
             needed_height: 0,
+            events: EventStream::new(),
         }
     }
 }

@@ -28,7 +28,10 @@ pub struct ColorClock {
 }
 
 impl ColorClock {
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Currently there is no struct that wraps the ColorClock configuration."
+    )]
     pub fn new(
         name: String,
         hour: String,

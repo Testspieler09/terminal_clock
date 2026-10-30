@@ -87,7 +87,8 @@ impl TuiRenderer {
                 Self::render(frame, &tui_state, &tui_components)
             })?;
 
-            let should_exit = controller::handle_events(&mut tui_state, &mut tui_components)?;
+            let should_exit =
+                controller::handle_events(&mut tui_state, &mut tui_components).await?;
 
             if matches!(
                 tui_state.application_state,

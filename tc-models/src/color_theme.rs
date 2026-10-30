@@ -2,14 +2,6 @@ use std::collections::{HashMap, HashSet};
 
 use ratatui::style::{Color, Style, palette::tailwind};
 
-pub const FALLBACK_COLOR_THEME: [Color; 5] = [
-    tailwind::SLATE.c300,  // SchemeColor::Forground
-    tailwind::GRAY.c500,   // SchemeColor::Background
-    tailwind::CYAN.c500,   // SchemeColor::Selection
-    tailwind::RED.c500,    // SchemeColor::Accent
-    tailwind::PURPLE.c500, // SchemeColor::Borders
-];
-
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum ThemeColor {
     Foreground,
@@ -17,6 +9,18 @@ pub enum ThemeColor {
     Selection,
     Accent,
     Borders,
+}
+
+impl ThemeColor {
+    pub fn fallback(self) -> &'static Color {
+        match self {
+            ThemeColor::Foreground => &tailwind::SLATE.c300,
+            ThemeColor::Background => &tailwind::GRAY.c500,
+            ThemeColor::Selection => &tailwind::CYAN.c500,
+            ThemeColor::Accent => &tailwind::RED.c500,
+            ThemeColor::Borders => &tailwind::PURPLE.c500,
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -32,9 +36,7 @@ impl ColorTheme {
     }
 
     pub fn get(&self, key: &ThemeColor) -> &Color {
-        self.colors
-            .get(key)
-            .unwrap_or(&FALLBACK_COLOR_THEME[*key as usize])
+        self.colors.get(key).unwrap_or(key.fallback())
     }
 
     pub fn update(&mut self, key: ThemeColor, new_value: Color) {

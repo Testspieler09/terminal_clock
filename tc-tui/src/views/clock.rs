@@ -8,13 +8,10 @@ use crate::{
     helpers::{
         center_widget, center_widget_horizontally, unstable_widget_fits_frame, widget_fits_frame,
     },
-    tui_models::{
-        tui_action::TuiAction,
-        tui_traits::{Dimensions, TcWidget},
-    },
+    tui_models::tui_traits::{Dimensions, TcWidget},
 };
 
-pub(crate) fn render_clock_view(frame: &mut Frame, state: &TuiState) {
+pub(crate) fn render_clock_view(frame: &mut Frame<'_>, state: &TuiState) {
     let tui_assets = assets();
     let frame_area = frame.area();
 
@@ -56,20 +53,6 @@ pub(crate) fn render_clock_view(frame: &mut Frame, state: &TuiState) {
     let needs_fallback =
         clock_overflows || quote_info.as_ref().map(|(_, _, o)| *o).unwrap_or(false);
     if needs_fallback {
-        let (w, h) = if let Some((quote, _, true)) = &quote_info {
-            (quote.width(), quote.height())
-        } else {
-            (clock_w as u16, clock_h as u16)
-        };
-
-        // FIX: handle the error instead of ignoring it?!
-        if let Err(e) = state.action_tx.send(TuiAction::UpdateFallback((w, h))) {
-            panic!(
-                "Receiver should never close before application.\nError: {}",
-                e
-            );
-        }
-
         let fallback_view = FallbackView;
         fallback_view.render(frame_area, frame.buffer_mut(), state);
 

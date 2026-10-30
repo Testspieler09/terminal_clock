@@ -1,13 +1,12 @@
-use std::{
-    path::PathBuf,
-    sync::mpsc::{Receiver, Sender},
-};
+use std::path::PathBuf;
 
+use crossterm::event::EventStream;
 use tc_models::{clock::Clock, color_theme::ColorTheme, quote::Quote};
 use tc_user_config_loader::{
     clock_face_loader::ClockFaceLoader, color_theme_loader::ColorThemeLoader,
     quote_loader::QuoteLoader,
 };
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use crate::{
     Result,
@@ -17,6 +16,7 @@ use crate::{
     },
     tui_models::{application::ApplicationState, clock::ClockState, tui_action::TuiAction},
 };
+
 pub struct TuiAssets {
     pub color_themes: Vec<ColorTheme>,
     pub clock_faces: Vec<Clock>,
@@ -62,8 +62,8 @@ impl TuiAssets {
 
 pub struct TuiState {
     pub application_state: ApplicationState,
-    pub action_tx: Sender<TuiAction>,
-    pub action_rx: Receiver<TuiAction>,
+    pub action_tx: UnboundedSender<TuiAction>,
+    pub action_rx: UnboundedReceiver<TuiAction>,
     pub color_theme_idx: u16,
     pub clock_state: ClockState,
     pub quote_idx: Option<u16>,
@@ -71,6 +71,7 @@ pub struct TuiState {
     pub refresh_rate: u16,
     pub needed_width: u16,
     pub needed_height: u16,
+    pub events: EventStream,
 }
 
 pub(crate) struct TuiComponents {

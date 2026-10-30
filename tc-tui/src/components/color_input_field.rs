@@ -10,7 +10,7 @@ use ratatui::{
     text::{Line, Span},
     widgets::Widget,
 };
-use tc_models::color_theme::{FALLBACK_COLOR_THEME, ThemeColor};
+use tc_models::color_theme::ThemeColor;
 
 use crate::{
     assets,
@@ -38,23 +38,23 @@ impl ColorSelector {
             Setting::ForegroundColor => theme
                 .colors
                 .get(&ThemeColor::Foreground)
-                .unwrap_or(&FALLBACK_COLOR_THEME[0]),
+                .unwrap_or(ThemeColor::Foreground.fallback()),
             Setting::BackgroundColor => theme
                 .colors
                 .get(&ThemeColor::Background)
-                .unwrap_or(&FALLBACK_COLOR_THEME[1]),
+                .unwrap_or(ThemeColor::Background.fallback()),
             Setting::SelectionColor => theme
                 .colors
                 .get(&ThemeColor::Selection)
-                .unwrap_or(&FALLBACK_COLOR_THEME[2]),
+                .unwrap_or(ThemeColor::Selection.fallback()),
             Setting::AccentColor => theme
                 .colors
                 .get(&ThemeColor::Accent)
-                .unwrap_or(&FALLBACK_COLOR_THEME[3]),
+                .unwrap_or(ThemeColor::Accent.fallback()),
             Setting::BorderColor => theme
                 .colors
                 .get(&ThemeColor::Borders)
-                .unwrap_or(&FALLBACK_COLOR_THEME[4]),
+                .unwrap_or(ThemeColor::Borders.fallback()),
             _ => unreachable!(),
         }
     }
