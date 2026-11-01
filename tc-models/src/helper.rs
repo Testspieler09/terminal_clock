@@ -149,7 +149,13 @@ pub fn generate_led_coords_to_base(
             let matches = match render_mode {
                 RenderMode::Bits => (tens & bit as u32) != 0,
                 RenderMode::Digits => tens == bit as u32,
-                RenderMode::Gauge => unreachable!(),
+                #[expect(
+                    clippy::unreachable,
+                    reason = "generate_led_coords_to_base is not supported by the Gauge render mode"
+                )]
+                RenderMode::Gauge => unreachable!(
+                    "generate_led_coords_to_base is not supported by the Gauge render mode"
+                ),
             };
 
             if matches {
@@ -161,7 +167,13 @@ pub fn generate_led_coords_to_base(
             let matches = match render_mode {
                 RenderMode::Bits => (units & bit as u32) != 0,
                 RenderMode::Digits => units == bit as u32,
-                RenderMode::Gauge => unreachable!(),
+                #[expect(
+                    clippy::unreachable,
+                    reason = "generate_led_coords_to_base is not supported by the Gauge render mode"
+                )]
+                RenderMode::Gauge => unreachable!(
+                    "generate_led_coords_to_base is not supported by the Gauge render mode"
+                ),
             };
 
             if matches {

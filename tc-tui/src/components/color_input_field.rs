@@ -1,10 +1,5 @@
-// TODO: [display of color while user is typing] [the input field]
-// i | a | e -> edit
-// ESC -> leave no save / ask for save
-// enter -> leave with save
-
 use ratatui::{
-    crossterm::event::{KeyCode, KeyEvent},
+    crossterm::event::KeyEvent,
     prelude::{Alignment, Buffer, Constraint, Layout, Rect, Stylize},
     style::{Color, Style},
     text::{Line, Span},
@@ -15,20 +10,27 @@ use tc_models::color_theme::ThemeColor;
 use crate::{
     assets,
     tui_models::{
-        selectable_item::SelectableItem, selector::SettingsSelector, settings::Setting,
-        tui::TuiState, tui_action::TuiAction, tui_error::UpdateResult, tui_traits::TcWidget,
+        selectable_item::SelectableItem,
+        selector::{SelectorState, SettingsSelector},
+        settings::Setting,
+        tui::TuiState,
+        tui_action::TuiAction,
+        tui_error::UpdateResult,
+        tui_traits::TcWidget,
     },
 };
 
-// TODO: add the global colorpicker component later on that gets rendered over the whole frame
 pub(crate) struct ColorSelector {
-    is_active: bool,
+    selector_state: SelectorState,
     setting: Setting,
 }
 
 impl ColorSelector {
-    pub fn new(is_active: bool, setting: Setting) -> ColorSelector {
-        ColorSelector { is_active, setting }
+    pub fn new(selector_state: SelectorState, setting: Setting) -> ColorSelector {
+        ColorSelector {
+            selector_state,
+            setting,
+        }
     }
 
     fn resolve_color(&self, color_theme_idx: u16) -> &'static Color {
@@ -61,25 +63,24 @@ impl ColorSelector {
 }
 
 impl SettingsSelector for ColorSelector {
-    fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction> {
-        match key_event.code {
-            KeyCode::Char('e') | KeyCode::Char('i') | KeyCode::Char('a') => {
-                todo!()
-            }
-            _ => None,
-        }
+    fn handle_keys(&mut self, _key_event: KeyEvent) -> Option<TuiAction> {
+        None
     }
 
     fn set_to_active(&mut self) {
-        self.is_active = true;
+        self.selector_state = SelectorState::Active;
     }
 
     fn set_to_inactive(&mut self) {
-        self.is_active = false;
+        self.selector_state = SelectorState::Inactive;
+    }
+
+    fn set_to_disabled(&mut self) {
+        self.selector_state = SelectorState::Disabled;
     }
 
     fn update_current_selection(&mut self, _selection: SelectableItem) -> UpdateResult<()> {
-        todo!()
+        unreachable!("The ColorSelector will never update the current selection")
     }
 }
 
@@ -91,7 +92,7 @@ impl TcWidget<'_> for &ColorSelector {
         let default_color = *theme.get(&ThemeColor::Foreground);
         let background_color = *theme.get(&ThemeColor::Background);
 
-        let style = if self.is_active {
+        let style = if self.selector_state == SelectorState::Active {
             Style::default().fg(default_color).bg(highlight_color)
         } else {
             Style::default().fg(default_color)
@@ -99,7 +100,7 @@ impl TcWidget<'_> for &ColorSelector {
 
         let [title_row_section, bottom_row_section] =
             Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(area);
-        let [left_section, text_middle_section, button_right_section] = Layout::horizontal([
+        let [left_section, text_middle_section, right_section] = Layout::horizontal([
             Constraint::Length(3),
             Constraint::Fill(1),
             Constraint::Length(3),
@@ -132,8 +133,6 @@ impl TcWidget<'_> for &ColorSelector {
             .alignment(Alignment::Center)
             .style(Style::default().fg(fg_color).bg(*bg_color))
             .render(text_middle_section, buf);
-        Span::from(" ⏎ ")
-            .style(style)
-            .render(button_right_section, buf);
+        Span::from("   ").style(style).render(right_section, buf);
     }
 }

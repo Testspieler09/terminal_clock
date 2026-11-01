@@ -67,7 +67,7 @@ pub struct TuiState {
     pub color_theme_idx: u16,
     pub clock_state: ClockState,
     pub quote_idx: Option<u16>,
-    pub pomodoro: Option<PomodoroTimer>,
+    pub pomodoro: PomodoroTimer,
     pub refresh_rate: u16,
     pub needed_width: u16,
     pub needed_height: u16,

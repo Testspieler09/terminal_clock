@@ -14,6 +14,7 @@ use crate::{
     assets,
     tui_models::{
         selectable_item::{Selectable, SelectableItem},
+        selector::{SelectorState, SettingsSelector},
         settings::Setting,
         tui::TuiState,
         tui_action::TuiAction,
@@ -45,7 +46,7 @@ impl Default for ScrollPhase {
 
 pub(crate) struct CarouselSelector {
     /// Fields needed for event handling logic
-    is_active: bool,
+    selector_state: SelectorState,
 
     /// Display fields
     setting: Setting,
@@ -62,7 +63,7 @@ pub(crate) struct CarouselSelector {
 
 impl CarouselSelector {
     pub fn new(
-        is_active: bool,
+        selector_state: SelectorState,
         setting: Setting,
         options: Vec<SelectableItem>,
     ) -> CarouselSelector {
@@ -71,7 +72,7 @@ impl CarouselSelector {
         }
 
         CarouselSelector {
-            is_active,
+            selector_state,
             setting,
             options,
             current_selection: 0,
@@ -89,7 +90,7 @@ impl CarouselSelector {
     }
 
     pub(crate) fn tick(&mut self) {
-        if !self.is_active {
+        if self.selector_state != SelectorState::Active {
             return;
         }
 
@@ -154,9 +155,8 @@ impl CarouselSelector {
     }
 }
 
-#[allow(dead_code)]
-impl CarouselSelector {
-    pub(crate) fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction> {
+impl SettingsSelector for CarouselSelector {
+    fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction> {
         match key_event.code {
             KeyCode::Char('h') | KeyCode::Left => {
                 self.prev_option();
@@ -170,20 +170,20 @@ impl CarouselSelector {
         }
     }
 
-    pub(crate) fn set_to_active(&mut self) {
-        self.is_active = true;
+    fn set_to_active(&mut self) {
+        self.selector_state = SelectorState::Active;
     }
 
-    pub(crate) fn set_to_inactive(&mut self) {
-        self.is_active = false;
+    fn set_to_inactive(&mut self) {
+        self.selector_state = SelectorState::Inactive;
         self.reset_scroll();
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn update_current_selection(
-        &mut self,
-        selection: SelectableItem,
-    ) -> UpdateResult<()> {
+    fn set_to_disabled(&mut self) {
+        self.selector_state = SelectorState::Disabled;
+    }
+
+    fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()> {
         if let Some(idx) = self
             .options
             .iter()
@@ -204,7 +204,7 @@ impl TcWidget<'_> for &CarouselSelector {
         let highlight_color = *theme.get(&ThemeColor::Selection);
         let default_color = *theme.get(&ThemeColor::Foreground);
 
-        let style = if self.is_active {
+        let style = if self.selector_state == SelectorState::Active {
             Style::default().fg(default_color).bg(highlight_color)
         } else {
             Style::default().fg(default_color)
@@ -249,7 +249,7 @@ impl TcWidget<'_> for &CarouselSelector {
         let name_len = name.chars().count();
         let display = if name_len <= box_width {
             name
-        } else if self.is_active {
+        } else if self.selector_state == SelectorState::Active {
             name.chars()
                 .skip(self.scroll_offset)
                 .take(box_width)

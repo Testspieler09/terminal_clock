@@ -21,6 +21,15 @@ use crate::{
     },
 };
 
+#[derive(PartialEq, Eq)]
+pub(crate) enum SelectorState {
+    Active,
+    Inactive,
+    #[expect(dead_code, reason = "Currently no selector uses the disabled state")]
+    Disabled,
+}
+
+#[derive(PartialEq, Eq)]
 pub(crate) enum SelectorType {
     Carousel,
     Color,
@@ -31,7 +40,12 @@ pub(crate) trait SettingsSelector {
     fn handle_keys(&mut self, key_event: KeyEvent) -> Option<TuiAction>;
     fn set_to_active(&mut self);
     fn set_to_inactive(&mut self);
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "Currently no selector uses the disabled state")]
+    fn set_to_disabled(&mut self);
+    #[expect(
+        dead_code,
+        reason = "Currently some settingsselector are only aesthetic and will not update the underlying value."
+    )]
     fn update_current_selection(&mut self, selection: SelectableItem) -> UpdateResult<()>;
 }
 
@@ -69,15 +83,18 @@ impl Selector {
         }
     }
 
-    pub fn create_selector_from_setting(setting: Setting, is_active: bool) -> Selector {
+    pub fn create_selector_from_setting(
+        setting: Setting,
+        selector_state: SelectorState,
+    ) -> Selector {
         match setting.selector_type() {
             SelectorType::Carousel => Selector::Carousel(CarouselSelector::new(
-                is_active,
+                selector_state,
                 setting,
                 Selector::carousel_options_for(setting),
             )),
-            SelectorType::Color => Selector::Color(ColorSelector::new(is_active, setting)),
-            SelectorType::Number => Selector::Number(NumberSelector::new(is_active, setting)),
+            SelectorType::Color => Selector::Color(ColorSelector::new(selector_state, setting)),
+            SelectorType::Number => Selector::Number(NumberSelector::new(selector_state, setting)),
         }
     }
 }
@@ -104,6 +121,14 @@ impl SettingsSelector for Selector {
             Selector::Carousel(selector) => selector.set_to_inactive(),
             Selector::Color(selector) => selector.set_to_inactive(),
             Selector::Number(selector) => selector.set_to_inactive(),
+        }
+    }
+
+    fn set_to_disabled(&mut self) {
+        match self {
+            Selector::Carousel(selector) => selector.set_to_disabled(),
+            Selector::Color(selector) => selector.set_to_disabled(),
+            Selector::Number(selector) => selector.set_to_disabled(),
         }
     }
 

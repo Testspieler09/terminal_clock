@@ -34,6 +34,8 @@ struct Args {
 
 pub fn setup_panic_hook() {
     panic::set_hook(Box::new(|info| {
+        ratatui::restore();
+
         let Ok(mut file) = OpenOptions::new()
             .create(true)
             .append(true)
@@ -62,6 +64,8 @@ pub fn setup_panic_hook() {
         let _ = writeln!(file, "\nBacktrace:\n{backtrace}");
         let _ = writeln!(file, "=======================================\n");
         let _ = file.flush();
+
+        eprintln!("A crash occured. Thus crash.log generated");
     }));
 }
 

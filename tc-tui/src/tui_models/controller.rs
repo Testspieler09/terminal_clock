@@ -47,6 +47,8 @@ pub(crate) async fn handle_events(
                 Some(Ok(Event::Resize(w, h))) => {
                     process_settings_action(state, &TuiAction::UpdateFallback((w, h)));
                 }
+                // Some(Ok(Event::Mouse(_))) => should also be dispatched to dispatch key but
+                // rename the fn first
                 Some(Ok(_)) => {}
                 Some(Err(e)) => return Err(e),
                 None => state.application_state = ApplicationState::Finished,
@@ -96,11 +98,21 @@ pub(crate) fn process_settings_action(state: &mut TuiState, action: &TuiAction) 
         TuiAction::ClockFormat(new_format) => state.clock_state.clock_time_fmt = *new_format,
         TuiAction::RefreshRate(new_refresh_rate) => state.refresh_rate = *new_refresh_rate,
         TuiAction::Quote(new_quote) => state.quote_idx = *new_quote,
-        TuiAction::TotalSession(_) => {}
-        TuiAction::WorkDuration(_) => {}
-        TuiAction::LongBreakDuration(_) => {}
-        TuiAction::ShortBreakDuration(_) => {}
-        TuiAction::SessionsBeforeLongBreak(_) => {}
+        TuiAction::TotalSession(new_session_amount) => {
+            state.pomodoro.config.total_sessions = *new_session_amount
+        }
+        TuiAction::WorkDuration(new_work_duration) => {
+            state.pomodoro.config.work_duration_min = *new_work_duration
+        }
+        TuiAction::LongBreakDuration(new_long_break) => {
+            state.pomodoro.config.long_break_duration_min = *new_long_break
+        }
+        TuiAction::ShortBreakDuration(new_short_break) => {
+            state.pomodoro.config.short_break_duration_min = *new_short_break
+        }
+        TuiAction::SessionsBeforeLongBreak(new_sessions_before_long_break) => {
+            state.pomodoro.config.sessions_before_long_break = *new_sessions_before_long_break
+        }
         TuiAction::ColorTheme(theme) => state.color_theme_idx = *theme,
         TuiAction::UpdateFallback((w, h)) => {
             state.needed_width = *w;

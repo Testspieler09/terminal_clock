@@ -18,11 +18,16 @@ pub(crate) fn render_clock_view(frame: &mut Frame<'_>, state: &TuiState) {
     let clock = tui_assets.get_clock(state.clock_state.clock_face_idx);
     let color_theme = tui_assets.get_color_theme(state.color_theme_idx);
 
-    let now = Local::now();
+    let timestamp = if state.pomodoro.is_active() {
+        state.pomodoro.get_timestamp()
+    } else {
+        Local::now()
+    };
+
     let (clock_widget, clock_w, clock_h) = clock.generate_clock_face_with_dimensions(
         color_theme,
         state.clock_state.clock_time_fmt,
-        now,
+        timestamp,
     );
     let clock_area = center_widget(
         frame_area,

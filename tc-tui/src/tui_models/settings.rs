@@ -87,7 +87,7 @@ impl GetSelectorType for Setting {
 #[derive(AsRefStr, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum GeneralSetting {
     // General
-    #[strum(serialize = "Refresh Rate")]
+    #[strum(serialize = "Refresh Rate (ms)")]
     RefreshRate,
     #[strum(serialize = "Clock Face")]
     ClockFace,
@@ -121,11 +121,11 @@ pub(crate) enum PomodoroSetting {
     TotalSessions,
     #[strum(serialize = "Long Break After")]
     SessionsBeforeLongBreak,
-    #[strum(serialize = "Work Duration")]
+    #[strum(serialize = "Work Duration (min)")]
     WorkDuration,
-    #[strum(serialize = "Short Break Duration")]
+    #[strum(serialize = "Short Break Duration (min)")]
     ShortBreakDuration,
-    #[strum(serialize = "Long Break Duration")]
+    #[strum(serialize = "Long Break Duration (min)")]
     LongBreakDuration,
 }
 

@@ -6,6 +6,7 @@ use tokio::sync::mpsc::unbounded_channel;
 
 use crate::{
     TuiAction,
+    components::pomodoro::PomodoroTimer,
     tui_models::{
         application::ApplicationState,
         clock::ClockState,
@@ -56,7 +57,7 @@ impl TuiAssets {
             action_rx,
             color_theme_idx,
             quote_idx,
-            pomodoro: None,
+            pomodoro: PomodoroTimer::default(),
             refresh_rate,
             needed_width: 0,
             needed_height: 0,

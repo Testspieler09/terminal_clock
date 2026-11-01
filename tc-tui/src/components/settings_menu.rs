@@ -16,7 +16,7 @@ use crate::{
     ApplicationState, TuiState, assets,
     helpers::generate_title,
     tui_models::{
-        selector::{Selector, SettingsSelector},
+        selector::{Selector, SelectorState, SettingsSelector},
         settings::Setting,
         tui_action::TuiAction,
         tui_constants::{COLOR_TAB_CONFIG, GENERAL_TAB_CONFIG, POMODORO_TAB_CONFIG},
@@ -74,6 +74,8 @@ pub(crate) struct SettingMenu {
 
     height: u16,
     width: u16,
+
+    active_desc: String,
 }
 
 impl SettingMenu {
@@ -82,21 +84,28 @@ impl SettingMenu {
             .iter()
             .enumerate()
             .map(|(idx, config)| {
-                let is_active = idx == 0;
-                Selector::create_selector_from_setting(config.setting, is_active)
+                let selector_state = if idx == 0 {
+                    SelectorState::Active
+                } else {
+                    SelectorState::Inactive
+                };
+                Selector::create_selector_from_setting(config.setting, selector_state)
             })
             .collect();
         let pomodoro_tab_selectors: Vec<Selector> = POMODORO_TAB_CONFIG
             .iter()
-            .map(|config| Selector::create_selector_from_setting(config.setting, false))
+            .map(|config| {
+                Selector::create_selector_from_setting(config.setting, SelectorState::Inactive)
+            })
             .collect();
-        // TODO: the bool should get a status::inactive / active type + optional disabled?!
         let color_tab_selectors: Vec<Selector> = COLOR_TAB_CONFIG
             .iter()
-            .map(|config| Selector::create_selector_from_setting(config.setting, false))
+            .map(|config| {
+                Selector::create_selector_from_setting(config.setting, SelectorState::Inactive)
+            })
             .collect();
 
-        SettingMenu {
+        let mut menu = SettingMenu {
             current_tab: SettingsTab::default(),
             general_tab_selectors,
             pomodoro_tab_selectors,
@@ -104,8 +113,27 @@ impl SettingMenu {
             called_from_hero: false,
             pending_action: None,
             height: 40u16,
-            width: 75u16,
+            width: 90u16,
+            active_desc: String::new(),
+        };
+
+        menu.update_active_description();
+        menu
+    }
+
+    fn update_active_description(&mut self) {
+        self.active_desc = match self.current_tab {
+            SettingsTab::General(idx) => GENERAL_TAB_CONFIG
+                .get(idx as usize)
+                .map(|c| c.description.join("\n")),
+            SettingsTab::Pomodoro(idx) => POMODORO_TAB_CONFIG
+                .get(idx as usize)
+                .map(|c| c.description.join("\n")),
+            SettingsTab::Color(idx) => COLOR_TAB_CONFIG
+                .get(idx as usize)
+                .map(|c| c.description.join("\n")),
         }
+        .unwrap_or_default();
     }
 
     fn reset_tab_page(&mut self) {
@@ -122,6 +150,8 @@ impl SettingMenu {
             SettingsTab::Pomodoro(_) => self.pomodoro_tab_selectors[0].set_to_active(),
             SettingsTab::Color(_) => self.color_tab_selectors[0].set_to_active(),
         };
+
+        self.update_active_description();
     }
 
     fn display_tab(&mut self, tab: SettingsTab) {
@@ -178,7 +208,9 @@ impl SettingMenu {
 
                 SettingsTab::Color(new_idx)
             }
-        }
+        };
+
+        self.update_active_description();
     }
 
     fn update_index(
@@ -254,10 +286,17 @@ impl SettingMenu {
             let theme = assets().get_color_theme(state.color_theme_idx);
 
             let desc_text = config.description.join("\n");
-            Paragraph::new(desc_text)
+
+            let padded_area = Rect {
+                x: rhs.x + 1,
+                width: rhs.width.saturating_sub(1),
+                ..rhs
+            };
+
+            Paragraph::new(desc_text.as_str())
                 .wrap(Wrap { trim: true })
                 .style(Style::default().fg(*theme.get(&ThemeColor::Foreground)))
-                .render(rhs, buf);
+                .render(padded_area, buf);
         }
     }
 
