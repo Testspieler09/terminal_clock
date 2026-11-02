@@ -1,7 +1,13 @@
 #[derive(Clone)]
 pub enum ApplicationState {
     /// The clock is running and displayed for the user
-    Running,
+    RunningClock,
+
+    /// Run the pomodoro timer. Using the clock for display
+    RunningPomodoro,
+
+    /// Run the timer in timer mode. Using the clock for display
+    RunningTimer,
 
     /// The hero menu (TerminalClock title, Settings, Help, Quit) is rendered
     ShowingHero,

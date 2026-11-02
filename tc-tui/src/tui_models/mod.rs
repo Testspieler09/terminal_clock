@@ -2,6 +2,7 @@ pub(crate) mod application;
 pub(crate) mod clock;
 pub(crate) mod controller;
 pub(crate) mod firework;
+pub(crate) mod number_input;
 pub(crate) mod selectable_item;
 pub(crate) mod selector;
 pub(crate) mod settings;

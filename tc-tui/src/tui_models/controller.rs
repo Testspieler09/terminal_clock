@@ -12,8 +12,9 @@ use crate::{
     components::hero::MenuLabel,
     tui_models::{
         application::ApplicationState,
+        number_input::NumericValue,
         tui::{TuiComponents, TuiState},
-        tui_action::TuiAction,
+        tui_action::{NumericOperation, TuiAction},
         tui_constants::{FIREWORK_FRAME_MS, SETTINGS_MENU_TICK_MS},
     },
 };
@@ -68,7 +69,7 @@ pub(crate) async fn handle_events(
         state.application_state = ApplicationState::ShowingFirework;
     }
     if matches!(state.application_state, ApplicationState::ShowingFirework) && fw.is_finished() {
-        state.application_state = ApplicationState::Running;
+        state.application_state = ApplicationState::RunningClock;
     }
 
     Ok(matches!(
@@ -79,12 +80,14 @@ pub(crate) async fn handle_events(
 
 async fn dispatch_key(state: &mut TuiState, components: &mut TuiComponents, key: KeyEvent) {
     match state.application_state.clone() {
-        ApplicationState::Running => handle_normal_keys(state, key, components),
+        ApplicationState::RunningClock => handle_normal_keys(state, key, components),
         ApplicationState::ShowingHero => handle_hero_keys(state, key, components),
         ApplicationState::ShowingSettings => {
             components.settings_menu.handle_setting_keys(key, state)
         }
         ApplicationState::ShowingHelp
+        | ApplicationState::RunningTimer
+        | ApplicationState::RunningPomodoro
         | ApplicationState::ShowingFirework
         | ApplicationState::Finished => {}
     }
@@ -92,27 +95,48 @@ async fn dispatch_key(state: &mut TuiState, components: &mut TuiComponents, key:
 
 pub(crate) fn process_settings_action(state: &mut TuiState, action: &TuiAction) {
     match action {
+        TuiAction::UpdateNumericValue(operation, numeric_type) => {
+            let config = numeric_type.derive_config();
+            let value = match numeric_type {
+                NumericValue::RefreshRate => state.refresh_rate as u64,
+                NumericValue::TotalSessions => state.pomodoro.config.total_sessions as u64,
+                NumericValue::SessionsBeforeLongBreak => {
+                    state.pomodoro.config.sessions_before_long_break as u64
+                }
+                NumericValue::WorkDuration => state.pomodoro.config.work_duration_min,
+                NumericValue::ShortBreakDuration => state.pomodoro.config.short_break_duration_min,
+                NumericValue::LongBreakDuration => state.pomodoro.config.long_break_duration_min,
+            };
+
+            let new_value = match operation {
+                NumericOperation::Increment => value
+                    .saturating_add(config.preset_interval as u64)
+                    .min(config.upper_clamp),
+                NumericOperation::Decrement => value.saturating_sub(config.preset_interval as u64),
+            };
+
+            match numeric_type {
+                NumericValue::RefreshRate => state.refresh_rate = new_value as u16,
+                NumericValue::TotalSessions => {
+                    state.pomodoro.config.total_sessions = new_value as u32
+                }
+                NumericValue::SessionsBeforeLongBreak => {
+                    state.pomodoro.config.sessions_before_long_break = new_value as u32
+                }
+                NumericValue::WorkDuration => state.pomodoro.config.work_duration_min = new_value,
+                NumericValue::ShortBreakDuration => {
+                    state.pomodoro.config.short_break_duration_min = new_value
+                }
+                NumericValue::LongBreakDuration => {
+                    state.pomodoro.config.long_break_duration_min = new_value
+                }
+            };
+        }
         TuiAction::ClockFace(new_clock_face_idx) => {
             state.clock_state.clock_face_idx = *new_clock_face_idx
         }
         TuiAction::ClockFormat(new_format) => state.clock_state.clock_time_fmt = *new_format,
-        TuiAction::RefreshRate(new_refresh_rate) => state.refresh_rate = *new_refresh_rate,
         TuiAction::Quote(new_quote) => state.quote_idx = *new_quote,
-        TuiAction::TotalSession(new_session_amount) => {
-            state.pomodoro.config.total_sessions = *new_session_amount
-        }
-        TuiAction::WorkDuration(new_work_duration) => {
-            state.pomodoro.config.work_duration_min = *new_work_duration
-        }
-        TuiAction::LongBreakDuration(new_long_break) => {
-            state.pomodoro.config.long_break_duration_min = *new_long_break
-        }
-        TuiAction::ShortBreakDuration(new_short_break) => {
-            state.pomodoro.config.short_break_duration_min = *new_short_break
-        }
-        TuiAction::SessionsBeforeLongBreak(new_sessions_before_long_break) => {
-            state.pomodoro.config.sessions_before_long_break = *new_sessions_before_long_break
-        }
         TuiAction::ColorTheme(theme) => state.color_theme_idx = *theme,
         TuiAction::UpdateFallback((w, h)) => {
             state.needed_width = *w;
@@ -129,14 +153,14 @@ fn handle_global_keys(
     match key_event.code {
         KeyCode::Esc | KeyCode::Char('q') => match state.application_state {
             ApplicationState::ShowingHero => {
-                state.application_state = ApplicationState::Running;
+                state.application_state = ApplicationState::RunningClock;
                 ControlFlow::Break(())
             }
             ApplicationState::ShowingHelp => {
                 if components.help_box.was_called_from_hero() {
                     state.application_state = ApplicationState::ShowingHero;
                 } else {
-                    state.application_state = ApplicationState::Running;
+                    state.application_state = ApplicationState::RunningClock;
                 }
                 components.help_box.set_called_from_hero(false);
                 ControlFlow::Break(())
@@ -145,12 +169,12 @@ fn handle_global_keys(
                 if components.settings_menu.was_called_from_hero() {
                     state.application_state = ApplicationState::ShowingHero;
                 } else {
-                    state.application_state = ApplicationState::Running;
+                    state.application_state = ApplicationState::RunningClock;
                 }
                 components.settings_menu.set_called_from_hero(false);
                 ControlFlow::Break(())
             }
-            ApplicationState::Running => {
+            ApplicationState::RunningClock => {
                 if matches!(key_event.code, KeyCode::Char('q')) {
                     state.application_state = ApplicationState::Finished;
                     ControlFlow::Break(())

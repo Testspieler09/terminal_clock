@@ -48,7 +48,7 @@ impl TuiAssets {
         let (action_tx, action_rx) = unbounded_channel::<TuiAction>();
 
         TuiState {
-            application_state: ApplicationState::Running,
+            application_state: ApplicationState::RunningClock,
             clock_state: ClockState {
                 clock_face_idx,
                 clock_time_fmt,

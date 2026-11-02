@@ -116,9 +116,11 @@ impl TuiRenderer {
         );
 
         match state.application_state {
-            ApplicationState::Running => {
+            ApplicationState::RunningClock => {
                 render_clock_view(frame, state);
             }
+            ApplicationState::RunningPomodoro => todo!(),
+            ApplicationState::RunningTimer => todo!(),
             ApplicationState::ShowingHero => {
                 components
                     .logo

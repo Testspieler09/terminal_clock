@@ -10,40 +10,20 @@ use tc_models::color_theme::ThemeColor;
 use crate::{
     TuiState, assets,
     tui_models::{
+        number_input::NumericValue,
         selectable_item::SelectableItem,
         selector::{SelectorState, SettingsSelector},
         settings::{GeneralSetting, PomodoroSetting, Setting},
-        tui_action::TuiAction,
+        tui_action::{NumericOperation, TuiAction},
         tui_error::UpdateResult,
         tui_traits::TcWidget,
     },
 };
 
-pub(crate) struct NumberSelectorConfig {
-    // FIX: override value should be removed
-    override_value: u64,
-    preset_interval: u16,
-    upper_clamp: u64,
-    fallback: u32,
-}
-
 // TODO: add the global numberpicker component later on that gets rendered over the whole frame
 pub(crate) struct NumberSelector {
     selector_state: SelectorState,
     setting: Setting,
-    config: NumberSelectorConfig,
-}
-
-impl NumberSelectorConfig {
-    pub fn derive(setting: Setting) -> Self {
-        // match setting {}
-        NumberSelectorConfig {
-            override_value: 100,
-            preset_interval: 100,
-            upper_clamp: 1000,
-            fallback: 200,
-        }
-    }
 }
 
 impl NumberSelector {
@@ -51,70 +31,52 @@ impl NumberSelector {
         NumberSelector {
             selector_state,
             setting,
-            config: NumberSelectorConfig::derive(setting),
         }
     }
 
-    fn resolve_number(&self, state: &TuiState) -> String {
+    fn resolve_number(&self, state: &TuiState) -> u64 {
         match self.setting {
-            Setting::General(GeneralSetting::RefreshRate) => state.refresh_rate.to_string(),
+            Setting::General(GeneralSetting::RefreshRate) => state.refresh_rate as u64,
             Setting::Pomodoro(setting) => match setting {
-                PomodoroSetting::WorkDuration => {
-                    state.pomodoro.config.work_duration_min.to_string()
-                }
+                PomodoroSetting::WorkDuration => state.pomodoro.config.work_duration_min,
                 PomodoroSetting::SessionsBeforeLongBreak => {
-                    state.pomodoro.config.sessions_before_long_break.to_string()
+                    state.pomodoro.config.sessions_before_long_break as u64
                 }
-                PomodoroSetting::TotalSessions => state.pomodoro.config.total_sessions.to_string(),
-                PomodoroSetting::LongBreakDuration => {
-                    state.pomodoro.config.long_break_duration_min.to_string()
-                }
+                PomodoroSetting::TotalSessions => state.pomodoro.config.total_sessions as u64,
+                PomodoroSetting::LongBreakDuration => state.pomodoro.config.long_break_duration_min,
                 PomodoroSetting::ShortBreakDuration => {
-                    state.pomodoro.config.short_break_duration_min.to_string()
+                    state.pomodoro.config.short_break_duration_min
                 }
             },
             _ => unreachable!("resolve_number called for a non-number setting"),
         }
     }
 
-    fn increase_value(&mut self) {
-        self.config.override_value = self
-            .config
-            .override_value
-            .saturating_add(self.config.preset_interval as u64)
-            .min(self.config.upper_clamp);
-    }
-
-    fn decrease_value(&mut self) {
-        self.config.override_value = self
-            .config
-            .override_value
-            .saturating_sub(self.config.preset_interval as u64);
-    }
-
-    fn get_corrosponding_action(&self) -> TuiAction {
+    fn get_corresponding_action(&self, op: NumericOperation) -> TuiAction {
         match self.setting {
-            Setting::General(GeneralSetting::RefreshRate) => TuiAction::RefreshRate(
-                u16::try_from(self.config.override_value).unwrap_or(self.config.fallback as u16),
-            ),
+            Setting::General(GeneralSetting::RefreshRate) => {
+                TuiAction::UpdateNumericValue(op, NumericValue::RefreshRate)
+            }
+
             Setting::Pomodoro(setting) => match setting {
-                PomodoroSetting::TotalSessions => TuiAction::TotalSession(
-                    u32::try_from(self.config.override_value).unwrap_or(self.config.fallback),
-                ),
-                PomodoroSetting::SessionsBeforeLongBreak => TuiAction::SessionsBeforeLongBreak(
-                    u32::try_from(self.config.override_value).unwrap_or(self.config.fallback),
-                ),
+                PomodoroSetting::TotalSessions => {
+                    TuiAction::UpdateNumericValue(op, NumericValue::TotalSessions)
+                }
+                PomodoroSetting::SessionsBeforeLongBreak => {
+                    TuiAction::UpdateNumericValue(op, NumericValue::SessionsBeforeLongBreak)
+                }
                 PomodoroSetting::WorkDuration => {
-                    TuiAction::WorkDuration(self.config.override_value)
+                    TuiAction::UpdateNumericValue(op, NumericValue::WorkDuration)
                 }
                 PomodoroSetting::ShortBreakDuration => {
-                    TuiAction::ShortBreakDuration(self.config.override_value)
+                    TuiAction::UpdateNumericValue(op, NumericValue::ShortBreakDuration)
                 }
                 PomodoroSetting::LongBreakDuration => {
-                    TuiAction::LongBreakDuration(self.config.override_value)
+                    TuiAction::UpdateNumericValue(op, NumericValue::LongBreakDuration)
                 }
             },
-            _ => unreachable!("get_corrosponding_action called for a non-number setting"),
+
+            _ => unreachable!("get_corresponding_action called for a non-number setting"),
         }
     }
 }
@@ -126,12 +88,10 @@ impl SettingsSelector for NumberSelector {
                 todo!()
             }
             KeyCode::Char('h') | KeyCode::Left => {
-                self.decrease_value();
-                Some(self.get_corrosponding_action())
+                Some(self.get_corresponding_action(NumericOperation::Decrement))
             }
             KeyCode::Char('l') | KeyCode::Right => {
-                self.increase_value();
-                Some(self.get_corrosponding_action())
+                Some(self.get_corresponding_action(NumericOperation::Increment))
             }
 
             _ => None,
@@ -175,7 +135,7 @@ impl TcWidget<'_> for &NumberSelector {
             Span::from(self.setting.as_ref()).style(Style::default().fg(default_color).bold()),
         ]);
 
-        let text = Line::from(self.resolve_number(state));
+        let text = Line::from(self.resolve_number(state).to_string());
 
         let style = if self.selector_state == SelectorState::Active {
             Style::default().fg(default_color).bg(highlight_color)

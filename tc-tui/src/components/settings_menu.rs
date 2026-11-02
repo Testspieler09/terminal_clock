@@ -315,7 +315,7 @@ impl SettingMenu {
                 if self.was_called_from_hero() {
                     state.application_state = ApplicationState::ShowingHero;
                 } else {
-                    state.application_state = ApplicationState::Running;
+                    state.application_state = ApplicationState::RunningClock;
                 }
                 self.set_called_from_hero(false);
             }
